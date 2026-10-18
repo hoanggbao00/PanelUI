@@ -1,0 +1,305 @@
+---
+title: Not Found
+description: An error code drawn in pixels that come apart near the pointer, with a title and a way out.
+status: new
+---
+
+<ComponentPreview name="not-found/page" height={560}>
+
+```tsx lineNumbers
+'use client';
+
+import { NotFound } from '@/components/panelui/not-found';
+import { Button } from '@/components/ui/button';
+
+export default function NotFoundPage() {
+  return (
+    <NotFound>
+      <NotFound.Code />
+      <NotFound.Title as="h2">Nothing lives at this address</NotFound.Title>
+      <NotFound.Description>
+        The link may be mistyped, or the page has moved somewhere else.
+      </NotFound.Description>
+      <NotFound.Actions>
+        <Button render={<a href="#" />}>Take me home</Button>
+        <Button variant="ghost" render={<a href="#" />}>
+          Report the link
+        </Button>
+      </NotFound.Actions>
+    </NotFound>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it for a page that does not exist, or any page that stands in for an error: the code at the top, a title saying what happened, a line on what to do next, and the links that get someone out.
+
+The code is drawn as cells on a canvas, in the text colour and an accent from the theme. A band of light goes slowly round it, and the pointer lights the cells it passes. Bring the pointer to a digit and that digit comes apart, then goes back together when the pointer moves on. Pick how it comes apart with `effect`.
+
+The code is decoration. It is read to a screen reader as a short label, and the title is the page's heading, so write the title as if the code were not there.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/not-found.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/not-found` instead of `@/components/panelui/not-found`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/not-found/`, one file for each below:
+
+<RegistrySource name="not-found" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { NotFound } from "@/components/panelui/not-found"
+```
+
+```tsx
+<NotFound>
+  <NotFound.Code code="404" />
+  <NotFound.Title>Nothing lives at this address</NotFound.Title>
+  <NotFound.Description>The link may be mistyped, or the page has moved.</NotFound.Description>
+  <NotFound.Actions>
+    <a href="/">Take me home</a>
+  </NotFound.Actions>
+</NotFound>
+```
+
+## Composition
+
+```tsx
+<NotFound>
+  <NotFound.Code />
+  <NotFound.Title />
+  <NotFound.Description />
+  <NotFound.Actions />
+</NotFound>
+```
+
+- **`NotFound.Code`** — The code, drawn in cells. `effect` picks how a digit comes apart, `fill` draws solid strokes or outlines, and `color` is the theme role of the accent.
+- **`NotFound.Title`** — What happened, in a few words. An `h1` by default; pass `as` for a lower level.
+- **`NotFound.Description`** — One line on what to do next.
+- **`NotFound.Actions`** — The links or buttons that get someone out, in a row that wraps on a narrow screen.
+
+## Examples
+
+### Dissolve
+
+`effect="dissolve"` takes the digit's cells out one at a time, starting nearest the pointer, and each flashes in the accent colour as it goes. They come back in reverse order.
+
+<ComponentPreview name="not-found/dissolve" height={520}>
+
+```tsx lineNumbers
+'use client';
+
+import { NotFound } from '@/components/panelui/not-found';
+import { Button } from '@/components/ui/button';
+
+export default function NotFoundDissolve() {
+  return (
+    <NotFound>
+      <NotFound.Code effect="dissolve" />
+      <NotFound.Title as="h2">This page was taken down</NotFound.Title>
+      <NotFound.Description>It was removed or archived. Search for what replaced it.</NotFound.Description>
+      <NotFound.Actions>
+        <Button variant="outline" render={<a href="#" />}>
+          Search
+        </Button>
+      </NotFound.Actions>
+    </NotFound>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Scramble
+
+`effect="scramble"` sends the digit's cells to a small icon and back: a question mark, a magnifying glass or a map pin, a different one each time.
+
+<ComponentPreview name="not-found/scramble" height={520}>
+
+```tsx lineNumbers
+'use client';
+
+import { NotFound } from '@/components/panelui/not-found';
+import { Button } from '@/components/ui/button';
+
+export default function NotFoundScramble() {
+  return (
+    <NotFound>
+      <NotFound.Code effect="scramble" />
+      <NotFound.Title as="h2">We looked everywhere</NotFound.Title>
+      <NotFound.Description>
+        No page matches that address. Check the spelling, or start again from the front page.
+      </NotFound.Description>
+      <NotFound.Actions>
+        <Button render={<a href="#" />}>Front page</Button>
+      </NotFound.Actions>
+    </NotFound>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Outlined digits in another colour
+
+`fill="outline"` keeps only the edge of each stroke, so every digit is drawn as two lines of cells. `color` names the theme role of the accent.
+
+<ComponentPreview name="not-found/outline" height={460}>
+
+```tsx lineNumbers
+'use client';
+
+import { NotFound } from '@/components/panelui/not-found';
+
+export default function NotFoundOutline() {
+  return (
+    <NotFound>
+      <NotFound.Code code="410" fill="outline" color="warning" />
+      <NotFound.Title as="h2">Gone for good</NotFound.Title>
+      <NotFound.Description>This page was retired and will not be coming back.</NotFound.Description>
+    </NotFound>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Other codes
+
+`code` takes any digits, so the same page works for a server error. Pass a `label` that says what the code means.
+
+<ComponentPreview name="not-found/server-error" height={520}>
+
+```tsx lineNumbers
+'use client';
+
+import { NotFound } from '@/components/panelui/not-found';
+import { Button } from '@/components/ui/button';
+
+export default function NotFoundServerError() {
+  return (
+    <NotFound>
+      <NotFound.Code code="500" color="destructive" label="Error 500, server error" />
+      <NotFound.Title as="h2">Something broke on our side</NotFound.Title>
+      <NotFound.Description>The server could not finish the request. Try again in a minute.</NotFound.Description>
+      <NotFound.Actions>
+        <Button variant="outline">Try again</Button>
+      </NotFound.Actions>
+    </NotFound>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### NotFound
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `backdrop` | `boolean` | — | Draws a faint grid behind everything, fading out towards the edges. On by default. |
+
+### NotFound.Code
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `code` | `string` | `'404'` | The code to draw. Digits only; any other character leaves a blank the width of a digit. |
+| `effect` | `NotFoundEffect` | `'scatter'` | How the digit nearest the pointer reacts. |
+| `fill` | `'outline' \| 'solid'` | `'solid'` | Digits drawn with solid strokes three cells wide, or as their outline. |
+| `ambient` | `boolean` | `true` | A band of light that goes slowly round the code on its own. While it is on, the canvas draws about 30 frames a second when the code is on screen; turn it off and nothing is drawn until the pointer comes near. |
+| `color` | `NotFoundColor` | `'info'` | The theme role of the accent: the highlighted digit, the band of light and the pointer's light. |
+| `highlight` | `number \| null` | — | Which digit is lit in `color` even with nothing else lighting it, counting from 0. Defaults to the middle one. `null` lights none of them. |
+| `label` | `string` | — | What a screen reader says for the code. Defaults to "Error" and the code. |
+
+### NotFound.Title
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `'h1' \| 'h2' \| 'h3'` | — | The heading level. A page that is only this one message wants `h1`. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Light
+
+Each cell is drawn in either the text colour or the accent, depending on how much light falls on it. The highlighted digit is always partly lit. A band of light goes slowly round the code, and the pointer lights the cells within a few cells of it, which fade over about half a second once it moves on. Cells in half light are mixed between the two colours.
+
+Pass `ambient={false}` to stop the band. The code is then still until the pointer comes near.
+
+### Which digit reacts
+
+The digit nearest the pointer reacts once the pointer is within a few cells of it, and is put back once the pointer moves away or onto another digit. On a touch screen, tapping a digit does the same, and it is put back about 0.7 seconds after the finger lifts.
+
+### The highlighted digit
+
+One digit is lit in `color` with nothing else lighting it. It is the middle one by default; `highlight` takes another position, counted from 0, or `null` to light none.
+
+### Backdrop
+
+`NotFound` draws a faint grid behind its contents, fading out towards its edges. Pass `backdrop={false}` to leave it out, for instance inside a card that has a surface of its own.
+
+### Room around the code
+
+Scattered cells fly outside the code's box, over whatever is around it. They do not block the pointer. `NotFound` clips them at its own left and right edges so a phone page never scrolls sideways; if you use `NotFound.Code` on its own, give its container `overflow-x: clip`.
+
+### Reduced motion
+
+With reduced motion turned on, nothing travels and the band holds still. A digit under the pointer dims instead of scattering or dissolving, and Scramble swaps the digit for the icon at once.
+
+### Cost
+
+The band draws 30 frames a second while the code is on screen, a few hundred cells in about sixteen fills each. Nothing is drawn while the code is scrolled out of view, and with `ambient={false}` nothing is drawn at rest.
+
+### Characters
+
+`code` draws the digits 0 to 9. Any other character leaves a blank the width of a digit.
+
+### Server Components
+
+`NotFound` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `NotFound.Code` off the import, so each part is also exported by name: `NotFoundCode` is `NotFound.Code`, and so on for the others.
+
+```tsx
+import { NotFound, NotFoundCode, NotFoundTitle, NotFoundDescription, NotFoundActions } from "@/components/panelui/not-found"
+```

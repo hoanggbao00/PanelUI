@@ -1,0 +1,43 @@
+{
+  "slug": "not-found",
+  "demo": "page",
+  "demoOptions": {
+    "height": 560
+  },
+  "intro": "Use it for a page that does not exist, or any page that stands in for an error: the code at the top, a title saying what happened, a line on what to do next, and the links that get someone out.\n\nThe code is drawn as cells on a canvas, in the text colour and an accent from the theme. A band of light goes slowly round it, and the pointer lights the cells it passes. Bring the pointer to a digit and that digit comes apart, then goes back together when the pointer moves on. Pick how it comes apart with `effect`.\n\nThe code is decoration. It is read to a screen reader as a short label, and the title is the page's heading, so write the title as if the code were not there.",
+  "usage": "<NotFound>\n  <NotFound.Code code=\"404\" />\n  <NotFound.Title>Nothing lives at this address</NotFound.Title>\n  <NotFound.Description>The link may be mistyped, or the page has moved.</NotFound.Description>\n  <NotFound.Actions>\n    <a href=\"/\">Take me home</a>\n  </NotFound.Actions>\n</NotFound>",
+  "anatomy": "<NotFound>\n  <NotFound.Code />\n  <NotFound.Title />\n  <NotFound.Description />\n  <NotFound.Actions />\n</NotFound>",
+  "parts": {
+    "Code": "The code, drawn in cells. `effect` picks how a digit comes apart, `fill` draws solid strokes or outlines, and `color` is the theme role of the accent.",
+    "Title": "What happened, in a few words. An `h1` by default; pass `as` for a lower level.",
+    "Description": "One line on what to do next.",
+    "Actions": "The links or buttons that get someone out, in a row that wraps on a narrow screen."
+  },
+  "examples": [
+    {
+      "title": "Dissolve",
+      "description": "`effect=\"dissolve\"` takes the digit's cells out one at a time, starting nearest the pointer, and each flashes in the accent colour as it goes. They come back in reverse order.",
+      "demo": "dissolve",
+      "height": 520
+    },
+    {
+      "title": "Scramble",
+      "description": "`effect=\"scramble\"` sends the digit's cells to a small icon and back: a question mark, a magnifying glass or a map pin, a different one each time.",
+      "demo": "scramble",
+      "height": 520
+    },
+    {
+      "title": "Outlined digits in another colour",
+      "description": "`fill=\"outline\"` keeps only the edge of each stroke, so every digit is drawn as two lines of cells. `color` names the theme role of the accent.",
+      "demo": "outline",
+      "height": 460
+    },
+    {
+      "title": "Other codes",
+      "description": "`code` takes any digits, so the same page works for a server error. Pass a `label` that says what the code means.",
+      "demo": "server-error",
+      "height": 520
+    }
+  ],
+  "notes": "### Light\n\nEach cell is drawn in either the text colour or the accent, depending on how much light falls on it. The highlighted digit is always partly lit. A band of light goes slowly round the code, and the pointer lights the cells within a few cells of it, which fade over about half a second once it moves on. Cells in half light are mixed between the two colours.\n\nPass `ambient={false}` to stop the band. The code is then still until the pointer comes near.\n\n### Which digit reacts\n\nThe digit nearest the pointer reacts once the pointer is within a few cells of it, and is put back once the pointer moves away or onto another digit. On a touch screen, tapping a digit does the same, and it is put back about 0.7 seconds after the finger lifts.\n\n### The highlighted digit\n\nOne digit is lit in `color` with nothing else lighting it. It is the middle one by default; `highlight` takes another position, counted from 0, or `null` to light none.\n\n### Backdrop\n\n`NotFound` draws a faint grid behind its contents, fading out towards its edges. Pass `backdrop={false}` to leave it out, for instance inside a card that has a surface of its own.\n\n### Room around the code\n\nScattered cells fly outside the code's box, over whatever is around it. They do not block the pointer. `NotFound` clips them at its own left and right edges so a phone page never scrolls sideways; if you use `NotFound.Code` on its own, give its container `overflow-x: clip`.\n\n### Reduced motion\n\nWith reduced motion turned on, nothing travels and the band holds still. A digit under the pointer dims instead of scattering or dissolving, and Scramble swaps the digit for the icon at once.\n\n### Cost\n\nThe band draws 30 frames a second while the code is on screen, a few hundred cells in about sixteen fills each. Nothing is drawn while the code is scrolled out of view, and with `ambient={false}` nothing is drawn at rest.\n\n### Characters\n\n`code` draws the digits 0 to 9. Any other character leaves a blank the width of a digit."
+}

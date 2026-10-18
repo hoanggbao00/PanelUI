@@ -28,3 +28,4 @@ Generated from the collection's source. Read a component's own file before using
 ## Feedback and status
 
 - [Feedback](components/feedback.md) — A dialog with a well to write in and two actions in the band around it.
+- [Not Found](components/not-found.md) — An error code drawn in pixels that come apart near the pointer, with a title and a way out.

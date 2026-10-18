@@ -283,3 +283,17 @@ export {
   type CommandDockRowMetaProps,
   type CommandDockStatusProps,
 } from './components/command-dock';
+export {
+  NotFound,
+  NotFoundCode,
+  NotFoundTitle,
+  NotFoundDescription,
+  NotFoundActions,
+  type NotFoundProps,
+  type NotFoundCodeProps,
+  type NotFoundTitleProps,
+  type NotFoundDescriptionProps,
+  type NotFoundActionsProps,
+  type NotFoundEffect,
+  type NotFoundColor,
+} from './components/not-found';

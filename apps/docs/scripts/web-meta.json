@@ -152,5 +152,15 @@
       "addedIn": "0.3.0",
       "category": "data"
     }
+  ],
+  "not-found": [
+    "NotFound",
+    "An error code drawn in pixels that come apart near the pointer, with a title and a way out.",
+    "react 404 page not found component pixel",
+    {
+      "addedIn": "0.4.0",
+      "category": "feedback",
+      "title": "Not Found"
+    }
   ]
 }
