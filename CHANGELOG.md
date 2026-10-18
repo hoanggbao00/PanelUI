@@ -9,6 +9,32 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.113.0] — 2026-10-18
+
+### Added
+
+- **Subpaths for Glass and Portal.** `useGlassMaterial` can now be imported from
+  `panelui-native/primitives/glass`, and `Portal`, `PortalHost` and `PortalProvider` from
+  `panelui-native/primitives/portal`. Before this, an app that imports by subpath had to reach
+  them through the root entry, which loads every component.
+
+### Fixed
+
+- **Chart axis labels at large text sizes.** The axis labels of all 13 charts with axes now stop
+  growing at iOS's largest size before the accessibility range (1.353×). The labels sit in
+  fixed-width gutters, so at the accessibility sizes they were cut to "J…" and "$…" or ran into
+  each other. Screen readers still get every value through each chart's accessibility data, and
+  tooltips, headers and legends still follow the text size.
+- **HeatmapChart's axes at large text sizes.** Its weekday column and month row now widen with
+  the labels, up to the same limit, so a weekday no longer wraps onto two lines and the months
+  no longer run into the first row of cells. At the default and smaller text sizes nothing moves.
+  `HeatmapChart.YAxis`'s `width` still overrides the column width.
+
+### Docs
+
+- panelui.dev has a 404 page of its own, built from the web collection's new NotFound component,
+  in place of the framework's default.
+
 ## [0.112.1] — 2026-10-17
 
 ### Fixed

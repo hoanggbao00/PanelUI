@@ -355,7 +355,7 @@
     "react native heatmap chart",
     {
       "addedIn": "0.14.0",
-      "updatedIn": "0.40.0",
+      "updatedIn": "0.113.0",
       "group": "charts",
       "visualization": true,
       "accessibilityMode": "shared-data"
