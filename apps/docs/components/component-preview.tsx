@@ -68,7 +68,7 @@ export function ComponentPreview({
     <div
       ref={frame}
       data-component-preview=""
-      className="not-prose my-6 scroll-mt-24 overflow-hidden rounded-2xl border bg-background"
+      className="not-prose isolate my-6 scroll-mt-24 overflow-hidden rounded-2xl border bg-background"
     >
       <div
         data-preview-stage=""

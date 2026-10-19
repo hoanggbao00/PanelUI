@@ -63,7 +63,10 @@ import { LAND, LAND_COLUMNS, LAND_ROWS } from './land';
 
 const planetVariants = tv({
   slots: {
-    root: 'flex w-full flex-col items-center gap-4 text-foreground',
+    // `isolate` keeps the markers' depth ordering inside the planet. Each marker
+    // sets its own z-index, and without a stacking context of its own those
+    // numbers compete with the page's sidebars and menus, and win.
+    root: 'isolate flex w-full flex-col items-center gap-4 text-foreground',
     // `touch-pan-y` leaves a vertical swipe to the page. A globe that traps
     // the scroll it sits in is worse than one that only turns sideways.
     globe:
