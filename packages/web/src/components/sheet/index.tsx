@@ -43,8 +43,12 @@ import { Drawer } from '@base-ui/react/drawer';
 import { ScrollArea } from '@base-ui/react/scroll-area';
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
+  useState,
   type ComponentProps,
   type ReactElement,
   type ReactNode,
@@ -233,6 +237,17 @@ interface SheetContextValue {
   /** Set by `Sheet.Content`. */
   inline: boolean;
   showClose: boolean;
+  /** Lets a sheet opened from this one be closed with it. Returns the undo. */
+  register(child: SheetHandle): () => void;
+  /** Closes this sheet and every sheet opened from it. */
+  closeTree(): void;
+  /** Whether a sheet opened from this one is open. */
+  hasOpenChild(): boolean;
+}
+
+interface SheetHandle {
+  isOpen(): boolean;
+  closeTree(): void;
 }
 
 const SheetContext = createContext<SheetContextValue | null>(null);
@@ -270,16 +285,56 @@ function SheetRoot({
 }: SheetProps) {
   // A sheet inside another sheet's content finds that sheet's context.
   const parent = useContext(SheetContext);
+  const nested = parent !== null && !parent.inline;
+  // Held here as well as by the primitive, so a sheet opened from this one
+  // can close it.
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isOpen = open ?? internalOpen;
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (open === undefined) setInternalOpen(next);
+      onOpenChange?.(next);
+    },
+    [open, onOpenChange]
+  );
+  // The sheets opened from this one, so a press on the page behind them all
+  // can close the whole stack. The primitive gives that press to no one
+  // while a second sheet is open.
+  const opened = useRef(new Set<SheetHandle>());
+  const live = useRef({ isOpen, setOpen });
+  live.current = { isOpen, setOpen };
+  const handle = useMemo<SheetHandle>(
+    () => ({
+      isOpen: () => live.current.isOpen,
+      closeTree: () => {
+        opened.current.forEach((child) => child.closeTree());
+        if (live.current.isOpen) live.current.setOpen(false);
+      },
+    }),
+    []
+  );
+  useEffect(() => (nested && parent ? parent.register(handle) : undefined), [nested, parent, handle]);
+
   const context = useMemo<SheetContextValue>(
-    () => ({ side, nested: parent !== null && !parent.inline, inline: false, showClose: true }),
-    [side, parent]
+    () => ({
+      side,
+      nested,
+      inline: false,
+      showClose: true,
+      register: (child) => {
+        opened.current.add(child);
+        return () => opened.current.delete(child);
+      },
+      closeTree: handle.closeTree,
+      hasOpenChild: () => [...opened.current].some((child) => child.isOpen()),
+    }),
+    [side, nested, handle]
   );
 
   return (
     <SheetContext.Provider value={context}>
       <Drawer.Root
-        open={open}
-        defaultOpen={defaultOpen}
+        open={isOpen}
         swipeDirection={SWIPE[side]}
         disablePointerDismissal={!dismissible}
         onOpenChange={(next, details) => {
@@ -293,7 +348,7 @@ function SheetRoot({
           ) {
             return;
           }
-          onOpenChange?.(next);
+          setOpen(next);
         }}
       >
         {children}
@@ -391,7 +446,15 @@ function SheetContent({
   return (
     <Drawer.Portal>
       {/* The first sheet darkens the page; one opened from it does not add a second shade. */}
-      {sheet.nested ? null : <Drawer.Backdrop className={slots.backdrop()} />}
+      {sheet.nested ? null : (
+        <Drawer.Backdrop
+          className={slots.backdrop()}
+          // With a second sheet open, a press here is outside both, and closes both.
+          onClick={() => {
+            if (sheet.hasOpenChild()) sheet.closeTree();
+          }}
+        />
+      )}
       <Drawer.Viewport className={slots.viewport()}>
         <Drawer.Popup className={slots.popup({ className })} {...props}>
           {/* The popup is portalled out from under the provider, so the
