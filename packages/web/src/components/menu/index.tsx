@@ -57,7 +57,8 @@ const menuVariants = tv({
       'motion-reduce:transition-none',
     ],
     item: [
-      'flex min-h-8 cursor-default items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm outline-none select-none',
+      // The label never wraps; a description beside it is cut short instead.
+      'flex min-h-8 cursor-default items-center gap-2.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm outline-none select-none',
       'data-highlighted:bg-accent data-highlighted:text-accent-foreground',
       'data-disabled:pointer-events-none data-disabled:opacity-50',
       // A submenu's row stays lit while its submenu is open, so it is clear what it belongs to.

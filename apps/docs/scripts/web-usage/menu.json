@@ -1,9 +1,8 @@
 {
   "slug": "menu",
-  "demo": "actions",
+  "demo": "demo",
   "demoOptions": {
-    "height": 360,
-    "align": "start"
+    "height": 300
   },
   "intro": "Use it for actions on one thing that do not all fit beside it: a document's rename, share and delete, a row's more button. For choosing a value that then shows in the button, use [Select](/docs/web/components/select).\n\nEvery row has the same shape: an icon, the label, and at its end a shortcut, a badge, a check or a submenu's chevron.\n\nIt opens from `Menu.Trigger`, which is a plain button until you give it `render`. Pass a [Button](/docs/web/components/button) there to draw it as one.",
   "usage": "<Menu>\n  <Menu.Trigger render={<Button variant=\"outline\" />}>Document</Menu.Trigger>\n  <Menu.Content>\n    <Menu.Item onClick={rename}>\n      <PencilIcon />\n      Rename\n      <Menu.Shortcut>⌘R</Menu.Shortcut>\n    </Menu.Item>\n    <Menu.Separator />\n    <Menu.Item variant=\"destructive\">Delete</Menu.Item>\n  </Menu.Content>\n</Menu>",
@@ -27,11 +26,52 @@
   },
   "examples": [
     {
-      "title": "Checks and choices",
-      "description": "Check items switch columns on and off, and a radio group picks one density. Both keep the menu open, so several can be changed in a row.",
-      "demo": "checks",
-      "height": 360,
-      "align": "start"
+      "title": "Basic",
+      "description": "Items and nothing else. Pressing one closes the menu.",
+      "demo": "basic",
+      "height": 260
+    },
+    {
+      "title": "Submenu",
+      "description": "`Menu.Sub` holds a `Menu.SubTrigger` row and the `Menu.SubContent` it opens to the side. Submenus nest.",
+      "demo": "submenu",
+      "height": 260
+    },
+    {
+      "title": "Shortcuts",
+      "description": "`Menu.Shortcut` puts the keys at the end of an item. It only shows them; handle the keys where the action lives.",
+      "demo": "shortcuts",
+      "height": 260
+    },
+    {
+      "title": "Icons",
+      "description": "An icon written as an item's first child is sized and coloured by the row.",
+      "demo": "icons",
+      "height": 260
+    },
+    {
+      "title": "Checkboxes",
+      "description": "`Menu.CheckboxItem` switches on and off with a check at its end, and keeps the menu open so several can be changed in a row.",
+      "demo": "checkboxes",
+      "height": 260
+    },
+    {
+      "title": "Radio group",
+      "description": "`Menu.RadioGroup` holds one choice among its `Menu.RadioItem`s, through `value` and `onValueChange`.",
+      "demo": "radio",
+      "height": 260
+    },
+    {
+      "title": "Destructive",
+      "description": "`variant=\"destructive\"` draws an item in the destructive colour, for an action that cannot be undone. Keep it last, after a separator.",
+      "demo": "destructive",
+      "height": 260
+    },
+    {
+      "title": "Descriptions and badges",
+      "description": "`Menu.Description` adds quieter words after the label, and `Menu.Badge` a count or a flag at the end of the row.",
+      "demo": "details",
+      "height": 260
     }
   ],
   "notes": "### Keyboard\n\nWith the trigger focused, Enter, Space or the down arrow opens the menu on its first item. The arrow keys move between items, typing jumps to one by its first letters, Enter presses it, and Escape closes the menu and puts focus back on the trigger. The right arrow opens a submenu and the left arrow closes it.\n\n### Submenus\n\nA submenu opens when its row is hovered, after a short delay, or pressed. The pointer can cross diagonally from the row to the submenu without closing it.\n\n### Closing\n\nPressing an item closes the menu; pressing a check or radio item does not. Pass `closeOnClick` to change either."

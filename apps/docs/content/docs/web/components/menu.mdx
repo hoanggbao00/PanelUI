@@ -4,86 +4,59 @@ description: A list of actions that opens from a button, with shortcuts, checks 
 status: new
 ---
 
-<ComponentPreview name="menu/actions" height={360} align="start">
+<ComponentPreview name="menu/demo" height={300}>
 
 ```tsx lineNumbers
-'use client';
-
-import {
-  ArchiveIcon,
-  CopyIcon,
-  EllipsisIcon,
-  LinkIcon,
-  MailIcon,
-  PencilIcon,
-  Share2Icon,
-  Trash2Icon,
-  UsersIcon,
-} from 'lucide-react';
 import { Button } from '@/components/panelui/button';
 import { Menu } from '@/components/panelui/menu';
-import { useState } from 'react';
 
-export default function MenuActions() {
-  const [last, setLast] = useState<string | null>(null);
-  const run = (action: string) => () => setLast(action);
-
+export default function MenuDemo() {
   return (
-    <div className="flex flex-col items-center gap-4">
-      <Menu>
-        <Menu.Trigger render={<Button variant="outline" />}>
-          <EllipsisIcon />
-          Document
-        </Menu.Trigger>
-        <Menu.Content>
-          <Menu.Item onClick={run('Renamed')}>
-            <PencilIcon />
-            Rename
-            <Menu.Shortcut>⌘R</Menu.Shortcut>
+    <Menu>
+      <Menu.Trigger render={<Button variant="outline" />}>Open</Menu.Trigger>
+      <Menu.Content className="w-56">
+        <Menu.Group>
+          <Menu.GroupLabel>Workspace</Menu.GroupLabel>
+          <Menu.Item>
+            Profile
+            <Menu.Shortcut>⇧⌘P</Menu.Shortcut>
           </Menu.Item>
-          <Menu.Item onClick={run('Duplicated')}>
-            <CopyIcon />
-            Duplicate
-            <Menu.Shortcut>⌘D</Menu.Shortcut>
+          <Menu.Item>
+            Plan and billing
+            <Menu.Shortcut>⌘B</Menu.Shortcut>
           </Menu.Item>
+          <Menu.Item>
+            Preferences
+            <Menu.Shortcut>⌘,</Menu.Shortcut>
+          </Menu.Item>
+        </Menu.Group>
+        <Menu.Separator />
+        <Menu.Group>
+          <Menu.Item>Members</Menu.Item>
           <Menu.Sub>
-            <Menu.SubTrigger>
-              <Share2Icon />
-              Share
-            </Menu.SubTrigger>
+            <Menu.SubTrigger>Invite people</Menu.SubTrigger>
             <Menu.SubContent>
-              <Menu.Item onClick={run('Link copied')}>
-                <LinkIcon />
-                Copy link
-              </Menu.Item>
-              <Menu.Item onClick={run('Sent by email')}>
-                <MailIcon />
-                Send by email
-              </Menu.Item>
+              <Menu.Item>By email</Menu.Item>
+              <Menu.Item>With a link</Menu.Item>
               <Menu.Separator />
-              <Menu.Item onClick={run('Opened sharing')}>
-                <UsersIcon />
-                Manage access
-                <Menu.Badge>3</Menu.Badge>
-              </Menu.Item>
+              <Menu.Item>From another workspace</Menu.Item>
             </Menu.SubContent>
           </Menu.Sub>
-          <Menu.Separator />
-          <Menu.Item onClick={run('Archived')}>
-            <ArchiveIcon />
-            Archive
+          <Menu.Item>
+            New project
+            <Menu.Shortcut>⌘N</Menu.Shortcut>
           </Menu.Item>
-          <Menu.Item variant="destructive" onClick={run('Deleted')}>
-            <Trash2Icon />
-            Delete
-            <Menu.Shortcut>⌫</Menu.Shortcut>
-          </Menu.Item>
-        </Menu.Content>
-      </Menu>
-      <p className="text-xs text-muted-foreground" aria-live="polite">
-        {last ?? 'Nothing chosen yet.'}
-      </p>
-    </div>
+        </Menu.Group>
+        <Menu.Separator />
+        <Menu.Item>Help centre</Menu.Item>
+        <Menu.Item disabled>Status page</Menu.Item>
+        <Menu.Separator />
+        <Menu.Item>
+          Sign out
+          <Menu.Shortcut>⇧⌘Q</Menu.Shortcut>
+        </Menu.Item>
+      </Menu.Content>
+    </Menu>
   );
 }
 ```
@@ -208,34 +181,178 @@ import { Menu } from "@/components/panelui/menu"
 
 ## Examples
 
-### Checks and choices
+### Basic
 
-Check items switch columns on and off, and a radio group picks one density. Both keep the menu open, so several can be changed in a row.
+Items and nothing else. Pressing one closes the menu.
 
-<ComponentPreview name="menu/checks" height={360} align="start">
+<ComponentPreview name="menu/basic" height={260}>
+
+```tsx lineNumbers
+import { Button } from '@/components/panelui/button';
+import { Menu } from '@/components/panelui/menu';
+
+export default function MenuBasic() {
+  return (
+    <Menu>
+      <Menu.Trigger render={<Button variant="outline" />}>Open</Menu.Trigger>
+      <Menu.Content>
+        <Menu.Item>Open in new tab</Menu.Item>
+        <Menu.Item>Copy link</Menu.Item>
+        <Menu.Item>Move to folder</Menu.Item>
+      </Menu.Content>
+    </Menu>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Submenu
+
+`Menu.Sub` holds a `Menu.SubTrigger` row and the `Menu.SubContent` it opens to the side. Submenus nest.
+
+<ComponentPreview name="menu/submenu" height={260}>
+
+```tsx lineNumbers
+import { Button } from '@/components/panelui/button';
+import { Menu } from '@/components/panelui/menu';
+
+export default function MenuSubmenu() {
+  return (
+    <Menu>
+      <Menu.Trigger render={<Button variant="outline" />}>Open</Menu.Trigger>
+      <Menu.Content>
+        <Menu.Item>Rename</Menu.Item>
+        <Menu.Sub>
+          <Menu.SubTrigger>Move to</Menu.SubTrigger>
+          <Menu.SubContent>
+            <Menu.Item>Drafts</Menu.Item>
+            <Menu.Item>Shared with me</Menu.Item>
+            <Menu.Sub>
+              <Menu.SubTrigger>Projects</Menu.SubTrigger>
+              <Menu.SubContent>
+                <Menu.Item>Spring launch</Menu.Item>
+                <Menu.Item>Brand refresh</Menu.Item>
+              </Menu.SubContent>
+            </Menu.Sub>
+          </Menu.SubContent>
+        </Menu.Sub>
+        <Menu.Item>Archive</Menu.Item>
+      </Menu.Content>
+    </Menu>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Shortcuts
+
+`Menu.Shortcut` puts the keys at the end of an item. It only shows them; handle the keys where the action lives.
+
+<ComponentPreview name="menu/shortcuts" height={260}>
+
+```tsx lineNumbers
+import { Button } from '@/components/panelui/button';
+import { Menu } from '@/components/panelui/menu';
+
+export default function MenuShortcuts() {
+  return (
+    <Menu>
+      <Menu.Trigger render={<Button variant="outline" />}>Edit</Menu.Trigger>
+      <Menu.Content className="w-48">
+        <Menu.Item>
+          Undo
+          <Menu.Shortcut>⌘Z</Menu.Shortcut>
+        </Menu.Item>
+        <Menu.Item>
+          Redo
+          <Menu.Shortcut>⇧⌘Z</Menu.Shortcut>
+        </Menu.Item>
+        <Menu.Separator />
+        <Menu.Item>
+          Cut
+          <Menu.Shortcut>⌘X</Menu.Shortcut>
+        </Menu.Item>
+        <Menu.Item>
+          Copy
+          <Menu.Shortcut>⌘C</Menu.Shortcut>
+        </Menu.Item>
+        <Menu.Item>
+          Paste
+          <Menu.Shortcut>⌘V</Menu.Shortcut>
+        </Menu.Item>
+      </Menu.Content>
+    </Menu>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Icons
+
+An icon written as an item's first child is sized and coloured by the row.
+
+<ComponentPreview name="menu/icons" height={260}>
+
+```tsx lineNumbers
+import { DownloadIcon, PencilIcon, PrinterIcon, Share2Icon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Menu } from '@/components/panelui/menu';
+
+export default function MenuIcons() {
+  return (
+    <Menu>
+      <Menu.Trigger render={<Button variant="outline" />}>Document</Menu.Trigger>
+      <Menu.Content>
+        <Menu.Item>
+          <PencilIcon />
+          Rename
+        </Menu.Item>
+        <Menu.Item>
+          <Share2Icon />
+          Share
+        </Menu.Item>
+        <Menu.Item>
+          <DownloadIcon />
+          Download
+        </Menu.Item>
+        <Menu.Item>
+          <PrinterIcon />
+          Print
+        </Menu.Item>
+      </Menu.Content>
+    </Menu>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Checkboxes
+
+`Menu.CheckboxItem` switches on and off with a check at its end, and keeps the menu open so several can be changed in a row.
+
+<ComponentPreview name="menu/checkboxes" height={260}>
 
 ```tsx lineNumbers
 'use client';
 
-import { SlidersHorizontalIcon } from 'lucide-react';
 import { Button } from '@/components/panelui/button';
 import { Menu } from '@/components/panelui/menu';
 import { useState } from 'react';
 
-export default function MenuChecks() {
+export default function MenuCheckboxes() {
   const [columns, setColumns] = useState({ owner: true, due: true, estimate: false });
-  const [density, setDensity] = useState('comfortable');
-  const toggle = (key: keyof typeof columns) => (on: boolean) => setColumns((c) => ({ ...c, [key]: on }));
+  const toggle = (key: keyof typeof columns) => (on: boolean) => setColumns((current) => ({ ...current, [key]: on }));
 
   return (
     <Menu>
-      <Menu.Trigger render={<Button variant="outline" />}>
-        <SlidersHorizontalIcon />
-        View
-      </Menu.Trigger>
-      <Menu.Content className="w-56">
+      <Menu.Trigger render={<Button variant="outline" />}>Columns</Menu.Trigger>
+      <Menu.Content className="w-48">
         <Menu.Group>
-          <Menu.GroupLabel>Columns</Menu.GroupLabel>
+          <Menu.GroupLabel>Show</Menu.GroupLabel>
           <Menu.CheckboxItem checked={columns.owner} onCheckedChange={toggle('owner')}>
             Owner
           </Menu.CheckboxItem>
@@ -246,15 +363,132 @@ export default function MenuChecks() {
             Estimate
           </Menu.CheckboxItem>
         </Menu.Group>
-        <Menu.Separator />
+      </Menu.Content>
+    </Menu>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Radio group
+
+`Menu.RadioGroup` holds one choice among its `Menu.RadioItem`s, through `value` and `onValueChange`.
+
+<ComponentPreview name="menu/radio" height={260}>
+
+```tsx lineNumbers
+'use client';
+
+import { Button } from '@/components/panelui/button';
+import { Menu } from '@/components/panelui/menu';
+import { useState } from 'react';
+
+export default function MenuRadio() {
+  const [density, setDensity] = useState('comfortable');
+
+  return (
+    <Menu>
+      <Menu.Trigger render={<Button variant="outline" />}>Density</Menu.Trigger>
+      <Menu.Content className="w-48">
         <Menu.Group>
-          <Menu.GroupLabel>Density</Menu.GroupLabel>
+          <Menu.GroupLabel>Row height</Menu.GroupLabel>
           <Menu.RadioGroup value={density} onValueChange={setDensity}>
             <Menu.RadioItem value="compact">Compact</Menu.RadioItem>
             <Menu.RadioItem value="comfortable">Comfortable</Menu.RadioItem>
             <Menu.RadioItem value="spacious">Spacious</Menu.RadioItem>
           </Menu.RadioGroup>
         </Menu.Group>
+      </Menu.Content>
+    </Menu>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Destructive
+
+`variant="destructive"` draws an item in the destructive colour, for an action that cannot be undone. Keep it last, after a separator.
+
+<ComponentPreview name="menu/destructive" height={260}>
+
+```tsx lineNumbers
+import { ArchiveIcon, CopyIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Menu } from '@/components/panelui/menu';
+
+export default function MenuDestructive() {
+  return (
+    <Menu>
+      <Menu.Trigger render={<Button variant="outline" />}>Project</Menu.Trigger>
+      <Menu.Content>
+        <Menu.Item>
+          <PencilIcon />
+          Rename
+        </Menu.Item>
+        <Menu.Item>
+          <CopyIcon />
+          Duplicate
+        </Menu.Item>
+        <Menu.Item>
+          <ArchiveIcon />
+          Archive
+        </Menu.Item>
+        <Menu.Separator />
+        <Menu.Item variant="destructive">
+          <Trash2Icon />
+          Delete project
+        </Menu.Item>
+      </Menu.Content>
+    </Menu>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Descriptions and badges
+
+`Menu.Description` adds quieter words after the label, and `Menu.Badge` a count or a flag at the end of the row.
+
+<ComponentPreview name="menu/details" height={260}>
+
+```tsx lineNumbers
+import { BellIcon, CalendarIcon, FolderIcon, MessageSquareIcon, TriangleAlertIcon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Menu } from '@/components/panelui/menu';
+
+export default function MenuDetails() {
+  return (
+    <Menu>
+      <Menu.Trigger render={<Button variant="outline" />}>Connections</Menu.Trigger>
+      <Menu.Content className="w-80">
+        <Menu.Item>
+          <CalendarIcon />
+          Calendar
+          <Menu.Description>Book and move meetings</Menu.Description>
+        </Menu.Item>
+        <Menu.Item>
+          <FolderIcon />
+          Shared drive
+          <Menu.Description>Read your team's files</Menu.Description>
+          <Menu.Badge>
+            <TriangleAlertIcon />
+            Sign in
+          </Menu.Badge>
+        </Menu.Item>
+        <Menu.Item>
+          <MessageSquareIcon />
+          Chat
+          <Menu.Description>Post to channels</Menu.Description>
+        </Menu.Item>
+        <Menu.Separator />
+        <Menu.Item>
+          <BellIcon />
+          Notifications
+          <Menu.Badge>3</Menu.Badge>
+        </Menu.Item>
       </Menu.Content>
     </Menu>
   );
