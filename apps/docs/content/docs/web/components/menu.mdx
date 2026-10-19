@@ -170,6 +170,7 @@ import { Menu } from "@/components/panelui/menu"
   <Menu.Trigger />
   <Menu.Content>
     <Menu.Item>
+      <Menu.Description />
       <Menu.Shortcut />
       <Menu.Badge />
     </Menu.Item>
@@ -190,7 +191,7 @@ import { Menu } from "@/components/panelui/menu"
 ```
 
 - **`Menu.Trigger`** — The button that opens the menu. `render` draws it as another element, such as a `Button`.
-- **`Menu.Content`** — The list, in a layer over the page. `side` and `align` place it against the trigger, and it moves to the other side when there is no room.
+- **`Menu.Content`** — The list, in a layer over the page. `side` and `align` place it against the trigger, and it moves to the other side when there is no room. `anchor` places it against another element instead.
 - **`Menu.Item`** — One action, which closes the menu when pressed. `variant="destructive"` is for one that cannot be undone.
 - **`Menu.CheckboxItem`** — An item switched on and off, with a check at its end while on. The menu stays open.
 - **`Menu.RadioGroup`** — Radio items of which one is chosen, held by `value` and `onValueChange`.
@@ -203,6 +204,7 @@ import { Menu } from "@/components/panelui/menu"
 - **`Menu.Separator`** — A rule between groups.
 - **`Menu.Shortcut`** — The keys for an item, at its end. It only shows them; the keys have to be handled where the action lives.
 - **`Menu.Badge`** — A small count or flag at an item's end.
+- **`Menu.Description`** — What an item does, in quieter words after its label.
 
 ## Examples
 
@@ -268,6 +270,7 @@ export default function MenuChecks() {
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `container` | `BaseMenu.Portal.Props['container']` | — | Where in the document the menu is put. Default `document.body`. |
+| `anchor` | `BaseMenu.Positioner.Props['anchor']` | — | What it is placed against instead of the trigger: an element or a ref to one. |
 | `className` | `string` | — |  |
 
 ### Menu.Item
@@ -341,5 +344,5 @@ Pressing an item closes the menu; pressing a check or radio item does not. Pass 
 `Menu` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Menu.Trigger` off the import, so each part is also exported by name: `MenuTrigger` is `Menu.Trigger`, and so on for the others.
 
 ```tsx
-import { Menu, MenuTrigger, MenuContent, MenuItem, MenuCheckboxItem, MenuRadioGroup, MenuRadioItem, MenuSub, MenuSubTrigger, MenuSubContent, MenuGroup, MenuGroupLabel, MenuSeparator, MenuShortcut, MenuBadge } from "@/components/panelui/menu"
+import { Menu, MenuTrigger, MenuContent, MenuItem, MenuCheckboxItem, MenuRadioGroup, MenuRadioItem, MenuSub, MenuSubTrigger, MenuSubContent, MenuGroup, MenuGroupLabel, MenuSeparator, MenuDescription, MenuShortcut, MenuBadge } from "@/components/panelui/menu"
 ```

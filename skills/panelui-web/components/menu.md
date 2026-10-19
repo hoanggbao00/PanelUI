@@ -40,6 +40,7 @@ It opens from `Menu.Trigger`, which is a plain button until you give it `render`
   <Menu.Trigger />
   <Menu.Content>
     <Menu.Item>
+      <Menu.Description />
       <Menu.Shortcut />
       <Menu.Badge />
     </Menu.Item>
@@ -60,7 +61,7 @@ It opens from `Menu.Trigger`, which is a plain button until you give it `render`
 ```
 
 - `Menu.Trigger` — The button that opens the menu. `render` draws it as another element, such as a `Button`.
-- `Menu.Content` — The list, in a layer over the page. `side` and `align` place it against the trigger, and it moves to the other side when there is no room.
+- `Menu.Content` — The list, in a layer over the page. `side` and `align` place it against the trigger, and it moves to the other side when there is no room. `anchor` places it against another element instead.
 - `Menu.Item` — One action, which closes the menu when pressed. `variant="destructive"` is for one that cannot be undone.
 - `Menu.CheckboxItem` — An item switched on and off, with a check at its end while on. The menu stays open.
 - `Menu.RadioGroup` — Radio items of which one is chosen, held by `value` and `onValueChange`.
@@ -73,6 +74,7 @@ It opens from `Menu.Trigger`, which is a plain button until you give it `render`
 - `Menu.Separator` — A rule between groups.
 - `Menu.Shortcut` — The keys for an item, at its end. It only shows them; the keys have to be handled where the action lives.
 - `Menu.Badge` — A small count or flag at an item's end.
+- `Menu.Description` — What an item does, in quieter words after its label.
 
 ## Props
 
@@ -83,6 +85,7 @@ Every part also takes the props of the element it renders, and a `className`.
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `container` | `BaseMenu.Portal.Props['container']` | — | Where in the document the menu is put. Default `document.body`. |
+| `anchor` | `BaseMenu.Positioner.Props['anchor']` | — | What it is placed against instead of the trigger: an element or a ref to one. |
 | `className` | `string` | — | — |
 
 #### `MenuItemProps`
@@ -137,7 +140,7 @@ Every part also takes the props of the element it renders, and a `className`.
 
 ## In a Server Component
 
-`Menu` is a client component. A Server Component cannot read `Menu.Trigger` off the import, so import each part by name: `MenuTrigger`, `MenuContent`, `MenuItem`, `MenuCheckboxItem`, `MenuRadioGroup`, `MenuRadioItem`, `MenuSub`, `MenuSubTrigger`, `MenuSubContent`, `MenuGroup`, `MenuGroupLabel`, `MenuSeparator`, `MenuShortcut`, `MenuBadge`.
+`Menu` is a client component. A Server Component cannot read `Menu.Trigger` off the import, so import each part by name: `MenuTrigger`, `MenuContent`, `MenuItem`, `MenuCheckboxItem`, `MenuRadioGroup`, `MenuRadioItem`, `MenuSub`, `MenuSubTrigger`, `MenuSubContent`, `MenuGroup`, `MenuGroupLabel`, `MenuSeparator`, `MenuDescription`, `MenuShortcut`, `MenuBadge`.
 
 ## Notes
 

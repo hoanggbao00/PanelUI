@@ -1,9 +1,9 @@
 'use client';
 
-import { BrainIcon, GitBranchIcon, GitPullRequestIcon, LaptopIcon, ListChecksIcon, SparklesIcon, ZapIcon } from 'lucide-react';
+import { AtSignIcon, BrainIcon, GitBranchIcon, GitPullRequestIcon, LaptopIcon, SparklesIcon, TerminalIcon, ZapIcon } from 'lucide-react';
+import { Menu } from 'panelui-web/menu';
 import { Prompt, type PromptModelItem } from 'panelui-web/prompt';
 import { Select } from 'panelui-web/select';
-import { useState } from 'react';
 
 const MODELS: PromptModelItem[] = [
   { value: 'lumen', label: 'Lumen 4', icon: <SparklesIcon />, description: 'Balanced, for most questions' },
@@ -18,8 +18,6 @@ const BRANCHES = [
 ];
 
 export default function PromptWorkspace() {
-  const [plan, setPlan] = useState(false);
-
   return (
     <div className="w-full max-w-xl">
       <Prompt>
@@ -27,13 +25,21 @@ export default function PromptWorkspace() {
           <Prompt.Textarea placeholder="Ask for a change, follow up, or attach a screenshot" />
           <Prompt.Footer>
             <Prompt.Tools>
+              <Prompt.Menu>
+                <Prompt.AttachItem>Add a screenshot</Prompt.AttachItem>
+                <Menu.Item>
+                  <AtSignIcon />
+                  Mention a file
+                  <Menu.Shortcut>@</Menu.Shortcut>
+                </Menu.Item>
+                <Menu.Item>
+                  <TerminalIcon />
+                  Add terminal output
+                </Menu.Item>
+              </Prompt.Menu>
               <Prompt.Model items={MODELS} variant="ghost" />
-              <Prompt.Tool label="Plan first" showLabel variant="ghost" pressed={plan} onPressedChange={setPlan}>
-                <ListChecksIcon />
-              </Prompt.Tool>
             </Prompt.Tools>
             <Prompt.Tools>
-              <Prompt.Attach variant="ghost" />
               <Prompt.Submit />
             </Prompt.Tools>
           </Prompt.Footer>

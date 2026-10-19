@@ -128,29 +128,17 @@ export default function PromptAsk() {
                     </Menu.Item>
                   </Menu.SubContent>
                 </Menu.Sub>
-                <Menu.Separator />
-                <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>
-                  <GlobeIcon />
-                  Search the web
-                </Menu.CheckboxItem>
-                <Menu.CheckboxItem checked={think} onCheckedChange={setThink}>
-                  <LightbulbIcon />
-                  Think longer
-                </Menu.CheckboxItem>
               </Prompt.Menu>
-              {/* What is switched on in the menu, shown beside it and pressed to switch off. */}
-              {search ? (
-                <Prompt.Tool label="Search" showLabel pressed onPressedChange={setSearch}>
-                  <GlobeIcon />
-                </Prompt.Tool>
-              ) : null}
-              {think ? (
-                <Prompt.Tool label="Think" showLabel pressed onPressedChange={setThink}>
-                  <LightbulbIcon />
-                </Prompt.Tool>
-              ) : null}
+              {/* Modes that stay in the footer and turn blue while they are on. */}
+              <Prompt.Tool label="Search" showLabel pressed={search} onPressedChange={setSearch}>
+                <GlobeIcon />
+              </Prompt.Tool>
+              <Prompt.Tool label="Think" showLabel pressed={think} onPressedChange={setThink}>
+                <LightbulbIcon />
+              </Prompt.Tool>
+              {/* A skill chosen in the menu, pressed again to put it away. */}
               {skill ? (
-                <Prompt.Tool label={skill} showLabel pressed onPressedChange={() => setSkill(null)}>
+                <Prompt.Tool label={skill} showLabel pressed onPressedChange={() => setSkill(null)} title={`Remove ${skill}`}>
                   <ScrollTextIcon />
                 </Prompt.Tool>
               ) : null}
@@ -270,6 +258,10 @@ import { Prompt } from "@/components/panelui/prompt"
   <Prompt.Banner>
     <Prompt.BannerAction />
   </Prompt.Banner>
+  <Prompt.Tasks>
+    <Prompt.Task />
+  </Prompt.Tasks>
+  <Prompt.Commands />
   <Prompt.Field>
     <Prompt.Attachments />
     <Prompt.Textarea />
@@ -284,6 +276,7 @@ import { Prompt } from "@/components/panelui/prompt"
       </Prompt.Tools>
       <Prompt.Submit />
     </Prompt.Footer>
+    <Prompt.Recorder />
   </Prompt.Field>
   <Prompt.Status />
   <Prompt.Context>
@@ -294,15 +287,19 @@ import { Prompt } from "@/components/panelui/prompt"
 ```
 
 - **`Prompt.Banner`** — A band above the field for something to do first, such as connecting an account. It folds under the field when `open` is false.
+- **`Prompt.Tasks`** — A band above the field with an agent's tasks. One line holds a ring that fills as they are done, the `title` and a count; pressed, it opens into the list, which scrolls past `maxHeight`.
+- **`Prompt.Task`** — One task, `pending`, `active`, `done` or `error`. An active task's words are lit while it runs, and a done one is checked and struck through.
+- **`Prompt.Commands`** — A band above the field listing `items` while the text is the trigger and a word. Chosen with the keys or a press.
 - **`Prompt.BannerAction`** — The banner's button, at its end. It takes everything a [Button](/docs/web/components/button) does, `loading` included.
-- **`Prompt.Field`** — The card that holds the text, the files and the footer. Files dropped on it are attached.
+- **`Prompt.Field`** — The card that holds the text, the files and the footer. Files dropped on it are attached. `layout="inline"` puts its parts in one row, for a one-line composer.
 - **`Prompt.Attachments`** — The attached files: images as thumbnails, anything else as a chip with its name and size, each with a button to remove it. It takes no room while there are none.
 - **`Prompt.Textarea`** — Where the message is written. It grows from two lines to ten. Enter sends, Shift+Enter starts a new line, and a pasted image is attached.
+- **`Prompt.Recorder`** — Takes the place of the text and the footer while voice is recorded: the `transcript` so far, the sound as a wave scrolling to the left, the time, and buttons to throw the recording away or keep it.
 - **`Prompt.Footer`** — The row under the text, with the tools at its start and the submit button at its end.
 - **`Prompt.Tools`** — A row of tools. It wraps onto a second line when the footer is narrow.
-- **`Prompt.Menu`** — One round button with a plus that opens a [Menu](/docs/web/components/menu) of what can be added to the message: files, skills, connections, modes. Its children are `Menu` items, check items and submenus. The plus turns to a cross while it is open.
+- **`Prompt.Menu`** — One round button with a plus that opens a [Menu](/docs/web/components/menu) of what can be added to the message: files, skills, connections, modes. Its children are `Menu` items, check items and submenus. The plus turns to a cross while it is open. `width="field"` opens it as wide as the field.
 - **`Prompt.AttachItem`** — The menu item that opens the file picker, with `⌘U` at its end. ⌘U or Ctrl+U in the field opens the picker too.
-- **`Prompt.Tool`** — A round button holding an icon. `label` is what a screen reader and the tooltip call it, and `showLabel` writes it beside the icon. With `pressed` and `onPressedChange` it switches on and off, which is how a mode chosen in the menu is shown beside it.
+- **`Prompt.Tool`** — A round button holding an icon. `label` is what a screen reader and the tooltip call it, and `showLabel` writes it beside the icon. With `pressed` and `onPressedChange` it switches on and off, and while on it is drawn in the info colour.
 - **`Prompt.Attach`** — A tool that opens the file picker, for a prompt with no menu.
 - **`Prompt.Model`** — Chooses the model. `items` are `{ value, label, icon, description }`, and the button shows the chosen one's icon and label. `variant="ghost"` has no edge.
 - **`Prompt.Submit`** — Sends the message. While `status` is `submitted` or `streaming` it stops the answer instead, with a ring turning round it. With `onVoice`, it starts voice while the field is empty.
@@ -406,6 +403,90 @@ export default function PromptBanner() {
 
 </ComponentPreview>
 
+### An agent's tasks
+
+`Prompt.Tasks` is a band above the field with what an agent is working through. Its line shows a ring that fills as tasks finish and a count; pressed, it opens into the list, which scrolls past `maxHeight` and keeps the task in progress in view. Each `Prompt.Task` is `pending`, `active`, `done` or `error`. Stopping pauses the run here, and sending carries it on.
+
+<ComponentPreview name="prompt/agent" height={420}>
+
+```tsx lineNumbers
+'use client';
+
+import { BrainIcon, SparklesIcon, ZapIcon } from 'lucide-react';
+import { Prompt, type PromptModelItem, type PromptTaskStatus } from '@/components/panelui/prompt';
+import { useEffect, useState } from 'react';
+
+const MODELS: PromptModelItem[] = [
+  { value: 'lumen', label: 'Lumen 4', icon: <SparklesIcon />, description: 'Balanced, for most questions' },
+  { value: 'lumen-mini', label: 'Lumen 4 Mini', icon: <ZapIcon />, description: 'Quick answers to small asks' },
+  { value: 'lumen-deep', label: 'Lumen 4 Deep', icon: <BrainIcon />, description: 'Slower, for hard problems' },
+];
+
+const TASKS = [
+  'Read the open pull requests',
+  'Group the changes by area',
+  'Draft the release notes',
+  'Check every link in the notes',
+  'Bump the version to 2.4.0',
+  'Run the test suite',
+  'Tag the release and open a draft',
+];
+
+export default function PromptAgent() {
+  // How many tasks are done; the next one is in progress.
+  const [done, setDone] = useState(2);
+  const [running, setRunning] = useState(true);
+
+  useEffect(() => {
+    if (!running || done >= TASKS.length) return;
+    const timer = window.setTimeout(() => setDone((count) => count + 1), 1800);
+    return () => window.clearTimeout(timer);
+  }, [done, running]);
+
+  const finished = done >= TASKS.length;
+  const statusOf = (index: number): PromptTaskStatus =>
+    index < done ? 'done' : index === done && running ? 'active' : 'pending';
+
+  return (
+    <div className="w-full max-w-xl">
+      <Prompt
+        status={running && !finished ? 'streaming' : 'idle'}
+        onStop={() => setRunning(false)}
+        onSubmit={() => {
+          if (finished) setDone(0);
+          setRunning(true);
+        }}
+      >
+        <Prompt.Tasks
+          defaultExpanded
+          title={finished ? 'Release 2.4.0 is ready for review' : running ? 'Preparing release 2.4.0' : 'Paused'}
+        >
+          {TASKS.map((task, index) => (
+            <Prompt.Task key={task} status={statusOf(index)}>
+              {task}
+            </Prompt.Task>
+          ))}
+        </Prompt.Tasks>
+        <Prompt.Field>
+          <Prompt.Textarea placeholder={running && !finished ? 'Steer the agent while it works' : 'Send anything to carry on'} />
+          <Prompt.Footer>
+            <Prompt.Tools>
+              <Prompt.Menu>
+                <Prompt.AttachItem />
+              </Prompt.Menu>
+              <Prompt.Model items={MODELS} defaultValue="lumen-deep" variant="ghost" />
+            </Prompt.Tools>
+            <Prompt.Submit />
+          </Prompt.Footer>
+        </Prompt.Field>
+      </Prompt>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
 ### While the answer is written
 
 With `status` at `streaming`, the status band is open and its words are lit by a moving sweep, and the send button has become a stop button with a ring turning round it. Pressing it calls `onStop`.
@@ -466,17 +547,17 @@ export default function PromptThinking() {
 
 ### Working in a project
 
-A ghost model picker and a tool with its label written out, and an inset context strip under the field naming the machine, the pull request and the branch. The branch is a [Select](/docs/web/components/select) set in the strip.
+A ghost model picker, the menu holding what a coding agent can be given, and an inset context strip under the field naming the machine, the pull request and the branch. The branch is a [Select](/docs/web/components/select) set in the strip.
 
 <ComponentPreview name="prompt/workspace" height={300}>
 
 ```tsx lineNumbers
 'use client';
 
-import { BrainIcon, GitBranchIcon, GitPullRequestIcon, LaptopIcon, ListChecksIcon, SparklesIcon, ZapIcon } from 'lucide-react';
+import { AtSignIcon, BrainIcon, GitBranchIcon, GitPullRequestIcon, LaptopIcon, SparklesIcon, TerminalIcon, ZapIcon } from 'lucide-react';
+import { Menu } from '@/components/panelui/menu';
 import { Prompt, type PromptModelItem } from '@/components/panelui/prompt';
 import { Select } from '@/components/panelui/select';
-import { useState } from 'react';
 
 const MODELS: PromptModelItem[] = [
   { value: 'lumen', label: 'Lumen 4', icon: <SparklesIcon />, description: 'Balanced, for most questions' },
@@ -491,8 +572,6 @@ const BRANCHES = [
 ];
 
 export default function PromptWorkspace() {
-  const [plan, setPlan] = useState(false);
-
   return (
     <div className="w-full max-w-xl">
       <Prompt>
@@ -500,13 +579,21 @@ export default function PromptWorkspace() {
           <Prompt.Textarea placeholder="Ask for a change, follow up, or attach a screenshot" />
           <Prompt.Footer>
             <Prompt.Tools>
+              <Prompt.Menu>
+                <Prompt.AttachItem>Add a screenshot</Prompt.AttachItem>
+                <Menu.Item>
+                  <AtSignIcon />
+                  Mention a file
+                  <Menu.Shortcut>@</Menu.Shortcut>
+                </Menu.Item>
+                <Menu.Item>
+                  <TerminalIcon />
+                  Add terminal output
+                </Menu.Item>
+              </Prompt.Menu>
               <Prompt.Model items={MODELS} variant="ghost" />
-              <Prompt.Tool label="Plan first" showLabel variant="ghost" pressed={plan} onPressedChange={setPlan}>
-                <ListChecksIcon />
-              </Prompt.Tool>
             </Prompt.Tools>
             <Prompt.Tools>
-              <Prompt.Attach variant="ghost" />
               <Prompt.Submit />
             </Prompt.Tools>
           </Prompt.Footer>
@@ -534,6 +621,233 @@ export default function PromptWorkspace() {
             </Select.Content>
           </Select>
         </Prompt.Context>
+      </Prompt>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### One line
+
+`layout="inline"` on `Prompt.Field` sets every part in one row, with the text between them, and wraps as the text grows. `width="field"` opens the menu as wide as the field, and `Menu.Description` adds a quieter line to each item.
+
+<ComponentPreview name="prompt/inline" height={460} align="start">
+
+```tsx lineNumbers
+'use client';
+
+import {
+  BookImageIcon,
+  GlobeIcon,
+  ImagePlusIcon,
+  LightbulbIcon,
+  MicIcon,
+  PenToolIcon,
+  TelescopeIcon,
+} from 'lucide-react';
+import { Menu } from '@/components/panelui/menu';
+import { Prompt } from '@/components/panelui/prompt';
+import { useState } from 'react';
+
+export default function PromptInline() {
+  const [think, setThink] = useState(false);
+  const [search, setSearch] = useState(false);
+
+  return (
+    <div className="w-full max-w-2xl">
+      <Prompt>
+        <Prompt.Field layout="inline">
+          <Prompt.Attachments />
+          <Prompt.Menu width="field" side="bottom">
+            <Prompt.AttachItem shortcut={null}>
+              Add files
+              <Menu.Description>From this computer</Menu.Description>
+            </Prompt.AttachItem>
+            <Menu.Item>
+              <BookImageIcon />
+              Pick from library
+              <Menu.Description>Files you have shared before</Menu.Description>
+            </Menu.Item>
+            <Menu.Item>
+              <ImagePlusIcon />
+              Make an image
+              <Menu.Description>Describe it and get a picture</Menu.Description>
+            </Menu.Item>
+            <Menu.Separator />
+            <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>
+              <GlobeIcon />
+              Search the web
+              <Menu.Description>Fresh results, with sources</Menu.Description>
+            </Menu.CheckboxItem>
+            <Menu.Item>
+              <TelescopeIcon />
+              Research
+              <Menu.Description>A long report with citations</Menu.Description>
+            </Menu.Item>
+            <Menu.Item>
+              <PenToolIcon />
+              Sketch
+              <Menu.Description>Draw something and attach it</Menu.Description>
+            </Menu.Item>
+          </Prompt.Menu>
+          <Prompt.Textarea minRows={1} maxRows={8} placeholder="Message Lumen" />
+          <Prompt.Tool label="Think" showLabel variant="ghost" pressed={think} onPressedChange={setThink}>
+            <LightbulbIcon />
+          </Prompt.Tool>
+          <Prompt.Tool label="Dictate" variant="ghost">
+            <MicIcon />
+          </Prompt.Tool>
+          <Prompt.Submit onVoice={() => {}} />
+        </Prompt.Field>
+      </Prompt>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Commands
+
+`Prompt.Commands` opens a band of commands while the text is the trigger and a word. Typing narrows it, the arrow keys move through it, and Enter or Tab chooses. Here `onSelect` shows the chosen command as a pressed tool, which is pressed again to drop it.
+
+<ComponentPreview name="prompt/commands" height={420}>
+
+```tsx lineNumbers
+'use client';
+
+import {
+  ALargeSmallIcon,
+  BrainIcon,
+  LanguagesIcon,
+  ListTreeIcon,
+  SparklesIcon,
+  TableIcon,
+  TextQuoteIcon,
+  WandSparklesIcon,
+  ZapIcon,
+} from 'lucide-react';
+import { Prompt, type PromptCommandItem, type PromptModelItem } from '@/components/panelui/prompt';
+import { useState } from 'react';
+
+const MODELS: PromptModelItem[] = [
+  { value: 'lumen', label: 'Lumen 4', icon: <SparklesIcon />, description: 'Balanced, for most questions' },
+  { value: 'lumen-mini', label: 'Lumen 4 Mini', icon: <ZapIcon />, description: 'Quick answers to small asks' },
+  { value: 'lumen-deep', label: 'Lumen 4 Deep', icon: <BrainIcon />, description: 'Slower, for hard problems' },
+];
+
+const COMMANDS: PromptCommandItem[] = [
+  { value: 'summarise', icon: <TextQuoteIcon />, description: 'Cut it down to the points that matter' },
+  { value: 'translate', icon: <LanguagesIcon />, description: 'Into any language, keeping the tone' },
+  { value: 'rewrite', icon: <WandSparklesIcon />, description: 'Same meaning, clearer words' },
+  { value: 'outline', icon: <ListTreeIcon />, description: 'Headings and bullets to start from' },
+  { value: 'table', icon: <TableIcon />, description: 'Turn a list into rows and columns' },
+  { value: 'shorter', icon: <ALargeSmallIcon />, description: 'Half the length, nothing lost' },
+];
+
+export default function PromptCommands() {
+  const [command, setCommand] = useState<PromptCommandItem | null>(null);
+
+  return (
+    <div className="flex w-full max-w-xl flex-col gap-3">
+      {/* Opens on the trigger, so the list is showing before anything is typed. */}
+      <Prompt defaultValue="/">
+        <Prompt.Commands items={COMMANDS} onSelect={setCommand} />
+        <Prompt.Field>
+          <Prompt.Textarea placeholder="Type / for commands" />
+          <Prompt.Footer>
+            <Prompt.Tools>
+              <Prompt.Menu>
+                <Prompt.AttachItem />
+              </Prompt.Menu>
+              {command ? (
+                <Prompt.Tool label={`/${command.value}`} showLabel pressed onPressedChange={() => setCommand(null)}>
+                  {command.icon}
+                </Prompt.Tool>
+              ) : null}
+              <Prompt.Model items={MODELS} variant="ghost" />
+            </Prompt.Tools>
+            <Prompt.Submit />
+          </Prompt.Footer>
+        </Prompt.Field>
+      </Prompt>
+      <p className="px-4 text-xs text-muted-foreground">Arrow keys to move, Enter or Tab to choose, Escape to close.</p>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Voice
+
+`Prompt.Recorder` takes over the field while voice is recorded. What has been heard is written in at the top through `transcript`, the wave scrolls underneath, and the check keeps the recording, which here puts the words into the field; the cross throws it away. Pass `level` to draw a real microphone's input.
+
+<ComponentPreview name="prompt/voice" height={320}>
+
+```tsx lineNumbers
+'use client';
+
+import { BrainIcon, SparklesIcon, ZapIcon } from 'lucide-react';
+import { Prompt, type PromptModelItem } from '@/components/panelui/prompt';
+import { useEffect, useState } from 'react';
+
+const MODELS: PromptModelItem[] = [
+  { value: 'lumen', label: 'Lumen 4', icon: <SparklesIcon />, description: 'Balanced, for most questions' },
+  { value: 'lumen-mini', label: 'Lumen 4 Mini', icon: <ZapIcon />, description: 'Quick answers to small asks' },
+  { value: 'lumen-deep', label: 'Lumen 4 Deep', icon: <BrainIcon />, description: 'Slower, for hard problems' },
+];
+
+/** What is "heard". A real app would get these words from speech to text as they arrive. */
+const WORDS = 'Find a table for four near the office on Friday, somewhere quiet enough to talk'.split(' ');
+
+export default function PromptVoice() {
+  const [recording, setRecording] = useState(true);
+  const [heard, setHeard] = useState(0);
+  const [text, setText] = useState('');
+
+  // The words arrive one at a time while recording, after a moment of silence.
+  useEffect(() => {
+    if (!recording || heard >= WORDS.length) return;
+    const timer = window.setTimeout(() => setHeard((count) => count + 1), heard === 0 ? 1400 : 320);
+    return () => window.clearTimeout(timer);
+  }, [recording, heard]);
+
+  const start = () => {
+    setHeard(0);
+    setRecording(true);
+  };
+
+  return (
+    <div className="w-full max-w-xl">
+      <Prompt value={text} onValueChange={setText}>
+        <Prompt.Field>
+          {recording ? (
+            <Prompt.Recorder
+              transcript={WORDS.slice(0, heard).join(' ')}
+              onCancel={() => setRecording(false)}
+              onDone={() => {
+                setRecording(false);
+                setText(WORDS.slice(0, Math.max(heard, 1)).join(' '));
+              }}
+            />
+          ) : (
+            <>
+              <Prompt.Textarea placeholder="Ask anything, or press the wave to talk" />
+              <Prompt.Footer>
+                <Prompt.Tools>
+                  <Prompt.Menu>
+                    <Prompt.AttachItem />
+                  </Prompt.Menu>
+                  <Prompt.Model items={MODELS} variant="ghost" />
+                </Prompt.Tools>
+                <Prompt.Submit onVoice={start} />
+              </Prompt.Footer>
+            </>
+          )}
+        </Prompt.Field>
       </Prompt>
     </div>
   );
@@ -662,13 +976,13 @@ export default function PromptAttachments() {
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `open` | `boolean` | — | Whether it is shown. It folds under the field when it is not. Default `true`. |
+| `open` | `boolean` | `true` | Whether it is shown. It folds under the field when it is not. Default `true`. |
 
 ### Prompt.Status
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `open` | `boolean` | — | Whether it is shown. Default: while `status` is `submitted` or `streaming`. |
+| `open` | `boolean` | `true` | Whether it is shown. Default: while `status` is `submitted` or `streaming`. |
 | `icon` | `ReactNode` | — | Something before the words: the model's mark, a tool's icon. |
 | `spinner` | `boolean` | — | Whether a spinner turns at its end. Default `true`. |
 
@@ -677,6 +991,12 @@ export default function PromptAttachments() {
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `onSelect` | `() => void` | — | Called when it is pressed. Passing this makes the item a button. |
+
+### Prompt.Field
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `layout` | `'stacked' \| 'inline'` | — | `stacked` puts the text above a footer. `inline` puts every part in one row, the text between them, for a one-line composer; the row wraps as the text grows. Default `stacked`. |
 
 ### Prompt.Tool
 
@@ -711,6 +1031,7 @@ export default function PromptAttachments() {
 | --- | --- | --- | --- |
 | `label` | `string` | `'Model'` | What a screen reader and the tooltip call the button. Default `Add`. |
 | `icon` | `ReactNode` | — | Replaces the plus on the button. |
+| `width` | `'auto' \| 'field'` | — | `field` opens the menu as wide as the field, lined up with it, for items with descriptions. Default `auto`. |
 
 ### Prompt.AttachItem
 
@@ -727,6 +1048,45 @@ export default function PromptAttachments() {
 | `sendLabel` | `string` | `'Send'` | What a screen reader calls the button while it sends. Default `Send`. |
 | `stopLabel` | `string` | `'Stop'` | While it stops the answer. Default `Stop`. |
 | `voiceLabel` | `string` | `'Speak'` | While it starts voice. Default `Speak`. |
+
+### Prompt.Tasks
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | `true` | Whether the band is shown. It folds under the field when it is not. Default `true`. |
+| `title` | `ReactNode` | — | What the agent is doing, on the band's one line: "Preparing the release". |
+| `expanded` | `boolean` | — | Whether the list is open under the title, when the caller holds it. |
+| `defaultExpanded` | `boolean` | `false` | Whether the list starts open, when the caller does not hold it. Default `false`. |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | Called when the title is pressed to open or close the list. |
+| `maxHeight` | `string` | `'10rem'` | How tall the list grows before it scrolls, as a CSS length. Default `10rem`. |
+
+### Prompt.Task
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `status` | `PromptTaskStatus` | `'idle'` | `pending`, `active` (its words are lit while it runs), `done` (a check) or `error`. Default `pending`. |
+
+### Prompt.Commands
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly PromptCommandItem[]` | — | The commands. |
+| `trigger` | `string` | — | The character that opens the list when the field starts with it. Default `/`. |
+| `onSelect` | `(item: PromptCommandItem) => void` | — | Called with the command chosen. With it, the field is cleared and the command is yours to show; without it, the command is written into the field. |
+| `label` | `ReactNode` | `'Model'` | The heading over the list. Default `Commands`. |
+| `maxHeight` | `string` | `'10rem'` | How tall the list grows before it scrolls, as a CSS length. Default `12rem`. |
+
+### Prompt.Recorder
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `transcript` | `ReactNode` | — | What has been heard so far, written in as it arrives. |
+| `placeholder` | `ReactNode` | `'Listening…'` | Shown, lit by a moving sweep, until there is a transcript. Default `Listening…`. |
+| `onCancel` | `() => void` | — | Called when the cross is pressed, to throw the recording away. |
+| `onDone` | `() => void` | — | Called when the check is pressed, to keep it. |
+| `level` | `number` | — | How loud the input is now, from 0 to 1, to draw from a real microphone. Without it the wave moves on its own, as a sign that it is listening. |
+| `cancelLabel` | `string` | `'Cancel recording'` | What a screen reader calls the cross. Default `Cancel recording`. |
+| `doneLabel` | `string` | `'Finish recording'` | And the check. Default `Finish recording`. |
 
 Every part also takes the props of the element it renders, and a `className`.
 
@@ -760,10 +1120,18 @@ The text field is called "Message" unless you give it an `aria-label`. Each tool
 
 `Prompt.Menu` keeps the footer to one button however many tools there are. A mode switched on in it, such as web search, is best shown beside it as a pressed `Prompt.Tool` with `showLabel`, which switches it off again when pressed. The first example does this for search, thinking and a chosen skill.
 
+### Commands and the keyboard
+
+While the command list is open, the arrow keys, Enter, Tab and Escape go to it rather than to the field, and the field points a screen reader at the highlighted command. Escape puts the list away until the text changes. Without `onSelect`, a chosen command is written into the field followed by a space.
+
+### Tasks
+
+The count and the ring are worked out from the `status` of the `Prompt.Task` children, so keep the tasks as its direct children. The task in progress is scrolled to the middle of the list as it changes; the page itself does not scroll.
+
 ### Server Components
 
 `Prompt` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Prompt.Banner` off the import, so each part is also exported by name: `PromptBanner` is `Prompt.Banner`, and so on for the others.
 
 ```tsx
-import { Prompt, PromptBanner, PromptBannerAction, PromptField, PromptAttachments, PromptTextarea, PromptFooter, PromptTools, PromptTool, PromptAttach, PromptMenu, PromptAttachItem, PromptModel, PromptSubmit, PromptStatus, PromptContext, PromptContextItem, PromptHint } from "@/components/panelui/prompt"
+import { Prompt, PromptBanner, PromptBannerAction, PromptField, PromptAttachments, PromptTextarea, PromptFooter, PromptTools, PromptTool, PromptAttach, PromptMenu, PromptAttachItem, PromptModel, PromptSubmit, PromptStatus, PromptTasks, PromptTask, PromptCommands, PromptRecorder, PromptContext, PromptContextItem, PromptHint } from "@/components/panelui/prompt"
 ```

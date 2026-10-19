@@ -119,29 +119,17 @@ export default function PromptAsk() {
                     </Menu.Item>
                   </Menu.SubContent>
                 </Menu.Sub>
-                <Menu.Separator />
-                <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>
-                  <GlobeIcon />
-                  Search the web
-                </Menu.CheckboxItem>
-                <Menu.CheckboxItem checked={think} onCheckedChange={setThink}>
-                  <LightbulbIcon />
-                  Think longer
-                </Menu.CheckboxItem>
               </Prompt.Menu>
-              {/* What is switched on in the menu, shown beside it and pressed to switch off. */}
-              {search ? (
-                <Prompt.Tool label="Search" showLabel pressed onPressedChange={setSearch}>
-                  <GlobeIcon />
-                </Prompt.Tool>
-              ) : null}
-              {think ? (
-                <Prompt.Tool label="Think" showLabel pressed onPressedChange={setThink}>
-                  <LightbulbIcon />
-                </Prompt.Tool>
-              ) : null}
+              {/* Modes that stay in the footer and turn blue while they are on. */}
+              <Prompt.Tool label="Search" showLabel pressed={search} onPressedChange={setSearch}>
+                <GlobeIcon />
+              </Prompt.Tool>
+              <Prompt.Tool label="Think" showLabel pressed={think} onPressedChange={setThink}>
+                <LightbulbIcon />
+              </Prompt.Tool>
+              {/* A skill chosen in the menu, pressed again to put it away. */}
               {skill ? (
-                <Prompt.Tool label={skill} showLabel pressed onPressedChange={() => setSkill(null)}>
+                <Prompt.Tool label={skill} showLabel pressed onPressedChange={() => setSkill(null)} title={`Remove ${skill}`}>
                   <ScrollTextIcon />
                 </Prompt.Tool>
               ) : null}

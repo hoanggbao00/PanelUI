@@ -6,18 +6,22 @@
   },
   "intro": "Use it for the field a person writes to an assistant in: a question, an instruction, a follow-up. It holds the text, the files attached to it, the model it goes to, a menu of what else can be added, and the button that sends it.\n\nIt does not talk to a model. `onSubmit` is handed the text and the files, and `status` is how you tell it what the answer is doing: `submitted` and `streaming` turn the send button into a stop button and open the status band, and `error` marks the field.\n\nThe field is a card, and what is said about it sits in bands the card overlaps: a banner above for something to do first, a status band below for the answer on its way, and an inset strip below for where the message is going. Each opens and closes with its `open` prop.\n\nFor one question asked from anywhere on a page, with the answer listed under it, use [Command Dock](/docs/web/components/command-dock).",
   "usage": "<Prompt onSubmit={send} status={status} onStop={stop}>\n  <Prompt.Field>\n    <Prompt.Attachments />\n    <Prompt.Textarea placeholder=\"Ask anything\" />\n    <Prompt.Footer>\n      <Prompt.Tools>\n        <Prompt.Menu>\n          <Prompt.AttachItem />\n          <Menu.Separator />\n          <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>\n            <GlobeIcon />\n            Search the web\n          </Menu.CheckboxItem>\n        </Prompt.Menu>\n        <Prompt.Model items={models} />\n      </Prompt.Tools>\n      <Prompt.Submit />\n    </Prompt.Footer>\n  </Prompt.Field>\n  <Prompt.Status>Writing the answer</Prompt.Status>\n</Prompt>",
-  "anatomy": "<Prompt>\n  <Prompt.Banner>\n    <Prompt.BannerAction />\n  </Prompt.Banner>\n  <Prompt.Field>\n    <Prompt.Attachments />\n    <Prompt.Textarea />\n    <Prompt.Footer>\n      <Prompt.Tools>\n        <Prompt.Menu>\n          <Prompt.AttachItem />\n        </Prompt.Menu>\n        <Prompt.Attach />\n        <Prompt.Tool />\n        <Prompt.Model />\n      </Prompt.Tools>\n      <Prompt.Submit />\n    </Prompt.Footer>\n  </Prompt.Field>\n  <Prompt.Status />\n  <Prompt.Context>\n    <Prompt.ContextItem />\n  </Prompt.Context>\n  <Prompt.Hint />\n</Prompt>",
+  "anatomy": "<Prompt>\n  <Prompt.Banner>\n    <Prompt.BannerAction />\n  </Prompt.Banner>\n  <Prompt.Tasks>\n    <Prompt.Task />\n  </Prompt.Tasks>\n  <Prompt.Commands />\n  <Prompt.Field>\n    <Prompt.Attachments />\n    <Prompt.Textarea />\n    <Prompt.Footer>\n      <Prompt.Tools>\n        <Prompt.Menu>\n          <Prompt.AttachItem />\n        </Prompt.Menu>\n        <Prompt.Attach />\n        <Prompt.Tool />\n        <Prompt.Model />\n      </Prompt.Tools>\n      <Prompt.Submit />\n    </Prompt.Footer>\n    <Prompt.Recorder />\n  </Prompt.Field>\n  <Prompt.Status />\n  <Prompt.Context>\n    <Prompt.ContextItem />\n  </Prompt.Context>\n  <Prompt.Hint />\n</Prompt>",
   "parts": {
     "Banner": "A band above the field for something to do first, such as connecting an account. It folds under the field when `open` is false.",
+    "Tasks": "A band above the field with an agent's tasks. One line holds a ring that fills as they are done, the `title` and a count; pressed, it opens into the list, which scrolls past `maxHeight`.",
+    "Task": "One task, `pending`, `active`, `done` or `error`. An active task's words are lit while it runs, and a done one is checked and struck through.",
+    "Commands": "A band above the field listing `items` while the text is the trigger and a word. Chosen with the keys or a press.",
     "BannerAction": "The banner's button, at its end. It takes everything a [Button](/docs/web/components/button) does, `loading` included.",
-    "Field": "The card that holds the text, the files and the footer. Files dropped on it are attached.",
+    "Field": "The card that holds the text, the files and the footer. Files dropped on it are attached. `layout=\"inline\"` puts its parts in one row, for a one-line composer.",
     "Attachments": "The attached files: images as thumbnails, anything else as a chip with its name and size, each with a button to remove it. It takes no room while there are none.",
     "Textarea": "Where the message is written. It grows from two lines to ten. Enter sends, Shift+Enter starts a new line, and a pasted image is attached.",
+    "Recorder": "Takes the place of the text and the footer while voice is recorded: the `transcript` so far, the sound as a wave scrolling to the left, the time, and buttons to throw the recording away or keep it.",
     "Footer": "The row under the text, with the tools at its start and the submit button at its end.",
     "Tools": "A row of tools. It wraps onto a second line when the footer is narrow.",
-    "Menu": "One round button with a plus that opens a [Menu](/docs/web/components/menu) of what can be added to the message: files, skills, connections, modes. Its children are `Menu` items, check items and submenus. The plus turns to a cross while it is open.",
+    "Menu": "One round button with a plus that opens a [Menu](/docs/web/components/menu) of what can be added to the message: files, skills, connections, modes. Its children are `Menu` items, check items and submenus. The plus turns to a cross while it is open. `width=\"field\"` opens it as wide as the field.",
     "AttachItem": "The menu item that opens the file picker, with `⌘U` at its end. ⌘U or Ctrl+U in the field opens the picker too.",
-    "Tool": "A round button holding an icon. `label` is what a screen reader and the tooltip call it, and `showLabel` writes it beside the icon. With `pressed` and `onPressedChange` it switches on and off, which is how a mode chosen in the menu is shown beside it.",
+    "Tool": "A round button holding an icon. `label` is what a screen reader and the tooltip call it, and `showLabel` writes it beside the icon. With `pressed` and `onPressedChange` it switches on and off, and while on it is drawn in the info colour.",
     "Attach": "A tool that opens the file picker, for a prompt with no menu.",
     "Model": "Chooses the model. `items` are `{ value, label, icon, description }`, and the button shows the chosen one's icon and label. `variant=\"ghost\"` has no edge.",
     "Submit": "Sends the message. While `status` is `submitted` or `streaming` it stops the answer instead, with a ring turning round it. With `onVoice`, it starts voice while the field is empty.",
@@ -34,6 +38,12 @@
       "height": 360
     },
     {
+      "title": "An agent's tasks",
+      "description": "`Prompt.Tasks` is a band above the field with what an agent is working through. Its line shows a ring that fills as tasks finish and a count; pressed, it opens into the list, which scrolls past `maxHeight` and keeps the task in progress in view. Each `Prompt.Task` is `pending`, `active`, `done` or `error`. Stopping pauses the run here, and sending carries it on.",
+      "demo": "agent",
+      "height": 420
+    },
+    {
       "title": "While the answer is written",
       "description": "With `status` at `streaming`, the status band is open and its words are lit by a moving sweep, and the send button has become a stop button with a ring turning round it. Pressing it calls `onStop`.",
       "demo": "thinking",
@@ -41,9 +51,28 @@
     },
     {
       "title": "Working in a project",
-      "description": "A ghost model picker and a tool with its label written out, and an inset context strip under the field naming the machine, the pull request and the branch. The branch is a [Select](/docs/web/components/select) set in the strip.",
+      "description": "A ghost model picker, the menu holding what a coding agent can be given, and an inset context strip under the field naming the machine, the pull request and the branch. The branch is a [Select](/docs/web/components/select) set in the strip.",
       "demo": "workspace",
       "height": 300
+    },
+    {
+      "title": "One line",
+      "description": "`layout=\"inline\"` on `Prompt.Field` sets every part in one row, with the text between them, and wraps as the text grows. `width=\"field\"` opens the menu as wide as the field, and `Menu.Description` adds a quieter line to each item.",
+      "demo": "inline",
+      "height": 460,
+      "align": "start"
+    },
+    {
+      "title": "Commands",
+      "description": "`Prompt.Commands` opens a band of commands while the text is the trigger and a word. Typing narrows it, the arrow keys move through it, and Enter or Tab chooses. Here `onSelect` shows the chosen command as a pressed tool, which is pressed again to drop it.",
+      "demo": "commands",
+      "height": 420
+    },
+    {
+      "title": "Voice",
+      "description": "`Prompt.Recorder` takes over the field while voice is recorded. What has been heard is written in at the top through `transcript`, the wave scrolls underneath, and the check keeps the recording, which here puts the words into the field; the cross throws it away. Pass `level` to draw a real microphone's input.",
+      "demo": "voice",
+      "height": 320
     },
     {
       "title": "Files",
@@ -52,5 +81,5 @@
       "height": 340
     }
   ],
-  "notes": "### Sending\n\nEnter sends and Shift+Enter starts a new line. An Enter that ends a composition in an input method, as when typing Japanese or Chinese, is left to the input method. `onSubmit` is called with `{ text, files }`, the text trimmed, and the field and files are then cleared. Nothing is sent while there is no text and no file, or while `status` is `submitted` or `streaming`.\n\n### Controlled text\n\n`value` and `onValueChange` hold the text from outside, to fill it from a suggestion or keep a draft. `onValueChange` is called with `''` when the message is sent.\n\n### The submit button\n\nIt has three jobs and changes between them in place, so it never moves under the pointer. It sends while the prompt is idle. It stops the answer while `status` is `submitted` or `streaming`, calling `onStop`, and it cannot be pressed then if `onStop` is not given. With `onVoice` it is a voice button while the field is empty, and its bars move while `listening` is true.\n\n### Files\n\nFiles arrive from `Prompt.AttachItem` or `Prompt.Attach`, from ⌘U or Ctrl+U in the field, from a paste and from a drop on the field. `accept` takes the same rules as a file input's, such as `image/*,.pdf`, and `maxFiles` caps how many are held at once. Files that are not taken are passed to `onReject` with the reason, `accept` or `max-files`, so you can say why. Images get a thumbnail from an object URL, which is released when the file is removed.\n\n### Bands\n\n`Prompt.Banner` and `Prompt.Status` open and close by their `open` prop, folding under the card, and nothing inside a closed band can be focused. The status band opens by itself while the prompt is busy. Its words are lit by a sweep that stops when reduced motion is asked for.\n\n### Screen readers\n\nThe text field is called \"Message\" unless you give it an `aria-label`. Each tool's `label` is its name, a pressed tool is announced as pressed, and the submit button's name follows its job: Send, Stop or Speak. The status band is a live region, so what it says is read as it changes.\n\n### The menu and what it switches on\n\n`Prompt.Menu` keeps the footer to one button however many tools there are. A mode switched on in it, such as web search, is best shown beside it as a pressed `Prompt.Tool` with `showLabel`, which switches it off again when pressed. The first example does this for search, thinking and a chosen skill."
+  "notes": "### Sending\n\nEnter sends and Shift+Enter starts a new line. An Enter that ends a composition in an input method, as when typing Japanese or Chinese, is left to the input method. `onSubmit` is called with `{ text, files }`, the text trimmed, and the field and files are then cleared. Nothing is sent while there is no text and no file, or while `status` is `submitted` or `streaming`.\n\n### Controlled text\n\n`value` and `onValueChange` hold the text from outside, to fill it from a suggestion or keep a draft. `onValueChange` is called with `''` when the message is sent.\n\n### The submit button\n\nIt has three jobs and changes between them in place, so it never moves under the pointer. It sends while the prompt is idle. It stops the answer while `status` is `submitted` or `streaming`, calling `onStop`, and it cannot be pressed then if `onStop` is not given. With `onVoice` it is a voice button while the field is empty, and its bars move while `listening` is true.\n\n### Files\n\nFiles arrive from `Prompt.AttachItem` or `Prompt.Attach`, from ⌘U or Ctrl+U in the field, from a paste and from a drop on the field. `accept` takes the same rules as a file input's, such as `image/*,.pdf`, and `maxFiles` caps how many are held at once. Files that are not taken are passed to `onReject` with the reason, `accept` or `max-files`, so you can say why. Images get a thumbnail from an object URL, which is released when the file is removed.\n\n### Bands\n\n`Prompt.Banner` and `Prompt.Status` open and close by their `open` prop, folding under the card, and nothing inside a closed band can be focused. The status band opens by itself while the prompt is busy. Its words are lit by a sweep that stops when reduced motion is asked for.\n\n### Screen readers\n\nThe text field is called \"Message\" unless you give it an `aria-label`. Each tool's `label` is its name, a pressed tool is announced as pressed, and the submit button's name follows its job: Send, Stop or Speak. The status band is a live region, so what it says is read as it changes.\n\n### The menu and what it switches on\n\n`Prompt.Menu` keeps the footer to one button however many tools there are. A mode switched on in it, such as web search, is best shown beside it as a pressed `Prompt.Tool` with `showLabel`, which switches it off again when pressed. The first example does this for search, thinking and a chosen skill.\n\n### Commands and the keyboard\n\nWhile the command list is open, the arrow keys, Enter, Tab and Escape go to it rather than to the field, and the field points a screen reader at the highlighted command. Escape puts the list away until the text changes. Without `onSelect`, a chosen command is written into the field followed by a space.\n\n### Tasks\n\nThe count and the ring are worked out from the `status` of the `Prompt.Task` children, so keep the tasks as its direct children. The task in progress is scrolled to the middle of the list as it changes; the page itself does not scroll."
 }

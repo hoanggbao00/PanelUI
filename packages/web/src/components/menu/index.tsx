@@ -67,6 +67,7 @@ const menuVariants = tv({
     ],
     end: 'ms-auto flex items-center ps-3',
     check: 'ms-auto flex size-4 items-center justify-center ps-0 text-foreground',
+    description: 'min-w-0 truncate text-muted-foreground',
     shortcut: 'ms-auto ps-3 text-xs tracking-wide text-muted-foreground',
     badge:
       'ms-auto inline-flex h-5 items-center gap-1 rounded-md bg-muted px-1.5 text-xs font-medium tabular-nums text-muted-foreground [&_svg:not([class*=size-])]:size-3',
@@ -115,6 +116,8 @@ interface PlacementProps {
 export interface MenuContentProps extends BaseMenu.Popup.Props, PlacementProps {
   /** Where in the document the menu is put. Default `document.body`. */
   container?: BaseMenu.Portal.Props['container'];
+  /** What it is placed against instead of the trigger: an element or a ref to one. */
+  anchor?: BaseMenu.Positioner.Props['anchor'];
   className?: string;
 }
 
@@ -125,6 +128,7 @@ function MenuContent({
   sideOffset = 6,
   alignOffset,
   container,
+  anchor,
   className,
   ...props
 }: MenuContentProps) {
@@ -136,6 +140,7 @@ function MenuContent({
         align={align}
         sideOffset={sideOffset}
         alignOffset={alignOffset}
+        anchor={anchor}
         className={slots.positioner()}
       >
         <BaseMenu.Popup data-slot="menu-content" className={slots.popup({ className })} {...props} />
@@ -289,6 +294,14 @@ function MenuSeparator({ className, ...props }: MenuSeparatorProps) {
 }
 MenuSeparator.displayName = 'Menu.Separator';
 
+export interface MenuDescriptionProps extends ComponentProps<'span'> {}
+
+/** What an item does, in quieter words after its label. */
+function MenuDescription({ className, ...props }: MenuDescriptionProps) {
+  return <span data-slot="menu-description" className={menuVariants().description({ className })} {...props} />;
+}
+MenuDescription.displayName = 'Menu.Description';
+
 export interface MenuShortcutProps extends ComponentProps<'kbd'> {}
 
 /** The keys for an item, at its end. It only shows them: wire the keys up where the action lives. */
@@ -318,6 +331,7 @@ export const Menu = Object.assign(MenuRoot, {
   Group: MenuGroup,
   GroupLabel: MenuGroupLabel,
   Separator: MenuSeparator,
+  Description: MenuDescription,
   Shortcut: MenuShortcut,
   Badge: MenuBadge,
 });
@@ -335,6 +349,7 @@ export {
   MenuGroup,
   MenuGroupLabel,
   MenuSeparator,
+  MenuDescription,
   MenuShortcut,
   MenuBadge,
 };

@@ -51,6 +51,10 @@ For one question asked from anywhere on a page, with the answer listed under it,
   <Prompt.Banner>
     <Prompt.BannerAction />
   </Prompt.Banner>
+  <Prompt.Tasks>
+    <Prompt.Task />
+  </Prompt.Tasks>
+  <Prompt.Commands />
   <Prompt.Field>
     <Prompt.Attachments />
     <Prompt.Textarea />
@@ -65,6 +69,7 @@ For one question asked from anywhere on a page, with the answer listed under it,
       </Prompt.Tools>
       <Prompt.Submit />
     </Prompt.Footer>
+    <Prompt.Recorder />
   </Prompt.Field>
   <Prompt.Status />
   <Prompt.Context>
@@ -75,15 +80,19 @@ For one question asked from anywhere on a page, with the answer listed under it,
 ```
 
 - `Prompt.Banner` — A band above the field for something to do first, such as connecting an account. It folds under the field when `open` is false.
+- `Prompt.Tasks` — A band above the field with an agent's tasks. One line holds a ring that fills as they are done, the `title` and a count; pressed, it opens into the list, which scrolls past `maxHeight`.
+- `Prompt.Task` — One task, `pending`, `active`, `done` or `error`. An active task's words are lit while it runs, and a done one is checked and struck through.
+- `Prompt.Commands` — A band above the field listing `items` while the text is the trigger and a word. Chosen with the keys or a press.
 - `Prompt.BannerAction` — The banner's button, at its end. It takes everything a [Button](/docs/web/components/button) does, `loading` included.
-- `Prompt.Field` — The card that holds the text, the files and the footer. Files dropped on it are attached.
+- `Prompt.Field` — The card that holds the text, the files and the footer. Files dropped on it are attached. `layout="inline"` puts its parts in one row, for a one-line composer.
 - `Prompt.Attachments` — The attached files: images as thumbnails, anything else as a chip with its name and size, each with a button to remove it. It takes no room while there are none.
 - `Prompt.Textarea` — Where the message is written. It grows from two lines to ten. Enter sends, Shift+Enter starts a new line, and a pasted image is attached.
+- `Prompt.Recorder` — Takes the place of the text and the footer while voice is recorded: the `transcript` so far, the sound as a wave scrolling to the left, the time, and buttons to throw the recording away or keep it.
 - `Prompt.Footer` — The row under the text, with the tools at its start and the submit button at its end.
 - `Prompt.Tools` — A row of tools. It wraps onto a second line when the footer is narrow.
-- `Prompt.Menu` — One round button with a plus that opens a [Menu](/docs/web/components/menu) of what can be added to the message: files, skills, connections, modes. Its children are `Menu` items, check items and submenus. The plus turns to a cross while it is open.
+- `Prompt.Menu` — One round button with a plus that opens a [Menu](/docs/web/components/menu) of what can be added to the message: files, skills, connections, modes. Its children are `Menu` items, check items and submenus. The plus turns to a cross while it is open. `width="field"` opens it as wide as the field.
 - `Prompt.AttachItem` — The menu item that opens the file picker, with `⌘U` at its end. ⌘U or Ctrl+U in the field opens the picker too.
-- `Prompt.Tool` — A round button holding an icon. `label` is what a screen reader and the tooltip call it, and `showLabel` writes it beside the icon. With `pressed` and `onPressedChange` it switches on and off, which is how a mode chosen in the menu is shown beside it.
+- `Prompt.Tool` — A round button holding an icon. `label` is what a screen reader and the tooltip call it, and `showLabel` writes it beside the icon. With `pressed` and `onPressedChange` it switches on and off, and while on it is drawn in the info colour.
 - `Prompt.Attach` — A tool that opens the file picker, for a prompt with no menu.
 - `Prompt.Model` — Chooses the model. `items` are `{ value, label, icon, description }`, and the button shows the chosen one's icon and label. `variant="ghost"` has no edge.
 - `Prompt.Submit` — Sends the message. While `status` is `submitted` or `streaming` it stops the answer instead, with a ring turning round it. With `onVoice`, it starts voice while the field is empty.
@@ -116,13 +125,13 @@ Every part also takes the props of the element it renders, and a `className`.
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `open` | `boolean` | — | Whether it is shown. It folds under the field when it is not. Default `true`. |
+| `open` | `boolean` | `true` | Whether it is shown. It folds under the field when it is not. Default `true`. |
 
 #### `PromptStatusProps`
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `open` | `boolean` | — | Whether it is shown. Default: while `status` is `submitted` or `streaming`. |
+| `open` | `boolean` | `true` | Whether it is shown. Default: while `status` is `submitted` or `streaming`. |
 | `icon` | `ReactNode` | — | Something before the words: the model's mark, a tool's icon. |
 | `spinner` | `boolean` | — | Whether a spinner turns at its end. Default `true`. |
 
@@ -131,6 +140,12 @@ Every part also takes the props of the element it renders, and a `className`.
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `onSelect` | `() => void` | — | Called when it is pressed. Passing this makes the item a button. |
+
+#### `PromptFieldProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `layout` | `'stacked' \| 'inline'` | — | `stacked` puts the text above a footer. `inline` puts every part in one row, the text between them, for a one-line composer; the row wraps as the text grows. Default `stacked`. |
 
 #### `PromptToolProps`
 
@@ -165,6 +180,7 @@ Every part also takes the props of the element it renders, and a `className`.
 | --- | --- | --- | --- |
 | `label` | `string` | `'Model'` | What a screen reader and the tooltip call the button. Default `Add`. |
 | `icon` | `ReactNode` | — | Replaces the plus on the button. |
+| `width` | `'auto' \| 'field'` | — | `field` opens the menu as wide as the field, lined up with it, for items with descriptions. Default `auto`. |
 
 #### `PromptAttachItemProps`
 
@@ -182,9 +198,48 @@ Every part also takes the props of the element it renders, and a `className`.
 | `stopLabel` | `string` | `'Stop'` | While it stops the answer. Default `Stop`. |
 | `voiceLabel` | `string` | `'Speak'` | While it starts voice. Default `Speak`. |
 
+#### `PromptTasksProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `open` | `boolean` | `true` | Whether the band is shown. It folds under the field when it is not. Default `true`. |
+| `title` | `ReactNode` | **required** | What the agent is doing, on the band's one line: "Preparing the release". |
+| `expanded` | `boolean` | — | Whether the list is open under the title, when the caller holds it. |
+| `defaultExpanded` | `boolean` | `false` | Whether the list starts open, when the caller does not hold it. Default `false`. |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | Called when the title is pressed to open or close the list. |
+| `maxHeight` | `string` | `'10rem'` | How tall the list grows before it scrolls, as a CSS length. Default `10rem`. |
+
+#### `PromptTaskProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `status` | `PromptTaskStatus` | `'idle'` | `pending`, `active` (its words are lit while it runs), `done` (a check) or `error`. Default `pending`. |
+
+#### `PromptCommandsProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `items` | `readonly PromptCommandItem[]` | **required** | The commands. |
+| `trigger` | `string` | — | The character that opens the list when the field starts with it. Default `/`. |
+| `onSelect` | `(item: PromptCommandItem) => void` | — | Called with the command chosen. With it, the field is cleared and the command is yours to show; without it, the command is written into the field. |
+| `label` | `ReactNode` | `'Model'` | The heading over the list. Default `Commands`. |
+| `maxHeight` | `string` | `'10rem'` | How tall the list grows before it scrolls, as a CSS length. Default `12rem`. |
+
+#### `PromptRecorderProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `transcript` | `ReactNode` | — | What has been heard so far, written in as it arrives. |
+| `placeholder` | `ReactNode` | `'Listening…'` | Shown, lit by a moving sweep, until there is a transcript. Default `Listening…`. |
+| `onCancel` | `() => void` | — | Called when the cross is pressed, to throw the recording away. |
+| `onDone` | `() => void` | — | Called when the check is pressed, to keep it. |
+| `level` | `number` | — | How loud the input is now, from 0 to 1, to draw from a real microphone. Without it the wave moves on its own, as a sign that it is listening. |
+| `cancelLabel` | `string` | `'Cancel recording'` | What a screen reader calls the cross. Default `Cancel recording`. |
+| `doneLabel` | `string` | `'Finish recording'` | And the check. Default `Finish recording`. |
+
 ## In a Server Component
 
-`Prompt` is a client component. A Server Component cannot read `Prompt.Banner` off the import, so import each part by name: `PromptBanner`, `PromptBannerAction`, `PromptField`, `PromptAttachments`, `PromptTextarea`, `PromptFooter`, `PromptTools`, `PromptTool`, `PromptAttach`, `PromptMenu`, `PromptAttachItem`, `PromptModel`, `PromptSubmit`, `PromptStatus`, `PromptContext`, `PromptContextItem`, `PromptHint`.
+`Prompt` is a client component. A Server Component cannot read `Prompt.Banner` off the import, so import each part by name: `PromptBanner`, `PromptBannerAction`, `PromptField`, `PromptAttachments`, `PromptTextarea`, `PromptFooter`, `PromptTools`, `PromptTool`, `PromptAttach`, `PromptMenu`, `PromptAttachItem`, `PromptModel`, `PromptSubmit`, `PromptStatus`, `PromptTasks`, `PromptTask`, `PromptCommands`, `PromptRecorder`, `PromptContext`, `PromptContextItem`, `PromptHint`.
 
 ## Notes
 
@@ -215,6 +270,14 @@ The text field is called "Message" unless you give it an `aria-label`. Each tool
 #### The menu and what it switches on
 
 `Prompt.Menu` keeps the footer to one button however many tools there are. A mode switched on in it, such as web search, is best shown beside it as a pressed `Prompt.Tool` with `showLabel`, which switches it off again when pressed. The first example does this for search, thinking and a chosen skill.
+
+#### Commands and the keyboard
+
+While the command list is open, the arrow keys, Enter, Tab and Escape go to it rather than to the field, and the field points a screen reader at the highlighted command. Escape puts the list away until the text changes. Without `onSelect`, a chosen command is written into the field followed by a space.
+
+#### Tasks
+
+The count and the ring are worked out from the `status` of the `Prompt.Task` children, so keep the tasks as its direct children. The task in progress is scrolled to the middle of the list as it changes; the page itself does not scroll.
 
 ## Example
 
@@ -340,29 +403,17 @@ export default function PromptAsk() {
                     </Menu.Item>
                   </Menu.SubContent>
                 </Menu.Sub>
-                <Menu.Separator />
-                <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>
-                  <GlobeIcon />
-                  Search the web
-                </Menu.CheckboxItem>
-                <Menu.CheckboxItem checked={think} onCheckedChange={setThink}>
-                  <LightbulbIcon />
-                  Think longer
-                </Menu.CheckboxItem>
               </Prompt.Menu>
-              {/* What is switched on in the menu, shown beside it and pressed to switch off. */}
-              {search ? (
-                <Prompt.Tool label="Search" showLabel pressed onPressedChange={setSearch}>
-                  <GlobeIcon />
-                </Prompt.Tool>
-              ) : null}
-              {think ? (
-                <Prompt.Tool label="Think" showLabel pressed onPressedChange={setThink}>
-                  <LightbulbIcon />
-                </Prompt.Tool>
-              ) : null}
+              {/* Modes that stay in the footer and turn blue while they are on. */}
+              <Prompt.Tool label="Search" showLabel pressed={search} onPressedChange={setSearch}>
+                <GlobeIcon />
+              </Prompt.Tool>
+              <Prompt.Tool label="Think" showLabel pressed={think} onPressedChange={setThink}>
+                <LightbulbIcon />
+              </Prompt.Tool>
+              {/* A skill chosen in the menu, pressed again to put it away. */}
               {skill ? (
-                <Prompt.Tool label={skill} showLabel pressed onPressedChange={() => setSkill(null)}>
+                <Prompt.Tool label={skill} showLabel pressed onPressedChange={() => setSkill(null)} title={`Remove ${skill}`}>
                   <ScrollTextIcon />
                 </Prompt.Tool>
               ) : null}

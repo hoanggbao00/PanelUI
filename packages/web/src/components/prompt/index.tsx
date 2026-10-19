@@ -55,7 +55,9 @@
  * name and size.
  */
 import {
+  Children,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -68,7 +70,9 @@ import {
   type DragEvent,
   type FormEvent,
   type KeyboardEvent,
+  type ReactElement,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import { tv } from 'tailwind-variants';
 import { Button, type ButtonProps } from '../button';
@@ -97,14 +101,18 @@ const promptVariants = tv({
       'focus-within:border-ring/70 has-[textarea:focus-visible]:shadow-md',
       'data-dragging:border-primary data-dragging:ring-4 data-dragging:ring-primary/10',
       'data-[status=error]:border-destructive/60',
+      // One line: the parts sit in a row, and the text takes the room between them.
+      'data-[layout=inline]:flex-row data-[layout=inline]:flex-wrap data-[layout=inline]:items-end data-[layout=inline]:gap-1.5 data-[layout=inline]:rounded-[1.75rem] data-[layout=inline]:p-2',
     ],
-    textarea: 'px-4 pb-1 pt-3.5 text-[0.9375rem] leading-6',
-    attachments: 'flex flex-wrap gap-2 px-3 pt-3',
+    textarea:
+      'px-4 pb-1 pt-3.5 text-[0.9375rem] leading-6 in-data-[layout=inline]:min-w-0 in-data-[layout=inline]:flex-1 in-data-[layout=inline]:basis-40 in-data-[layout=inline]:px-1.5 in-data-[layout=inline]:py-2',
+    attachments: 'flex flex-wrap gap-2 px-3 pt-3 in-data-[layout=inline]:basis-full in-data-[layout=inline]:px-1 in-data-[layout=inline]:pb-1 in-data-[layout=inline]:pt-1',
     attachment: [
       'group/attachment relative flex items-center gap-2 rounded-xl border bg-background text-xs',
       'transition-[opacity,scale] duration-200 ease-out starting:scale-90 starting:opacity-0 motion-reduce:transition-none',
     ],
-    attachmentImage: 'size-14 overflow-hidden p-0',
+    // Not clipped, so the remove button can sit over the corner; the picture rounds itself.
+    attachmentImage: 'size-14 p-0',
     attachmentFile: 'h-14 max-w-56 py-2 pe-8 ps-2',
     attachmentGlyph: 'flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground [&_svg]:size-4',
     attachmentName: 'block truncate font-medium text-foreground',
@@ -118,7 +126,11 @@ const promptVariants = tv({
     footer: 'flex items-end justify-between gap-2 p-2.5 pt-1.5',
     // The padding makes a row of tools as tall as the submit button, so a single row lines up with it.
     tools: 'flex min-w-0 flex-wrap items-center gap-1.5 py-0.5',
-    tool: 'aria-pressed:bg-accent aria-pressed:text-accent-foreground',
+    // Switched on, a tool is drawn in the theme's info colour, so it reads as on at a glance.
+    tool: [
+      'aria-pressed:border-[color-mix(in_oklab,var(--info)_40%,transparent)] aria-pressed:bg-[color-mix(in_oklab,var(--info)_12%,transparent)] aria-pressed:text-[var(--info)]',
+      'aria-pressed:hover:not-disabled:bg-[color-mix(in_oklab,var(--info)_18%,transparent)] aria-pressed:hover:not-disabled:text-[var(--info)]',
+    ],
     // The plus turns to a cross while its menu is open.
     menuTrigger: 'data-popup-open:bg-accent [&_svg]:transition-transform [&_svg]:duration-200 data-popup-open:[&_svg]:rotate-45 motion-reduce:[&_svg]:transition-none',
     modelValue: 'flex min-w-0 items-center gap-2 [&_svg]:size-4',
@@ -139,6 +151,43 @@ const promptVariants = tv({
     contextItem: 'inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap',
     contextButton:
       'cursor-pointer rounded-md outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring',
+    tasksHeader:
+      'flex h-9 w-full cursor-pointer items-center gap-2.5 px-4 text-start outline-none transition-colors hover:text-foreground focus-visible:text-foreground',
+    tasksTitle: 'min-w-0 truncate font-medium text-foreground',
+    tasksCount: 'shrink-0 tabular-nums',
+    tasksChevron: 'ms-auto transition-transform duration-200 motion-reduce:transition-none',
+    tasksBody: 'grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none',
+    tasksList: [
+      'relative flex flex-col overflow-y-auto overscroll-contain px-2 py-1 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]',
+      // Rows fade out at the edges they scroll past, instead of being cut by them.
+      '[mask-image:linear-gradient(to_bottom,transparent,black_0.75rem,black_calc(100%-0.75rem),transparent)]',
+    ],
+    task: 'flex items-start gap-2.5 rounded-lg px-2 py-1 text-sm',
+    taskMark: 'mt-0.5 flex size-4 shrink-0 items-center justify-center',
+    // Pops in as the task finishes.
+    taskDone:
+      'size-4 transition-[scale,opacity] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] starting:scale-50 starting:opacity-0 motion-reduce:transition-none',
+    taskPending: 'size-3.5 rounded-full border-[1.5px] border-dashed border-muted-foreground/50',
+    taskError:
+      'flex size-4 items-center justify-center rounded-full bg-destructive text-[0.625rem] font-bold leading-none text-white',
+    commandsLabel: 'px-4 pb-1 pt-2.5 text-xs font-medium',
+    commandsList:
+      'flex flex-col overflow-y-auto overscroll-contain px-2 pb-1 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]',
+    command:
+      'flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-foreground aria-selected:bg-card aria-selected:shadow-xs [&_svg]:text-muted-foreground',
+    commandName: 'shrink-0 font-medium',
+    commandDescription: 'min-w-0 truncate text-muted-foreground',
+    recorder: 'flex flex-col',
+    recorderTranscript: 'min-h-[3.25rem] px-4 pb-1 pt-3.5 text-[0.9375rem] leading-6 text-foreground',
+    recorderListening: 'bg-[linear-gradient(90deg,var(--muted-foreground)_35%,var(--foreground)_50%,var(--muted-foreground)_65%)] bg-[length:250%_100%] bg-clip-text text-transparent',
+    recorderControls: 'flex items-center gap-2.5 p-2.5 pt-1.5',
+    // Older sound fades out to the left as it scrolls away.
+    recorderWave:
+      'flex h-10 min-w-0 flex-1 items-center justify-end gap-[2px] overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_35%)]',
+    recorderBar: 'w-[3px] shrink-0 rounded-full bg-foreground transition-[height] duration-75 ease-out motion-reduce:transition-none',
+    recorderTime: 'flex shrink-0 items-center gap-1.5 text-xs font-medium tabular-nums text-muted-foreground',
+    recorderDot: 'size-2 animate-pulse rounded-full bg-destructive motion-reduce:animate-none',
+    recorderDone: 'size-10 p-0 [&_svg]:size-[18px]',
     hint: 'px-4 pt-2 text-xs text-muted-foreground [&_kbd]:rounded-[0.3rem] [&_kbd]:border [&_kbd]:bg-muted [&_kbd]:px-1 [&_kbd]:py-px [&_kbd]:font-sans [&_kbd]:text-[0.6875rem] [&_kbd]:text-foreground',
   },
   variants: {
@@ -196,6 +245,13 @@ interface PromptContextValue {
   dragging: boolean;
   setDragging(dragging: boolean): void;
   fieldId: string;
+  /** The field's card, for a menu that spans it. */
+  fieldRef: RefObject<HTMLDivElement | null>;
+  /** A part that wants the field's keys first, such as the command list. Returns true when it used the key. */
+  keyHandler: { current: ((event: KeyboardEvent<HTMLTextAreaElement>) => boolean) | null };
+  /** What the field should point a screen reader at while the command list is open. */
+  listbox: { id: string; active?: string } | null;
+  setListbox(listbox: { id: string; active?: string } | null): void;
 }
 
 const PromptStore = createContext<PromptContextValue | null>(null);
@@ -279,6 +335,9 @@ function PromptRoot({
   const [attachments, setAttachments] = useState<PromptAttachment[]>(() => (defaultFiles ?? []).map(attach));
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const keyHandler = useRef<PromptContextValue['keyHandler']['current']>(null);
+  const [listbox, setListbox] = useState<PromptContextValue['listbox']>(null);
   const fieldId = useId();
   const busy = status === 'submitted' || status === 'streaming';
   const empty = value.trim() === '' && attachments.length === 0;
@@ -354,8 +413,12 @@ function PromptRoot({
       dragging,
       setDragging,
       fieldId,
+      fieldRef,
+      keyHandler,
+      listbox,
+      setListbox,
     }),
-    [value, setValue, attachments, addFiles, removeAttachment, openFileDialog, status, busy, disabled, empty, submit, stop, onStop, dragging, fieldId]
+    [value, setValue, attachments, addFiles, removeAttachment, openFileDialog, status, busy, disabled, empty, submit, stop, onStop, dragging, fieldId, listbox]
   );
 
   const send = (event: FormEvent<HTMLFormElement>) => {
@@ -546,15 +609,24 @@ PromptHint.displayName = 'Prompt.Hint';
 
 /* ------------------------------------------------------------------ field */
 
-export interface PromptFieldProps extends ComponentProps<'div'> {}
+export interface PromptFieldProps extends ComponentProps<'div'> {
+  /**
+   * `stacked` puts the text above a footer. `inline` puts every part in one
+   * row, the text between them, for a one-line composer; the row wraps as
+   * the text grows. Default `stacked`.
+   */
+  layout?: 'stacked' | 'inline';
+}
 
 /** The card that holds the text, the files and the footer. Files can be dropped on it. */
-function PromptField({ className, onDragOver, onDragLeave, onDrop, ...props }: PromptFieldProps) {
+function PromptField({ layout = 'stacked', className, onDragOver, onDragLeave, onDrop, ...props }: PromptFieldProps) {
   const prompt = usePrompt('Prompt.Field');
   const hasFiles = (event: DragEvent) => [...event.dataTransfer.types].includes('Files');
   return (
     <div
+      ref={prompt.fieldRef}
       data-slot="prompt-field"
+      data-layout={layout}
       data-status={prompt.status}
       data-dragging={prompt.dragging ? '' : undefined}
       className={promptVariants().field({ className })}
@@ -607,9 +679,12 @@ function PromptTextarea({
       disabled={prompt.disabled}
       value={prompt.value}
       onChange={(event) => prompt.setValue(event.target.value)}
+      aria-controls={prompt.listbox?.id}
+      aria-activedescendant={prompt.listbox?.active}
       onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
         onKeyDown?.(event);
         if (event.defaultPrevented) return;
+        if (prompt.keyHandler.current?.(event)) return;
         // The usual shortcut for attaching, where underlining means nothing.
         if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'u') {
           event.preventDefault();
@@ -867,6 +942,8 @@ export interface PromptMenuProps extends Omit<MenuContentProps, 'children'> {
   icon?: ReactNode;
   /** The menu: `Prompt.AttachItem`, and any `Menu` items, check items and submenus. */
   children?: ReactNode;
+  /** `field` opens the menu as wide as the field, lined up with it, for items with descriptions. Default `auto`. */
+  width?: 'auto' | 'field';
 }
 
 /**
@@ -874,7 +951,7 @@ export interface PromptMenuProps extends Omit<MenuContentProps, 'children'> {
  * message: files, tools, modes. It keeps the footer to one button however
  * many there are.
  */
-function PromptMenu({ label = 'Add', icon, children, side = 'top', align = 'start', ...props }: PromptMenuProps) {
+function PromptMenu({ label = 'Add', icon, children, side = 'top', align = 'start', width = 'auto', className, ...props }: PromptMenuProps) {
   const prompt = usePrompt('Prompt.Menu');
   return (
     <Menu>
@@ -891,7 +968,13 @@ function PromptMenu({ label = 'Add', icon, children, side = 'top', align = 'star
           </svg>
         )}
       </Menu.Trigger>
-      <Menu.Content side={side} align={align} {...props}>
+      <Menu.Content
+        side={side}
+        align={align}
+        anchor={width === 'field' ? prompt.fieldRef : undefined}
+        className={[width === 'field' ? 'w-(--anchor-width) rounded-2xl p-1.5' : undefined, className].filter(Boolean).join(' ') || undefined}
+        {...props}
+      >
         {children}
       </Menu.Content>
     </Menu>
@@ -1056,6 +1139,432 @@ function PromptSubmit({
 }
 PromptSubmit.displayName = 'Prompt.Submit';
 
+/* ------------------------------------------------------------------ tasks */
+
+/** A filled circle in the success colour with a tick drawn in it. */
+const CheckCircle = ({ className }: { className?: string }) => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className={className}>
+    <path
+      d="M22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12Z"
+      fill="var(--success)"
+      stroke="var(--success)"
+      strokeWidth="1.5"
+    />
+    <path d="M8 12.5L10.5 15L16 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export type PromptTaskStatus = 'pending' | 'active' | 'done' | 'error';
+
+function reducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** A ring that fills as tasks are done, and becomes a check when all of them are. */
+function ProgressRing({ done, total }: { done: number; total: number }) {
+  const complete = total > 0 && done === total;
+  const r = 6.25;
+  const length = 2 * Math.PI * r;
+  if (complete) {
+    return <CheckCircle className="size-4" />;
+  }
+  return (
+    <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 -rotate-90">
+      <circle cx="8" cy="8" r={r} fill="none" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
+      <circle
+        cx="8"
+        cy="8"
+        r={r}
+        fill="none"
+        stroke="var(--success)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeDasharray={`${(length * done) / Math.max(total, 1)} ${length}`}
+        className="transition-[stroke-dasharray] duration-500 ease-out motion-reduce:transition-none"
+      />
+    </svg>
+  );
+}
+
+export interface PromptTasksProps extends Omit<ComponentProps<'div'>, 'title'> {
+  /** Whether the band is shown. It folds under the field when it is not. Default `true`. */
+  open?: boolean;
+  /** What the agent is doing, on the band's one line: "Preparing the release". */
+  title: ReactNode;
+  /** Whether the list is open under the title, when the caller holds it. */
+  expanded?: boolean;
+  /** Whether the list starts open, when the caller does not hold it. Default `false`. */
+  defaultExpanded?: boolean;
+  /** Called when the title is pressed to open or close the list. */
+  onExpandedChange?: (expanded: boolean) => void;
+  /** How tall the list grows before it scrolls, as a CSS length. Default `10rem`. */
+  maxHeight?: string;
+}
+
+/**
+ * A band above the field with an agent's tasks: one line with a ring that
+ * fills as they are done, opening into the list. The list scrolls past
+ * `maxHeight`, and keeps the task in progress in view.
+ */
+function PromptTasks({
+  open = true,
+  title,
+  expanded,
+  defaultExpanded = false,
+  onExpandedChange,
+  maxHeight = '10rem',
+  className,
+  children,
+  ...props
+}: PromptTasksProps) {
+  const slots = promptVariants();
+  const [inner, setInner] = useState(defaultExpanded);
+  const isExpanded = expanded ?? inner;
+  const listId = useId();
+  const list = useRef<HTMLOListElement>(null);
+  const tasks = Children.toArray(children).filter(isValidElement) as ReactElement<PromptTaskProps>[];
+  const done = tasks.filter((task) => task.props.status === 'done').length;
+  const active = tasks.findIndex((task) => task.props.status === 'active');
+
+  // The task in progress is kept in the middle of the list, so a long run can
+  // be followed without scrolling. The list scrolls, never the page.
+  useEffect(() => {
+    const node = list.current;
+    const current = node?.querySelector<HTMLElement>('[data-status=active]');
+    if (!node || !current || !isExpanded) return;
+    node.scrollTo({
+      top: current.offsetTop - node.clientHeight / 2 + current.offsetHeight / 2,
+      behavior: reducedMotion() ? 'auto' : 'smooth',
+    });
+  }, [active, isExpanded]);
+
+  const toggle = () => {
+    if (expanded === undefined) setInner(!isExpanded);
+    onExpandedChange?.(!isExpanded);
+  };
+
+  return (
+    <Band edge="top" open={open} slot="prompt-tasks" className={['flex-col items-stretch gap-0 px-0 pt-0.5', className].filter(Boolean).join(' ')} {...props}>
+      <button type="button" aria-expanded={isExpanded} aria-controls={listId} onClick={toggle} className={slots.tasksHeader()}>
+        <ProgressRing done={done} total={tasks.length} />
+        <span className={slots.tasksTitle()}>{title}</span>
+        <span className={slots.tasksCount()}>
+          {done}/{tasks.length}
+        </span>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={slots.tasksChevron({ className: isExpanded ? 'rotate-180' : undefined })}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      <div className={slots.tasksBody({ className: isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]' })}>
+        <div className="min-h-0 overflow-hidden">
+          <ol ref={list} id={listId} aria-label="Tasks" className={slots.tasksList()} style={{ maxHeight }}>
+            {children}
+          </ol>
+        </div>
+      </div>
+    </Band>
+  );
+}
+PromptTasks.displayName = 'Prompt.Tasks';
+
+export interface PromptTaskProps extends ComponentProps<'li'> {
+  /** `pending`, `active` (its words are lit while it runs), `done` (a check) or `error`. Default `pending`. */
+  status?: PromptTaskStatus;
+}
+
+/** One task in `Prompt.Tasks`. */
+function PromptTask({ status = 'pending', className, children, ...props }: PromptTaskProps) {
+  const slots = promptVariants();
+  const text = useShimmer(status === 'active');
+  return (
+    <li data-status={status} className={slots.task({ className })} {...props}>
+      <span className={slots.taskMark()}>
+        {status === 'done' ? (
+          <CheckCircle className={slots.taskDone()} />
+        ) : status === 'active' ? (
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" className="size-3.5 animate-spin text-foreground motion-reduce:animate-none">
+            <path d="M21 12a9 9 0 1 1-6.22-8.56" />
+          </svg>
+        ) : status === 'error' ? (
+          <span className={slots.taskError()}>!</span>
+        ) : (
+          <span className={slots.taskPending()} />
+        )}
+      </span>
+      <span
+        ref={text}
+        className={
+          status === 'active'
+            ? slots.statusText({ className: 'whitespace-normal' })
+            : status === 'done'
+              ? 'text-muted-foreground line-through decoration-muted-foreground/40'
+              : status === 'error'
+                ? 'text-destructive'
+                : 'text-muted-foreground'
+        }
+      >
+        {children}
+      </span>
+      <span className="sr-only">{status === 'done' ? ', done' : status === 'active' ? ', in progress' : status === 'error' ? ', failed' : ''}</span>
+    </li>
+  );
+}
+PromptTask.displayName = 'Prompt.Task';
+
+/* --------------------------------------------------------------- commands */
+
+export interface PromptCommandItem {
+  /** What is typed after the trigger to reach it: `summarise` for `/summarise`. */
+  value: string;
+  /** Its name in the list. Default the trigger and the value. */
+  label?: ReactNode;
+  /** What it does, after the name. */
+  description?: ReactNode;
+  icon?: ReactNode;
+}
+
+export interface PromptCommandsProps {
+  /** The commands. */
+  items: readonly PromptCommandItem[];
+  /** The character that opens the list when the field starts with it. Default `/`. */
+  trigger?: string;
+  /**
+   * Called with the command chosen. With it, the field is cleared and the
+   * command is yours to show; without it, the command is written into the field.
+   */
+  onSelect?: (item: PromptCommandItem) => void;
+  /** The heading over the list. Default `Commands`. */
+  label?: ReactNode;
+  /** How tall the list grows before it scrolls, as a CSS length. Default `12rem`. */
+  maxHeight?: string;
+}
+
+/**
+ * A band above the field listing commands while the text is a trigger and a
+ * word, `/sum`. The arrow keys move through it, Enter or Tab chooses, Escape
+ * puts it away.
+ */
+function PromptCommands({ items, trigger = '/', onSelect, label = 'Commands', maxHeight = '12rem' }: PromptCommandsProps) {
+  const prompt = usePrompt('Prompt.Commands');
+  const slots = promptVariants();
+  const listId = useId();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const list = useRef<HTMLDivElement>(null);
+
+  const query = prompt.value.startsWith(trigger) && !/\s/.test(prompt.value) ? prompt.value.slice(trigger.length).toLowerCase() : null;
+  const matches =
+    query === null
+      ? []
+      : items
+          .filter((item) => item.value.toLowerCase().includes(query) || String(item.label ?? '').toLowerCase().includes(query))
+          // Those whose name starts with what was typed come first.
+          .sort((a, b) => Number(!a.value.toLowerCase().startsWith(query)) - Number(!b.value.toLowerCase().startsWith(query)));
+  const open = matches.length > 0 && dismissed !== prompt.value;
+  const active = Math.min(activeIndex, Math.max(matches.length - 1, 0));
+  const optionId = (index: number) => `${listId}-${index}`;
+
+  // A new query starts at the top of what it matches.
+  useEffect(() => setActiveIndex(0), [query]);
+
+  const choose = (item: PromptCommandItem) => {
+    if (onSelect) {
+      onSelect(item);
+      prompt.setValue('');
+    } else {
+      prompt.setValue(`${trigger}${item.value} `);
+    }
+  };
+
+  // The field's keys come here first while the list is open.
+  useEffect(() => {
+    prompt.keyHandler.current = (event) => {
+      if (!open) return false;
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const step = event.key === 'ArrowDown' ? 1 : -1;
+        setActiveIndex((active + step + matches.length) % matches.length);
+        return true;
+      }
+      if ((event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) || event.key === 'Tab') {
+        event.preventDefault();
+        choose(matches[active]!);
+        return true;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setDismissed(prompt.value);
+        return true;
+      }
+      return false;
+    };
+    return () => {
+      prompt.keyHandler.current = null;
+    };
+  });
+
+  // The field points a screen reader at the highlighted command.
+  const { setListbox } = prompt;
+  useEffect(() => {
+    setListbox(open ? { id: listId, active: optionId(active) } : null);
+    return () => setListbox(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, active, listId, setListbox]);
+
+  // The highlighted row is kept in view inside the list.
+  useEffect(() => {
+    const node = list.current;
+    const row = node?.querySelector<HTMLElement>('[aria-selected=true]');
+    if (!node || !row) return;
+    if (row.offsetTop < node.scrollTop) node.scrollTop = row.offsetTop;
+    else if (row.offsetTop + row.offsetHeight > node.scrollTop + node.clientHeight) {
+      node.scrollTop = row.offsetTop + row.offsetHeight - node.clientHeight;
+    }
+  }, [active]);
+
+  return (
+    <Band edge="top" open={open} slot="prompt-commands" className="flex-col items-stretch gap-0 px-0 pt-0">
+      <div className={slots.commandsLabel()}>{label}</div>
+      <div ref={list} id={listId} role="listbox" aria-label={typeof label === 'string' ? label : 'Commands'} className={slots.commandsList({ className: 'relative' })} style={{ maxHeight }}>
+        {matches.map((item, index) => (
+          <div
+            key={item.value}
+            id={optionId(index)}
+            role="option"
+            aria-selected={index === active}
+            className={slots.command()}
+            // Pressed without taking focus from the field.
+            onMouseDown={(event) => event.preventDefault()}
+            onMouseMove={() => index !== active && setActiveIndex(index)}
+            onClick={() => choose(item)}
+          >
+            {item.icon}
+            <span className={slots.commandName()}>{item.label ?? `${trigger}${item.value}`}</span>
+            {item.description ? <span className={slots.commandDescription()}>{item.description}</span> : null}
+          </div>
+        ))}
+      </div>
+    </Band>
+  );
+}
+PromptCommands.displayName = 'Prompt.Commands';
+
+/* --------------------------------------------------------------- recorder */
+
+const BARS = 64;
+
+export interface PromptRecorderProps extends ComponentProps<'div'> {
+  /** What has been heard so far, written in as it arrives. */
+  transcript?: ReactNode;
+  /** Shown, lit by a moving sweep, until there is a transcript. Default `Listening…`. */
+  placeholder?: ReactNode;
+  /** Called when the cross is pressed, to throw the recording away. */
+  onCancel?: () => void;
+  /** Called when the check is pressed, to keep it. */
+  onDone?: () => void;
+  /**
+   * How loud the input is now, from 0 to 1, to draw from a real microphone.
+   * Without it the wave moves on its own, as a sign that it is listening.
+   */
+  level?: number;
+  /** What a screen reader calls the cross. Default `Cancel recording`. */
+  cancelLabel?: string;
+  /** And the check. Default `Finish recording`. */
+  doneLabel?: string;
+}
+
+/**
+ * Takes the place of the text and the footer while voice is recorded: what
+ * has been heard so far, the sound as a wave scrolling to the left, how long
+ * it has been, and buttons to throw it away or keep it.
+ */
+function PromptRecorder({
+  transcript,
+  placeholder = 'Listening…',
+  onCancel,
+  onDone,
+  level,
+  cancelLabel = 'Cancel recording',
+  doneLabel = 'Finish recording',
+  className,
+  ...props
+}: PromptRecorderProps) {
+  const slots = promptVariants();
+  // Starts on a low murmur rather than flat silence, so the wave is never a row of dots.
+  const [levels, setLevels] = useState<number[]>(() => Array.from({ length: BARS }, (_, i) => 0.12 + 0.06 * Math.sin(i * 1.7)));
+  const [seconds, setSeconds] = useState(0);
+  const latest = useRef(level);
+  latest.current = level;
+  const listening = useShimmer(!transcript);
+
+  useEffect(() => {
+    const started = Date.now();
+    const clock = window.setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 250);
+    if (reducedMotion() && latest.current === undefined) {
+      setLevels(Array.from({ length: BARS }, (_, i) => 0.25 + 0.2 * Math.sin(i / 3)));
+      return () => window.clearInterval(clock);
+    }
+    let t = 0;
+    let smooth = 0.2;
+    const tick = window.setInterval(() => {
+      t += 1;
+      // Speech: phrases that swell and fall, with syllables riding on them.
+      const phrase = Math.max(0, Math.sin(t / 11) * 0.6 + 0.45);
+      const syllable = Math.abs(Math.sin(t * 0.85 + Math.sin(t * 0.31) * 2));
+      const target = latest.current ?? Math.min(1, 0.1 + phrase * (0.3 + syllable * 0.6) + Math.random() * 0.12);
+      smooth += (target - smooth) * 0.55;
+      setLevels((current) => [...current.slice(1), smooth]);
+    }, 70);
+    return () => {
+      window.clearInterval(clock);
+      window.clearInterval(tick);
+    };
+  }, []);
+
+  const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+
+  return (
+    <div data-slot="prompt-recorder" className={slots.recorder({ className })} {...props}>
+      <p aria-live="polite" className={slots.recorderTranscript()}>
+        {transcript || (
+          <span ref={listening} className={slots.recorderListening()}>
+            {placeholder}
+          </span>
+        )}
+      </p>
+      <div className={slots.recorderControls()}>
+        <Button variant="ghost" size="icon" shape="pill" aria-label={cancelLabel} onClick={onCancel}>
+          <XIcon />
+        </Button>
+        <div aria-hidden="true" className={slots.recorderWave()}>
+          {levels.map((value, index) => (
+            <span key={index} className={slots.recorderBar()} style={{ height: `${3 + value * 33}px` }} />
+          ))}
+        </div>
+        <span role="timer" aria-label={`Recording, ${time}`} className={slots.recorderTime()}>
+          <span className={slots.recorderDot()} />
+          {time}
+        </span>
+        <Button shape="pill" aria-label={doneLabel} onClick={onDone} className={slots.recorderDone()}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </Button>
+      </div>
+    </div>
+  );
+}
+PromptRecorder.displayName = 'Prompt.Recorder';
+
 export const Prompt = Object.assign(PromptRoot, {
   Banner: PromptBanner,
   BannerAction: PromptBannerAction,
@@ -1071,6 +1580,10 @@ export const Prompt = Object.assign(PromptRoot, {
   Model: PromptModel,
   Submit: PromptSubmit,
   Status: PromptStatus,
+  Tasks: PromptTasks,
+  Task: PromptTask,
+  Commands: PromptCommands,
+  Recorder: PromptRecorder,
   Context: PromptContext,
   ContextItem: PromptContextItem,
   Hint: PromptHint,
@@ -1093,6 +1606,10 @@ export {
   PromptModel,
   PromptSubmit,
   PromptStatus,
+  PromptTasks,
+  PromptTask,
+  PromptCommands,
+  PromptRecorder,
   PromptContext,
   PromptContextItem,
   PromptHint,
