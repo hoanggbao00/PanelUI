@@ -11,7 +11,9 @@
  *     <Prompt.Textarea placeholder="Ask anything" />
  *     <Prompt.Footer>
  *       <Prompt.Tools>
- *         <Prompt.Attach />
+ *         <Prompt.Menu>
+ *           <Prompt.AttachItem />
+ *         </Prompt.Menu>
  *         <Prompt.Model items={models} defaultValue="swift" />
  *       </Prompt.Tools>
  *       <Prompt.Submit />
@@ -46,7 +48,8 @@
  *
  * ## Files
  *
- * Files arrive from `Prompt.Attach`, from a paste, or dropped on the field.
+ * Files arrive from `Prompt.AttachItem` in the menu or `Prompt.Attach`, from
+ * ⌘U or Ctrl+U in the field, from a paste, or dropped on the field.
  * `accept` and `maxFiles` decide which are taken, and `onReject` is told about
  * the rest. Images are shown as thumbnails, anything else as a chip with its
  * name and size.
@@ -69,6 +72,7 @@ import {
 } from 'react';
 import { tv } from 'tailwind-variants';
 import { Button, type ButtonProps } from '../button';
+import { Menu, type MenuContentProps, type MenuItemProps } from '../menu';
 import { Select } from '../select';
 import { Textarea, type TextareaProps } from '../textarea';
 
@@ -114,15 +118,9 @@ const promptVariants = tv({
     footer: 'flex items-end justify-between gap-2 p-2.5 pt-1.5',
     // The padding makes a row of tools as tall as the submit button, so a single row lines up with it.
     tools: 'flex min-w-0 flex-wrap items-center gap-1.5 py-0.5',
-    tool: [
-      // In a group it gives up its edge, and the pressed one is raised out of the group's well.
-      'in-data-[slot=prompt-tool-group]:border-transparent in-data-[slot=prompt-tool-group]:bg-transparent in-data-[slot=prompt-tool-group]:shadow-none',
-      'in-data-[slot=prompt-tool-group]:size-8 in-data-[slot=prompt-tool-group]:text-muted-foreground',
-      'in-data-[slot=prompt-tool-group]:aria-pressed:bg-card in-data-[slot=prompt-tool-group]:aria-pressed:text-foreground in-data-[slot=prompt-tool-group]:aria-pressed:shadow-xs',
-      'in-data-[slot=prompt-tool-group]:aria-pressed:border-border',
-      'aria-pressed:bg-accent aria-pressed:text-accent-foreground',
-    ],
-    toolGroup: 'flex items-center gap-0.5 rounded-full bg-muted p-0.5',
+    tool: 'aria-pressed:bg-accent aria-pressed:text-accent-foreground',
+    // The plus turns to a cross while its menu is open.
+    menuTrigger: 'data-popup-open:bg-accent [&_svg]:transition-transform [&_svg]:duration-200 data-popup-open:[&_svg]:rotate-45 motion-reduce:[&_svg]:transition-none',
     modelValue: 'flex min-w-0 items-center gap-2 [&_svg]:size-4',
     submit: [
       'relative size-10 shrink-0 overflow-visible rounded-full p-0',
@@ -612,6 +610,12 @@ function PromptTextarea({
       onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
         onKeyDown?.(event);
         if (event.defaultPrevented) return;
+        // The usual shortcut for attaching, where underlining means nothing.
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'u') {
+          event.preventDefault();
+          prompt.openFileDialog();
+          return;
+        }
         // `isComposing`: Enter that ends a composition in an input method is not a send.
         if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
           event.preventDefault();
@@ -750,19 +754,6 @@ function PromptTool({
 }
 PromptTool.displayName = 'Prompt.Tool';
 
-export interface PromptToolGroupProps extends ComponentProps<'div'> {
-  /** What the tools have in common, for a screen reader. */
-  label?: string;
-}
-
-/** Tools set together in one well. The pressed one is raised out of it. */
-function PromptToolGroup({ label, className, ...props }: PromptToolGroupProps) {
-  return (
-    <div role="group" aria-label={label} data-slot="prompt-tool-group" className={promptVariants().toolGroup({ className })} {...props} />
-  );
-}
-PromptToolGroup.displayName = 'Prompt.ToolGroup';
-
 export interface PromptAttachProps extends Omit<PromptToolProps, 'label' | 'pressed' | 'onPressedChange'> {
   /** Default `Attach files`. */
   label?: string;
@@ -780,11 +771,7 @@ function PromptAttach({ label = 'Attach files', onClick, children, ...props }: P
       }}
       {...props}
     >
-      {children ?? (
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m16 6-8.41 8.59a2 2 0 0 0 2.83 2.83l8.41-8.59a4 4 0 0 0-5.66-5.66l-8.58 8.59a6 6 0 1 0 8.49 8.49L21.5 12" />
-        </svg>
-      )}
+      {children ?? <PaperclipIcon />}
     </PromptTool>
   );
 }
@@ -866,6 +853,77 @@ function PromptModel({
   );
 }
 PromptModel.displayName = 'Prompt.Model';
+
+const PaperclipIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m16 6-8.41 8.59a2 2 0 0 0 2.83 2.83l8.41-8.59a4 4 0 0 0-5.66-5.66l-8.58 8.59a6 6 0 1 0 8.49 8.49L21.5 12" />
+  </svg>
+);
+
+export interface PromptMenuProps extends Omit<MenuContentProps, 'children'> {
+  /** What a screen reader and the tooltip call the button. Default `Add`. */
+  label?: string;
+  /** Replaces the plus on the button. */
+  icon?: ReactNode;
+  /** The menu: `Prompt.AttachItem`, and any `Menu` items, check items and submenus. */
+  children?: ReactNode;
+}
+
+/**
+ * One round button that opens a menu of everything that can be added to the
+ * message: files, tools, modes. It keeps the footer to one button however
+ * many there are.
+ */
+function PromptMenu({ label = 'Add', icon, children, side = 'top', align = 'start', ...props }: PromptMenuProps) {
+  const prompt = usePrompt('Prompt.Menu');
+  return (
+    <Menu>
+      <Menu.Trigger
+        disabled={prompt.disabled}
+        aria-label={label}
+        title={label}
+        render={<Button data-slot="prompt-menu" variant="outline" shape="pill" size="icon" />}
+        className={promptVariants().menuTrigger()}
+      >
+        {icon ?? (
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        )}
+      </Menu.Trigger>
+      <Menu.Content side={side} align={align} {...props}>
+        {children}
+      </Menu.Content>
+    </Menu>
+  );
+}
+PromptMenu.displayName = 'Prompt.Menu';
+
+export interface PromptAttachItemProps extends Omit<MenuItemProps, 'children'> {
+  /** Default `Add files`. */
+  children?: ReactNode;
+  /** The keys shown at its end. Default `⌘U`; pass `null` for none. ⌘U and Ctrl+U in the field open the picker. */
+  shortcut?: ReactNode;
+}
+
+/** The menu item that opens the file picker. */
+function PromptAttachItem({ children = 'Add files', shortcut = '⌘U', onClick, ...props }: PromptAttachItemProps) {
+  const prompt = usePrompt('Prompt.AttachItem');
+  return (
+    <Menu.Item
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) prompt.openFileDialog();
+      }}
+      {...props}
+    >
+      <PaperclipIcon />
+      {children}
+      {shortcut === null ? null : <Menu.Shortcut>{shortcut}</Menu.Shortcut>}
+    </Menu.Item>
+  );
+}
+PromptAttachItem.displayName = 'Prompt.AttachItem';
 
 /* ----------------------------------------------------------------- submit */
 
@@ -1007,8 +1065,9 @@ export const Prompt = Object.assign(PromptRoot, {
   Footer: PromptFooter,
   Tools: PromptTools,
   Tool: PromptTool,
-  ToolGroup: PromptToolGroup,
   Attach: PromptAttach,
+  Menu: PromptMenu,
+  AttachItem: PromptAttachItem,
   Model: PromptModel,
   Submit: PromptSubmit,
   Status: PromptStatus,
@@ -1028,8 +1087,9 @@ export {
   PromptFooter,
   PromptTools,
   PromptTool,
-  PromptToolGroup,
   PromptAttach,
+  PromptMenu,
+  PromptAttachItem,
   PromptModel,
   PromptSubmit,
   PromptStatus,

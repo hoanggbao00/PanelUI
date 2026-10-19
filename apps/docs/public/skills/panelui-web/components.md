@@ -15,6 +15,7 @@ Generated from the collection's source. Read a component's own file before using
 ## Overlays
 
 - [Command Dock](components/command-dock.md) — A small button that opens into a field, with the answer arriving under it a row at a time.
+- [Menu](components/menu.md) — A list of actions that opens from a button, with shortcuts, checks and submenus.
 - [Sheet](components/sheet.md) — A panel that rises from an edge of the screen, floating clear of it, and leaves with a swipe.
 
 ## Layout and structure

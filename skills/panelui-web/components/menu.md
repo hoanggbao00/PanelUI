@@ -1,0 +1,238 @@
+# Menu
+
+A list of actions that opens from a button, with shortcuts, checks and submenus.
+
+```tsx
+import { Menu } from "@/components/panelui/menu"
+```
+
+From npm the path is `panelui-web/menu`. Install with `npx shadcn@latest add @panelui/menu`.
+
+## When to use it
+
+Use it for actions on one thing that do not all fit beside it: a document's rename, share and delete, a row's more button. For choosing a value that then shows in the button, use [Select](/docs/web/components/select).
+
+Every row has the same shape: an icon, the label, and at its end a shortcut, a badge, a check or a submenu's chevron.
+
+It opens from `Menu.Trigger`, which is a plain button until you give it `render`. Pass a [Button](/docs/web/components/button) there to draw it as one.
+
+## Usage
+
+```tsx
+<Menu>
+  <Menu.Trigger render={<Button variant="outline" />}>Document</Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item onClick={rename}>
+      <PencilIcon />
+      Rename
+      <Menu.Shortcut>⌘R</Menu.Shortcut>
+    </Menu.Item>
+    <Menu.Separator />
+    <Menu.Item variant="destructive">Delete</Menu.Item>
+  </Menu.Content>
+</Menu>
+```
+
+## Parts
+
+```tsx
+<Menu>
+  <Menu.Trigger />
+  <Menu.Content>
+    <Menu.Item>
+      <Menu.Shortcut />
+      <Menu.Badge />
+    </Menu.Item>
+    <Menu.Sub>
+      <Menu.SubTrigger />
+      <Menu.SubContent />
+    </Menu.Sub>
+    <Menu.Separator />
+    <Menu.Group>
+      <Menu.GroupLabel />
+      <Menu.CheckboxItem />
+      <Menu.RadioGroup>
+        <Menu.RadioItem />
+      </Menu.RadioGroup>
+    </Menu.Group>
+  </Menu.Content>
+</Menu>
+```
+
+- `Menu.Trigger` — The button that opens the menu. `render` draws it as another element, such as a `Button`.
+- `Menu.Content` — The list, in a layer over the page. `side` and `align` place it against the trigger, and it moves to the other side when there is no room.
+- `Menu.Item` — One action, which closes the menu when pressed. `variant="destructive"` is for one that cannot be undone.
+- `Menu.CheckboxItem` — An item switched on and off, with a check at its end while on. The menu stays open.
+- `Menu.RadioGroup` — Radio items of which one is chosen, held by `value` and `onValueChange`.
+- `Menu.RadioItem` — One choice in a radio group.
+- `Menu.Sub` — A submenu: its row and the list it opens.
+- `Menu.SubTrigger` — The row that opens a submenu, on hover or press, with a chevron at its end. `end` puts something before the chevron, such as a badge.
+- `Menu.SubContent` — The submenu's list, opened beside its row.
+- `Menu.Group` — Items that belong together. A screen reader announces them by their `Menu.GroupLabel`.
+- `Menu.GroupLabel` — The heading of a group.
+- `Menu.Separator` — A rule between groups.
+- `Menu.Shortcut` — The keys for an item, at its end. It only shows them; the keys have to be handled where the action lives.
+- `Menu.Badge` — A small count or flag at an item's end.
+
+## Props
+
+Every part also takes the props of the element it renders, and a `className`.
+
+#### `MenuContentProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `container` | `BaseMenu.Portal.Props['container']` | — | Where in the document the menu is put. Default `document.body`. |
+| `className` | `string` | — | — |
+
+#### `MenuItemProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `variant` | `'default' \| 'destructive'` | — | `destructive` draws it in the destructive colour, for an action that cannot be undone. Default `default`. |
+| `className` | `string` | — | — |
+
+#### `MenuCheckboxItemProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `className` | `string` | — | — |
+
+#### `MenuRadioGroupProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `className` | `string` | — | — |
+
+#### `MenuRadioItemProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `className` | `string` | — | — |
+
+#### `MenuSubTriggerProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `className` | `string` | — | — |
+| `end` | `ReactNode` | — | Something before the chevron, such as a `Menu.Badge`. |
+
+#### `MenuSubContentProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `side` | `BaseMenu.Positioner.Props['side']` | `'bottom'` | Default `inline-end`: to the right in a left-to-right page. |
+
+#### `MenuGroupProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `className` | `string` | — | — |
+
+#### `MenuGroupLabelProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `className` | `string` | — | — |
+
+## In a Server Component
+
+`Menu` is a client component. A Server Component cannot read `Menu.Trigger` off the import, so import each part by name: `MenuTrigger`, `MenuContent`, `MenuItem`, `MenuCheckboxItem`, `MenuRadioGroup`, `MenuRadioItem`, `MenuSub`, `MenuSubTrigger`, `MenuSubContent`, `MenuGroup`, `MenuGroupLabel`, `MenuSeparator`, `MenuShortcut`, `MenuBadge`.
+
+## Notes
+
+#### Keyboard
+
+With the trigger focused, Enter, Space or the down arrow opens the menu on its first item. The arrow keys move between items, typing jumps to one by its first letters, Enter presses it, and Escape closes the menu and puts focus back on the trigger. The right arrow opens a submenu and the left arrow closes it.
+
+#### Submenus
+
+A submenu opens when its row is hovered, after a short delay, or pressed. The pointer can cross diagonally from the row to the submenu without closing it.
+
+#### Closing
+
+Pressing an item closes the menu; pressing a check or radio item does not. Pass `closeOnClick` to change either.
+
+## Example
+
+```tsx
+'use client';
+
+import {
+  ArchiveIcon,
+  CopyIcon,
+  EllipsisIcon,
+  LinkIcon,
+  MailIcon,
+  PencilIcon,
+  Share2Icon,
+  Trash2Icon,
+  UsersIcon,
+} from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Menu } from '@/components/panelui/menu';
+import { useState } from 'react';
+
+export default function MenuActions() {
+  const [last, setLast] = useState<string | null>(null);
+  const run = (action: string) => () => setLast(action);
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <Menu>
+        <Menu.Trigger render={<Button variant="outline" />}>
+          <EllipsisIcon />
+          Document
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item onClick={run('Renamed')}>
+            <PencilIcon />
+            Rename
+            <Menu.Shortcut>⌘R</Menu.Shortcut>
+          </Menu.Item>
+          <Menu.Item onClick={run('Duplicated')}>
+            <CopyIcon />
+            Duplicate
+            <Menu.Shortcut>⌘D</Menu.Shortcut>
+          </Menu.Item>
+          <Menu.Sub>
+            <Menu.SubTrigger>
+              <Share2Icon />
+              Share
+            </Menu.SubTrigger>
+            <Menu.SubContent>
+              <Menu.Item onClick={run('Link copied')}>
+                <LinkIcon />
+                Copy link
+              </Menu.Item>
+              <Menu.Item onClick={run('Sent by email')}>
+                <MailIcon />
+                Send by email
+              </Menu.Item>
+              <Menu.Separator />
+              <Menu.Item onClick={run('Opened sharing')}>
+                <UsersIcon />
+                Manage access
+                <Menu.Badge>3</Menu.Badge>
+              </Menu.Item>
+            </Menu.SubContent>
+          </Menu.Sub>
+          <Menu.Separator />
+          <Menu.Item onClick={run('Archived')}>
+            <ArchiveIcon />
+            Archive
+          </Menu.Item>
+          <Menu.Item variant="destructive" onClick={run('Deleted')}>
+            <Trash2Icon />
+            Delete
+            <Menu.Shortcut>⌫</Menu.Shortcut>
+          </Menu.Item>
+        </Menu.Content>
+      </Menu>
+      <p className="text-xs text-muted-foreground" aria-live="polite">
+        {last ?? 'Nothing chosen yet.'}
+      </p>
+    </div>
+  );
+}
+```

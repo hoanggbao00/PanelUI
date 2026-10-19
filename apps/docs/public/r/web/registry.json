@@ -258,6 +258,24 @@
       ]
     },
     {
+      "name": "menu",
+      "type": "registry:component",
+      "title": "Menu",
+      "description": "A list of actions that opens from a button, with shortcuts, checks and submenus.",
+      "dependencies": [
+        "@base-ui/react",
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/menu.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/menu.tsx"
+        }
+      ]
+    },
+    {
       "name": "not-found",
       "type": "registry:component",
       "title": "Not Found",
@@ -335,6 +353,7 @@
       ],
       "registryDependencies": [
         "https://panelui.dev/r/web/button.json",
+        "https://panelui.dev/r/web/menu.json",
         "https://panelui.dev/r/web/select.json",
         "https://panelui.dev/r/web/textarea.json"
       ],

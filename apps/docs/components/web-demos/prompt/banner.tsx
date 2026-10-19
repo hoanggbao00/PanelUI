@@ -1,6 +1,7 @@
 'use client';
 
-import { BrainIcon, CalendarIcon, CheckIcon, GlobeIcon, LightbulbIcon, ShapesIcon, SparklesIcon, ZapIcon } from 'lucide-react';
+import { BrainIcon, CalendarIcon, CheckIcon, GlobeIcon, LightbulbIcon, SparklesIcon, ZapIcon } from 'lucide-react';
+import { Menu } from 'panelui-web/menu';
 import { Prompt, type PromptModelItem } from 'panelui-web/prompt';
 import { useState } from 'react';
 
@@ -13,6 +14,8 @@ const MODELS: PromptModelItem[] = [
 export default function PromptBanner() {
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [search, setSearch] = useState(true);
+  const [think, setThink] = useState(false);
 
   const connect = () => {
     setConnecting(true);
@@ -36,19 +39,29 @@ export default function PromptBanner() {
           <Prompt.Textarea placeholder="Ask anything" />
           <Prompt.Footer>
             <Prompt.Tools>
-              <Prompt.Attach />
-              <Prompt.ToolGroup label="Mode">
-                <Prompt.Tool label="Search the web" pressed onPressedChange={() => {}}>
+              <Prompt.Menu>
+                <Prompt.AttachItem />
+                <Menu.Separator />
+                <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>
+                  <GlobeIcon />
+                  Search the web
+                </Menu.CheckboxItem>
+                <Menu.CheckboxItem checked={think} onCheckedChange={setThink}>
+                  <LightbulbIcon />
+                  Think longer
+                </Menu.CheckboxItem>
+              </Prompt.Menu>
+              {search ? (
+                <Prompt.Tool label="Search" showLabel pressed onPressedChange={setSearch}>
                   <GlobeIcon />
                 </Prompt.Tool>
-                <Prompt.Tool label="Think it through" pressed={false} onPressedChange={() => {}}>
+              ) : null}
+              {think ? (
+                <Prompt.Tool label="Think" showLabel pressed onPressedChange={setThink}>
                   <LightbulbIcon />
                 </Prompt.Tool>
-                <Prompt.Tool label="Sketch a diagram" pressed={false} onPressedChange={() => {}}>
-                  <ShapesIcon />
-                </Prompt.Tool>
-              </Prompt.ToolGroup>
-              <Prompt.Model items={MODELS} />
+              ) : null}
+              <Prompt.Model items={MODELS} variant="ghost" />
             </Prompt.Tools>
             <Prompt.Submit />
           </Prompt.Footer>

@@ -10,7 +10,7 @@ From npm the path is `panelui-web/prompt`. Install with `npx shadcn@latest add @
 
 ## When to use it
 
-Use it for the field a person writes to an assistant in: a question, an instruction, a follow-up. It holds the text, the files attached to it, the tools and model it goes to, and the button that sends it.
+Use it for the field a person writes to an assistant in: a question, an instruction, a follow-up. It holds the text, the files attached to it, the model it goes to, a menu of what else can be added, and the button that sends it.
 
 It does not talk to a model. `onSubmit` is handed the text and the files, and `status` is how you tell it what the answer is doing: `submitted` and `streaming` turn the send button into a stop button and open the status band, and `error` marks the field.
 
@@ -27,7 +27,14 @@ For one question asked from anywhere on a page, with the answer listed under it,
     <Prompt.Textarea placeholder="Ask anything" />
     <Prompt.Footer>
       <Prompt.Tools>
-        <Prompt.Attach />
+        <Prompt.Menu>
+          <Prompt.AttachItem />
+          <Menu.Separator />
+          <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>
+            <GlobeIcon />
+            Search the web
+          </Menu.CheckboxItem>
+        </Prompt.Menu>
         <Prompt.Model items={models} />
       </Prompt.Tools>
       <Prompt.Submit />
@@ -49,10 +56,11 @@ For one question asked from anywhere on a page, with the answer listed under it,
     <Prompt.Textarea />
     <Prompt.Footer>
       <Prompt.Tools>
+        <Prompt.Menu>
+          <Prompt.AttachItem />
+        </Prompt.Menu>
         <Prompt.Attach />
-        <Prompt.ToolGroup>
-          <Prompt.Tool />
-        </Prompt.ToolGroup>
+        <Prompt.Tool />
         <Prompt.Model />
       </Prompt.Tools>
       <Prompt.Submit />
@@ -73,9 +81,10 @@ For one question asked from anywhere on a page, with the answer listed under it,
 - `Prompt.Textarea` — Where the message is written. It grows from two lines to ten. Enter sends, Shift+Enter starts a new line, and a pasted image is attached.
 - `Prompt.Footer` — The row under the text, with the tools at its start and the submit button at its end.
 - `Prompt.Tools` — A row of tools. It wraps onto a second line when the footer is narrow.
-- `Prompt.Tool` — A round button holding an icon. `label` is what a screen reader and the tooltip call it, and `showLabel` writes it beside the icon. With `pressed` and `onPressedChange` it switches on and off.
-- `Prompt.ToolGroup` — Tools set together in one well, with the pressed one raised out of it. Use it for modes where one is on at a time.
-- `Prompt.Attach` — A tool that opens the file picker.
+- `Prompt.Menu` — One round button with a plus that opens a [Menu](/docs/web/components/menu) of what can be added to the message: files, skills, connections, modes. Its children are `Menu` items, check items and submenus. The plus turns to a cross while it is open.
+- `Prompt.AttachItem` — The menu item that opens the file picker, with `⌘U` at its end. ⌘U or Ctrl+U in the field opens the picker too.
+- `Prompt.Tool` — A round button holding an icon. `label` is what a screen reader and the tooltip call it, and `showLabel` writes it beside the icon. With `pressed` and `onPressedChange` it switches on and off, which is how a mode chosen in the menu is shown beside it.
+- `Prompt.Attach` — A tool that opens the file picker, for a prompt with no menu.
 - `Prompt.Model` — Chooses the model. `items` are `{ value, label, icon, description }`, and the button shows the chosen one's icon and label. `variant="ghost"` has no edge.
 - `Prompt.Submit` — Sends the message. While `status` is `submitted` or `streaming` it stops the answer instead, with a ring turning round it. With `onVoice`, it starts voice while the field is empty.
 - `Prompt.Status` — A band under the field saying what the answer is doing. It opens while the prompt is busy unless `open` says otherwise.
@@ -132,12 +141,6 @@ Every part also takes the props of the element it renders, and a `className`.
 | `onPressedChange` | `(pressed: boolean) => void` | — | Called with the new state when a tool with `pressed` is pressed. |
 | `showLabel` | `boolean` | `false` | Writes the label beside the icon. |
 
-#### `PromptToolGroupProps`
-
-| Prop | Type | Default | What it does |
-| --- | --- | --- | --- |
-| `label` | `string` | `'Model'` | What the tools have in common, for a screen reader. |
-
 #### `PromptAttachProps`
 
 | Prop | Type | Default | What it does |
@@ -156,6 +159,19 @@ Every part also takes the props of the element it renders, and a `className`.
 | `label` | `string` | `'Model'` | What a screen reader calls the button. Default `Model`. |
 | `className` | `string` | — | — |
 
+#### `PromptMenuProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `label` | `string` | `'Model'` | What a screen reader and the tooltip call the button. Default `Add`. |
+| `icon` | `ReactNode` | — | Replaces the plus on the button. |
+
+#### `PromptAttachItemProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `shortcut` | `ReactNode` | — | The keys shown at its end. Default `⌘U`; pass `null` for none. ⌘U and Ctrl+U in the field open the picker. |
+
 #### `PromptSubmitProps`
 
 | Prop | Type | Default | What it does |
@@ -168,7 +184,7 @@ Every part also takes the props of the element it renders, and a `className`.
 
 ## In a Server Component
 
-`Prompt` is a client component. A Server Component cannot read `Prompt.Banner` off the import, so import each part by name: `PromptBanner`, `PromptBannerAction`, `PromptField`, `PromptAttachments`, `PromptTextarea`, `PromptFooter`, `PromptTools`, `PromptTool`, `PromptToolGroup`, `PromptAttach`, `PromptModel`, `PromptSubmit`, `PromptStatus`, `PromptContext`, `PromptContextItem`, `PromptHint`.
+`Prompt` is a client component. A Server Component cannot read `Prompt.Banner` off the import, so import each part by name: `PromptBanner`, `PromptBannerAction`, `PromptField`, `PromptAttachments`, `PromptTextarea`, `PromptFooter`, `PromptTools`, `PromptTool`, `PromptAttach`, `PromptMenu`, `PromptAttachItem`, `PromptModel`, `PromptSubmit`, `PromptStatus`, `PromptContext`, `PromptContextItem`, `PromptHint`.
 
 ## Notes
 
@@ -186,7 +202,7 @@ It has three jobs and changes between them in place, so it never moves under the
 
 #### Files
 
-Files arrive from `Prompt.Attach`, from a paste and from a drop on the field. `accept` takes the same rules as a file input's, such as `image/*,.pdf`, and `maxFiles` caps how many are held at once. Files that are not taken are passed to `onReject` with the reason, `accept` or `max-files`, so you can say why. Images get a thumbnail from an object URL, which is released when the file is removed.
+Files arrive from `Prompt.AttachItem` or `Prompt.Attach`, from ⌘U or Ctrl+U in the field, from a paste and from a drop on the field. `accept` takes the same rules as a file input's, such as `image/*,.pdf`, and `maxFiles` caps how many are held at once. Files that are not taken are passed to `onReject` with the reason, `accept` or `max-files`, so you can say why. Images get a thumbnail from an object URL, which is released when the file is removed.
 
 #### Bands
 
@@ -196,13 +212,32 @@ Files arrive from `Prompt.Attach`, from a paste and from a drop on the field. `a
 
 The text field is called "Message" unless you give it an `aria-label`. Each tool's `label` is its name, a pressed tool is announced as pressed, and the submit button's name follows its job: Send, Stop or Speak. The status band is a live region, so what it says is read as it changes.
 
+#### The menu and what it switches on
+
+`Prompt.Menu` keeps the footer to one button however many tools there are. A mode switched on in it, such as web search, is best shown beside it as a pressed `Prompt.Tool` with `showLabel`, which switches it off again when pressed. The first example does this for search, thinking and a chosen skill.
+
 ## Example
 
 ```tsx
 'use client';
 
-import { BrainIcon, GlobeIcon, LightbulbIcon, ShapesIcon, SparklesIcon, ZapIcon } from 'lucide-react';
-import { Prompt, type PromptMessage, type PromptState, type PromptModelItem } from '@/components/panelui/prompt';
+import {
+  BookTextIcon,
+  BrainIcon,
+  CalendarIcon,
+  FolderIcon,
+  GlobeIcon,
+  LightbulbIcon,
+  PlusIcon,
+  PlugIcon,
+  ScrollTextIcon,
+  SparklesIcon,
+  TicketIcon,
+  TriangleAlertIcon,
+  ZapIcon,
+} from 'lucide-react';
+import { Menu } from '@/components/panelui/menu';
+import { Prompt, type PromptMessage, type PromptModelItem, type PromptState } from '@/components/panelui/prompt';
 import { useEffect, useRef, useState } from 'react';
 
 const MODELS: PromptModelItem[] = [
@@ -211,11 +246,15 @@ const MODELS: PromptModelItem[] = [
   { value: 'lumen-deep', label: 'Lumen 4 Deep', icon: <BrainIcon />, description: 'Slower, for hard problems' },
 ];
 
-type Mode = 'search' | 'think' | 'draw' | null;
+const SKILLS = ['Weekly report', 'Release notes', 'Meeting brief', 'Code review'];
 
 export default function PromptAsk() {
   const [status, setStatus] = useState<PromptState>('idle');
-  const [mode, setMode] = useState<Mode>('search');
+  const [search, setSearch] = useState(true);
+  const [think, setThink] = useState(false);
+  const [calendar, setCalendar] = useState(true);
+  const [drive, setDrive] = useState(false);
+  const [skill, setSkill] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
   const timers = useRef<number[]>([]);
@@ -236,8 +275,6 @@ export default function PromptAsk() {
     timers.current.push(window.setTimeout(() => setStatus('idle'), 4200));
   };
 
-  const toggle = (next: Exclude<Mode, null>) => (on: boolean) => setMode(on ? next : null);
-
   return (
     <div className="flex w-full max-w-xl flex-col gap-3">
       <Prompt
@@ -253,19 +290,83 @@ export default function PromptAsk() {
           <Prompt.Textarea placeholder="Ask about your notes, or attach a file" />
           <Prompt.Footer>
             <Prompt.Tools>
-              <Prompt.Attach />
-              <Prompt.ToolGroup label="Mode">
-                <Prompt.Tool label="Search the web" pressed={mode === 'search'} onPressedChange={toggle('search')}>
+              <Prompt.Menu>
+                <Prompt.AttachItem />
+                <Menu.Separator />
+                <Menu.Sub>
+                  <Menu.SubTrigger>
+                    <BookTextIcon />
+                    Skills
+                  </Menu.SubTrigger>
+                  <Menu.SubContent>
+                    {SKILLS.map((name) => (
+                      <Menu.Item key={name} onClick={() => setSkill(name)}>
+                        <ScrollTextIcon />
+                        {name}
+                      </Menu.Item>
+                    ))}
+                    <Menu.Separator />
+                    <Menu.Item>
+                      <PlusIcon />
+                      Browse skills
+                    </Menu.Item>
+                  </Menu.SubContent>
+                </Menu.Sub>
+                <Menu.Sub>
+                  <Menu.SubTrigger
+                    end={
+                      drive ? null : (
+                        <Menu.Badge>
+                          <TriangleAlertIcon />1
+                        </Menu.Badge>
+                      )
+                    }
+                  >
+                    <PlugIcon />
+                    Connections
+                  </Menu.SubTrigger>
+                  <Menu.SubContent>
+                    <Menu.CheckboxItem checked={calendar} onCheckedChange={setCalendar}>
+                      <CalendarIcon />
+                      Calendar
+                    </Menu.CheckboxItem>
+                    <Menu.CheckboxItem checked={drive} onCheckedChange={setDrive}>
+                      <FolderIcon />
+                      Shared drive
+                    </Menu.CheckboxItem>
+                    <Menu.Item disabled>
+                      <TicketIcon />
+                      Issue tracker
+                    </Menu.Item>
+                  </Menu.SubContent>
+                </Menu.Sub>
+                <Menu.Separator />
+                <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>
+                  <GlobeIcon />
+                  Search the web
+                </Menu.CheckboxItem>
+                <Menu.CheckboxItem checked={think} onCheckedChange={setThink}>
+                  <LightbulbIcon />
+                  Think longer
+                </Menu.CheckboxItem>
+              </Prompt.Menu>
+              {/* What is switched on in the menu, shown beside it and pressed to switch off. */}
+              {search ? (
+                <Prompt.Tool label="Search" showLabel pressed onPressedChange={setSearch}>
                   <GlobeIcon />
                 </Prompt.Tool>
-                <Prompt.Tool label="Think it through" pressed={mode === 'think'} onPressedChange={toggle('think')}>
+              ) : null}
+              {think ? (
+                <Prompt.Tool label="Think" showLabel pressed onPressedChange={setThink}>
                   <LightbulbIcon />
                 </Prompt.Tool>
-                <Prompt.Tool label="Sketch a diagram" pressed={mode === 'draw'} onPressedChange={toggle('draw')}>
-                  <ShapesIcon />
+              ) : null}
+              {skill ? (
+                <Prompt.Tool label={skill} showLabel pressed onPressedChange={() => setSkill(null)}>
+                  <ScrollTextIcon />
                 </Prompt.Tool>
-              </Prompt.ToolGroup>
-              <Prompt.Model items={MODELS} />
+              ) : null}
+              <Prompt.Model items={MODELS} variant="ghost" />
             </Prompt.Tools>
             <Prompt.Submit onVoice={() => setListening((on) => !on)} listening={listening} />
           </Prompt.Footer>

@@ -1,7 +1,22 @@
 'use client';
 
-import { BrainIcon, GlobeIcon, LightbulbIcon, ShapesIcon, SparklesIcon, ZapIcon } from 'lucide-react';
-import { Prompt, type PromptMessage, type PromptState, type PromptModelItem } from 'panelui-web/prompt';
+import {
+  BookTextIcon,
+  BrainIcon,
+  CalendarIcon,
+  FolderIcon,
+  GlobeIcon,
+  LightbulbIcon,
+  PlusIcon,
+  PlugIcon,
+  ScrollTextIcon,
+  SparklesIcon,
+  TicketIcon,
+  TriangleAlertIcon,
+  ZapIcon,
+} from 'lucide-react';
+import { Menu } from 'panelui-web/menu';
+import { Prompt, type PromptMessage, type PromptModelItem, type PromptState } from 'panelui-web/prompt';
 import { useEffect, useRef, useState } from 'react';
 
 const MODELS: PromptModelItem[] = [
@@ -10,11 +25,15 @@ const MODELS: PromptModelItem[] = [
   { value: 'lumen-deep', label: 'Lumen 4 Deep', icon: <BrainIcon />, description: 'Slower, for hard problems' },
 ];
 
-type Mode = 'search' | 'think' | 'draw' | null;
+const SKILLS = ['Weekly report', 'Release notes', 'Meeting brief', 'Code review'];
 
 export default function PromptAsk() {
   const [status, setStatus] = useState<PromptState>('idle');
-  const [mode, setMode] = useState<Mode>('search');
+  const [search, setSearch] = useState(true);
+  const [think, setThink] = useState(false);
+  const [calendar, setCalendar] = useState(true);
+  const [drive, setDrive] = useState(false);
+  const [skill, setSkill] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
   const timers = useRef<number[]>([]);
@@ -35,8 +54,6 @@ export default function PromptAsk() {
     timers.current.push(window.setTimeout(() => setStatus('idle'), 4200));
   };
 
-  const toggle = (next: Exclude<Mode, null>) => (on: boolean) => setMode(on ? next : null);
-
   return (
     <div className="flex w-full max-w-xl flex-col gap-3">
       <Prompt
@@ -52,19 +69,83 @@ export default function PromptAsk() {
           <Prompt.Textarea placeholder="Ask about your notes, or attach a file" />
           <Prompt.Footer>
             <Prompt.Tools>
-              <Prompt.Attach />
-              <Prompt.ToolGroup label="Mode">
-                <Prompt.Tool label="Search the web" pressed={mode === 'search'} onPressedChange={toggle('search')}>
+              <Prompt.Menu>
+                <Prompt.AttachItem />
+                <Menu.Separator />
+                <Menu.Sub>
+                  <Menu.SubTrigger>
+                    <BookTextIcon />
+                    Skills
+                  </Menu.SubTrigger>
+                  <Menu.SubContent>
+                    {SKILLS.map((name) => (
+                      <Menu.Item key={name} onClick={() => setSkill(name)}>
+                        <ScrollTextIcon />
+                        {name}
+                      </Menu.Item>
+                    ))}
+                    <Menu.Separator />
+                    <Menu.Item>
+                      <PlusIcon />
+                      Browse skills
+                    </Menu.Item>
+                  </Menu.SubContent>
+                </Menu.Sub>
+                <Menu.Sub>
+                  <Menu.SubTrigger
+                    end={
+                      drive ? null : (
+                        <Menu.Badge>
+                          <TriangleAlertIcon />1
+                        </Menu.Badge>
+                      )
+                    }
+                  >
+                    <PlugIcon />
+                    Connections
+                  </Menu.SubTrigger>
+                  <Menu.SubContent>
+                    <Menu.CheckboxItem checked={calendar} onCheckedChange={setCalendar}>
+                      <CalendarIcon />
+                      Calendar
+                    </Menu.CheckboxItem>
+                    <Menu.CheckboxItem checked={drive} onCheckedChange={setDrive}>
+                      <FolderIcon />
+                      Shared drive
+                    </Menu.CheckboxItem>
+                    <Menu.Item disabled>
+                      <TicketIcon />
+                      Issue tracker
+                    </Menu.Item>
+                  </Menu.SubContent>
+                </Menu.Sub>
+                <Menu.Separator />
+                <Menu.CheckboxItem checked={search} onCheckedChange={setSearch}>
+                  <GlobeIcon />
+                  Search the web
+                </Menu.CheckboxItem>
+                <Menu.CheckboxItem checked={think} onCheckedChange={setThink}>
+                  <LightbulbIcon />
+                  Think longer
+                </Menu.CheckboxItem>
+              </Prompt.Menu>
+              {/* What is switched on in the menu, shown beside it and pressed to switch off. */}
+              {search ? (
+                <Prompt.Tool label="Search" showLabel pressed onPressedChange={setSearch}>
                   <GlobeIcon />
                 </Prompt.Tool>
-                <Prompt.Tool label="Think it through" pressed={mode === 'think'} onPressedChange={toggle('think')}>
+              ) : null}
+              {think ? (
+                <Prompt.Tool label="Think" showLabel pressed onPressedChange={setThink}>
                   <LightbulbIcon />
                 </Prompt.Tool>
-                <Prompt.Tool label="Sketch a diagram" pressed={mode === 'draw'} onPressedChange={toggle('draw')}>
-                  <ShapesIcon />
+              ) : null}
+              {skill ? (
+                <Prompt.Tool label={skill} showLabel pressed onPressedChange={() => setSkill(null)}>
+                  <ScrollTextIcon />
                 </Prompt.Tool>
-              </Prompt.ToolGroup>
-              <Prompt.Model items={MODELS} />
+              ) : null}
+              <Prompt.Model items={MODELS} variant="ghost" />
             </Prompt.Tools>
             <Prompt.Submit onVoice={() => setListening((on) => !on)} listening={listening} />
           </Prompt.Footer>

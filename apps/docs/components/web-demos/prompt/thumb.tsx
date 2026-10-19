@@ -1,6 +1,6 @@
 'use client';
 
-import { BrainIcon, GlobeIcon, LightbulbIcon, ShapesIcon, SparklesIcon, ZapIcon } from 'lucide-react';
+import { BrainIcon, GlobeIcon, SparklesIcon, ZapIcon } from 'lucide-react';
 import { Prompt, type PromptModelItem } from 'panelui-web/prompt';
 
 const MODELS: PromptModelItem[] = [
@@ -17,19 +17,11 @@ export default function PromptThumb() {
           <Prompt.Textarea minRows={1} />
           <Prompt.Footer>
             <Prompt.Tools>
-              <Prompt.Attach />
-              <Prompt.ToolGroup label="Mode">
-                <Prompt.Tool label="Search the web" pressed>
-                  <GlobeIcon />
-                </Prompt.Tool>
-                <Prompt.Tool label="Think it through" pressed={false}>
-                  <LightbulbIcon />
-                </Prompt.Tool>
-                <Prompt.Tool label="Sketch a diagram" pressed={false}>
-                  <ShapesIcon />
-                </Prompt.Tool>
-              </Prompt.ToolGroup>
-              <Prompt.Model items={MODELS} />
+              <Prompt.Menu />
+              <Prompt.Tool label="Search" showLabel pressed>
+                <GlobeIcon />
+              </Prompt.Tool>
+              <Prompt.Model items={MODELS} variant="ghost" />
             </Prompt.Tools>
             <Prompt.Submit />
           </Prompt.Footer>

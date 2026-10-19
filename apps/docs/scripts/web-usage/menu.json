@@ -1,0 +1,37 @@
+{
+  "slug": "menu",
+  "demo": "actions",
+  "demoOptions": {
+    "height": 360,
+    "align": "start"
+  },
+  "intro": "Use it for actions on one thing that do not all fit beside it: a document's rename, share and delete, a row's more button. For choosing a value that then shows in the button, use [Select](/docs/web/components/select).\n\nEvery row has the same shape: an icon, the label, and at its end a shortcut, a badge, a check or a submenu's chevron.\n\nIt opens from `Menu.Trigger`, which is a plain button until you give it `render`. Pass a [Button](/docs/web/components/button) there to draw it as one.",
+  "usage": "<Menu>\n  <Menu.Trigger render={<Button variant=\"outline\" />}>Document</Menu.Trigger>\n  <Menu.Content>\n    <Menu.Item onClick={rename}>\n      <PencilIcon />\n      Rename\n      <Menu.Shortcut>⌘R</Menu.Shortcut>\n    </Menu.Item>\n    <Menu.Separator />\n    <Menu.Item variant=\"destructive\">Delete</Menu.Item>\n  </Menu.Content>\n</Menu>",
+  "anatomy": "<Menu>\n  <Menu.Trigger />\n  <Menu.Content>\n    <Menu.Item>\n      <Menu.Shortcut />\n      <Menu.Badge />\n    </Menu.Item>\n    <Menu.Sub>\n      <Menu.SubTrigger />\n      <Menu.SubContent />\n    </Menu.Sub>\n    <Menu.Separator />\n    <Menu.Group>\n      <Menu.GroupLabel />\n      <Menu.CheckboxItem />\n      <Menu.RadioGroup>\n        <Menu.RadioItem />\n      </Menu.RadioGroup>\n    </Menu.Group>\n  </Menu.Content>\n</Menu>",
+  "parts": {
+    "Trigger": "The button that opens the menu. `render` draws it as another element, such as a `Button`.",
+    "Content": "The list, in a layer over the page. `side` and `align` place it against the trigger, and it moves to the other side when there is no room.",
+    "Item": "One action, which closes the menu when pressed. `variant=\"destructive\"` is for one that cannot be undone.",
+    "CheckboxItem": "An item switched on and off, with a check at its end while on. The menu stays open.",
+    "RadioGroup": "Radio items of which one is chosen, held by `value` and `onValueChange`.",
+    "RadioItem": "One choice in a radio group.",
+    "Sub": "A submenu: its row and the list it opens.",
+    "SubTrigger": "The row that opens a submenu, on hover or press, with a chevron at its end. `end` puts something before the chevron, such as a badge.",
+    "SubContent": "The submenu's list, opened beside its row.",
+    "Group": "Items that belong together. A screen reader announces them by their `Menu.GroupLabel`.",
+    "GroupLabel": "The heading of a group.",
+    "Separator": "A rule between groups.",
+    "Shortcut": "The keys for an item, at its end. It only shows them; the keys have to be handled where the action lives.",
+    "Badge": "A small count or flag at an item's end."
+  },
+  "examples": [
+    {
+      "title": "Checks and choices",
+      "description": "Check items switch columns on and off, and a radio group picks one density. Both keep the menu open, so several can be changed in a row.",
+      "demo": "checks",
+      "height": 360,
+      "align": "start"
+    }
+  ],
+  "notes": "### Keyboard\n\nWith the trigger focused, Enter, Space or the down arrow opens the menu on its first item. The arrow keys move between items, typing jumps to one by its first letters, Enter presses it, and Escape closes the menu and puts focus back on the trigger. The right arrow opens a submenu and the left arrow closes it.\n\n### Submenus\n\nA submenu opens when its row is hovered, after a short delay, or pressed. The pointer can cross diagonally from the row to the submenu without closing it.\n\n### Closing\n\nPressing an item closes the menu; pressing a check or radio item does not. Pass `closeOnClick` to change either."
+}
