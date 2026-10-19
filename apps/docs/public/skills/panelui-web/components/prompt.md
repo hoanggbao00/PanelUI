@@ -269,7 +269,7 @@ The text field is called "Message" unless you give it an `aria-label`. Each tool
 
 #### The menu and what it switches on
 
-`Prompt.Menu` keeps the footer to one button however many tools there are. A mode switched on in it, such as web search, is best shown beside it as a pressed `Prompt.Tool` with `showLabel`, which switches it off again when pressed. The first example does this for search, thinking and a chosen skill.
+`Prompt.Menu` keeps the footer to one button however many tools there are. A mode switched on in it, such as web search, is best shown beside it as a pressed `Prompt.Tool` with `showLabel`, which switches it off again when pressed. The first example does this for a chosen skill, and keeps web search as a tool that stays in the footer and turns blue while it is on.
 
 #### Commands and the keyboard
 
@@ -290,7 +290,6 @@ import {
   CalendarIcon,
   FolderIcon,
   GlobeIcon,
-  LightbulbIcon,
   PlusIcon,
   PlugIcon,
   ScrollTextIcon,
@@ -314,7 +313,6 @@ const SKILLS = ['Weekly report', 'Release notes', 'Meeting brief', 'Code review'
 export default function PromptAsk() {
   const [status, setStatus] = useState<PromptState>('idle');
   const [search, setSearch] = useState(true);
-  const [think, setThink] = useState(false);
   const [calendar, setCalendar] = useState(true);
   const [drive, setDrive] = useState(false);
   const [skill, setSkill] = useState<string | null>(null);
@@ -404,12 +402,9 @@ export default function PromptAsk() {
                   </Menu.SubContent>
                 </Menu.Sub>
               </Prompt.Menu>
-              {/* Modes that stay in the footer and turn blue while they are on. */}
+              {/* A mode that stays in the footer and turns blue while it is on. */}
               <Prompt.Tool label="Search" showLabel pressed={search} onPressedChange={setSearch}>
                 <GlobeIcon />
-              </Prompt.Tool>
-              <Prompt.Tool label="Think" showLabel pressed={think} onPressedChange={setThink}>
-                <LightbulbIcon />
               </Prompt.Tool>
               {/* A skill chosen in the menu, pressed again to put it away. */}
               {skill ? (

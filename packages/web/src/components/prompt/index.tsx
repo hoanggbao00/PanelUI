@@ -180,12 +180,12 @@ const promptVariants = tv({
     recorder: 'flex flex-col',
     recorderTranscript: 'min-h-[3.25rem] px-4 pb-1 pt-3.5 text-[0.9375rem] leading-6 text-foreground',
     recorderListening: 'bg-[linear-gradient(90deg,var(--muted-foreground)_35%,var(--foreground)_50%,var(--muted-foreground)_65%)] bg-[length:250%_100%] bg-clip-text text-transparent',
-    recorderControls: 'flex items-center gap-2.5 p-2.5 pt-1.5',
+    recorderControls: 'flex items-center gap-1.5 p-2.5 pt-1.5',
     // Older sound fades out to the left as it scrolls away.
     recorderWave:
-      'flex h-10 min-w-0 flex-1 items-center justify-end gap-[2px] overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_35%)]',
+      'flex h-10 min-w-0 flex-1 items-center justify-end gap-[2px] overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_18%)]',
     recorderBar: 'w-[3px] shrink-0 rounded-full bg-foreground transition-[height] duration-75 ease-out motion-reduce:transition-none',
-    recorderTime: 'flex shrink-0 items-center gap-1.5 text-xs font-medium tabular-nums text-muted-foreground',
+    recorderTime: 'flex shrink-0 items-center gap-1.5 ps-1.5 text-xs font-medium tabular-nums text-muted-foreground',
     recorderDot: 'size-2 animate-pulse rounded-full bg-destructive motion-reduce:animate-none',
     recorderDone: 'size-10 p-0 [&_svg]:size-[18px]',
     hint: 'px-4 pt-2 text-xs text-muted-foreground [&_kbd]:rounded-[0.3rem] [&_kbd]:border [&_kbd]:bg-muted [&_kbd]:px-1 [&_kbd]:py-px [&_kbd]:font-sans [&_kbd]:text-[0.6875rem] [&_kbd]:text-foreground',
@@ -1460,7 +1460,10 @@ PromptCommands.displayName = 'Prompt.Commands';
 
 /* --------------------------------------------------------------- recorder */
 
-const BARS = 64;
+/** Enough history to fill a wide field; only as many bars as fit are drawn. */
+const BARS = 160;
+/** A bar and the gap after it, in pixels: `w-[3px]` and `gap-[2px]`. */
+const BAR_PITCH = 5;
 
 export interface PromptRecorderProps extends ComponentProps<'div'> {
   /** What has been heard so far, written in as it arrives. */
@@ -1505,6 +1508,18 @@ function PromptRecorder({
   const latest = useRef(level);
   latest.current = level;
   const listening = useShimmer(!transcript);
+  // The wave fills its row from the cross to the timer, however wide that is.
+  const wave = useRef<HTMLDivElement>(null);
+  const [fits, setFits] = useState(48);
+  useEffect(() => {
+    const node = wave.current;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      setFits(Math.max(8, Math.min(BARS, Math.floor((entry!.contentRect.width + 2) / BAR_PITCH))));
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const started = Date.now();
@@ -1545,8 +1560,8 @@ function PromptRecorder({
         <Button variant="ghost" size="icon" shape="pill" aria-label={cancelLabel} onClick={onCancel}>
           <XIcon />
         </Button>
-        <div aria-hidden="true" className={slots.recorderWave()}>
-          {levels.map((value, index) => (
+        <div ref={wave} aria-hidden="true" className={slots.recorderWave()}>
+          {levels.slice(-fits).map((value, index) => (
             <span key={index} className={slots.recorderBar()} style={{ height: `${3 + value * 33}px` }} />
           ))}
         </div>

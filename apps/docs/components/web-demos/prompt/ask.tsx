@@ -6,7 +6,6 @@ import {
   CalendarIcon,
   FolderIcon,
   GlobeIcon,
-  LightbulbIcon,
   PlusIcon,
   PlugIcon,
   ScrollTextIcon,
@@ -30,7 +29,6 @@ const SKILLS = ['Weekly report', 'Release notes', 'Meeting brief', 'Code review'
 export default function PromptAsk() {
   const [status, setStatus] = useState<PromptState>('idle');
   const [search, setSearch] = useState(true);
-  const [think, setThink] = useState(false);
   const [calendar, setCalendar] = useState(true);
   const [drive, setDrive] = useState(false);
   const [skill, setSkill] = useState<string | null>(null);
@@ -120,12 +118,9 @@ export default function PromptAsk() {
                   </Menu.SubContent>
                 </Menu.Sub>
               </Prompt.Menu>
-              {/* Modes that stay in the footer and turn blue while they are on. */}
+              {/* A mode that stays in the footer and turns blue while it is on. */}
               <Prompt.Tool label="Search" showLabel pressed={search} onPressedChange={setSearch}>
                 <GlobeIcon />
-              </Prompt.Tool>
-              <Prompt.Tool label="Think" showLabel pressed={think} onPressedChange={setThink}>
-                <LightbulbIcon />
               </Prompt.Tool>
               {/* A skill chosen in the menu, pressed again to put it away. */}
               {skill ? (
