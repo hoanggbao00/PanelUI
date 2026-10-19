@@ -1,0 +1,174 @@
+---
+title: Textarea
+description: A field for more than one line that grows as it is written in, up to a limit.
+status: new
+---
+
+<ComponentPreview name="textarea/grows" height={260}>
+
+```tsx lineNumbers
+'use client';
+
+import { Textarea } from '@/components/panelui/textarea';
+import { useState } from 'react';
+
+const LIMIT = 280;
+
+export default function TextareaGrows() {
+  const [text, setText] = useState('The release moved to Thursday. ');
+
+  return (
+    <div className="flex w-full max-w-md flex-col gap-2">
+      <Textarea
+        aria-label="Update"
+        placeholder="What changed?"
+        minRows={2}
+        maxRows={6}
+        maxLength={LIMIT}
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+      />
+      <p className="flex justify-between px-1 text-xs text-muted-foreground">
+        <span>Grows to six lines, then scrolls.</span>
+        <span className="tabular-nums">
+          {text.length} / {LIMIT}
+        </span>
+      </p>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it for text that runs to more than one line: a comment, a description, a message. For one line, use [Input](/docs/web/components/input).
+
+It grows a line at a time as it is written in, from `minRows` to `maxRows`, and scrolls after that. Set `autoResize={false}` for one that keeps its size and can be resized by hand.
+
+For a message to an assistant, with files and a send button, use [Prompt](/docs/web/components/prompt), which is built on it.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/textarea.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/textarea` instead of `@/components/panelui/textarea`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/textarea.tsx`:
+
+<RegistrySource name="textarea" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Textarea } from "@/components/panelui/textarea"
+```
+
+```tsx
+<Textarea placeholder="What changed?" minRows={2} maxRows={6} />
+```
+
+## Composition
+
+```tsx
+<Textarea />
+```
+
+## Examples
+
+### Inside a card
+
+`variant="ghost"` drops the border, background and ring, for a field set inside something that draws its own box.
+
+<ComponentPreview name="textarea/ghost" height={320}>
+
+```tsx lineNumbers
+import { Button } from '@/components/panelui/button';
+import { Card } from '@/components/panelui/card';
+import { Textarea } from '@/components/panelui/textarea';
+
+export default function TextareaGhost() {
+  return (
+    <Card size="sm" className="w-full max-w-md">
+      <Card.Header>
+        <Card.Title>Leave a note</Card.Title>
+        <Card.Description>Only people on this project can see it.</Card.Description>
+      </Card.Header>
+      <Card.Content>
+        <Textarea variant="ghost" minRows={3} placeholder="Write something for the team" aria-label="Note" />
+      </Card.Content>
+      <Card.Footer variant="panel" className="justify-end">
+        <Button size="sm" variant="ghost">
+          Discard
+        </Button>
+        <Button size="sm">Post note</Button>
+      </Card.Footer>
+    </Card>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Textarea
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `'default' \| 'ghost'` | `default` | `ghost` draws no box, for a field inside something that draws one. Default `default`. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `md` | Its text size and line height. Default `md`. |
+| `autoResize` | `boolean` | `true` | Whether it grows with what is written in it. Default `true`. |
+| `minRows` | `number` | `2` | How many lines tall it starts, while growing. Default `2`. |
+| `maxRows` | `number` | `8` | How many lines tall it can grow before it scrolls. Default `8`. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Growing
+
+The height is measured from the text before the page is painted, so a field with a value already in it opens at the right height, and so does one whose value is set from outside. Past `maxRows` it scrolls with a thin scrollbar in the theme's border colour.
+
+### Sizes
+
+`size` is `sm`, `md` or `lg` and sets the text size and line height. The rows are counted in that line height.
+
+### Every attribute passes through
+
+`Textarea` renders a `<textarea>` and passes everything to it, so `name`, `maxLength`, `required` and the rest work as they do on the element. `rows` is used only with `autoResize={false}`.

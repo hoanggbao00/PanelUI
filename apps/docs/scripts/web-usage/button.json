@@ -1,0 +1,25 @@
+{
+  "slug": "button",
+  "demo": "variants",
+  "demoOptions": {
+    "height": 200
+  },
+  "intro": "Use it for an action: saving, sending, opening something. For moving to another page, use a link.\n\nThe variant says how much the action asks to be pressed. `default` is the one action a view is for, `secondary` and `outline` are the ones beside it, `ghost` is for actions in a toolbar or a row that should not draw the eye, and `destructive` is for one that cannot be undone.\n\nA view usually has one `default` button. Two of them leave the reader to work out which one matters.",
+  "usage": "<Button>Publish</Button>\n<Button variant=\"outline\">Preview</Button>\n<Button variant=\"ghost\" size=\"icon\" aria-label=\"Close\">\n  <XIcon />\n</Button>",
+  "anatomy": "<Button />",
+  "examples": [
+    {
+      "title": "Sizes and shapes",
+      "description": "`sm`, `md` and `lg` set the height and text. The `icon` sizes are square, for a button that holds only an icon; give one an `aria-label`. `shape=\"pill\"` rounds the ends fully.",
+      "demo": "sizes",
+      "height": 240
+    },
+    {
+      "title": "Loading",
+      "description": "`loading` sets a spinner over the label and stops presses until it is cleared. The label stays in place, hidden, so the button keeps its width.",
+      "demo": "loading",
+      "height": 180
+    }
+  ],
+  "notes": "### Icons\n\nPut an icon before or after the text as a child. It is sized to 16 pixels unless it carries a `size-*` class of its own, and the gap between it and the text is set by the button.\n\n### Type\n\nThe button is `type=\"button\"` unless you say otherwise, so one inside a form does not send the form by accident. Set `type=\"submit\"` on the one that should.\n\n### Loading\n\nWhile `loading` is true the button is disabled and has `aria-busy`, so a screen reader announces it as busy and a second press is not possible. Clear it when the work is done, whether it worked or not.\n\n### Server Components\n\nIt holds no state, so a Server Component can render it. Its `onClick` needs a client component, as any event handler does."
+}

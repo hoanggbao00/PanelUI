@@ -2,6 +2,16 @@
 
 Generated from the collection's source. Read a component's own file before using it: the props in it are the real ones.
 
+## Actions
+
+- [Button](components/button.md) — Something to press, in the weight its action deserves, with a spinner for while it works.
+
+## Forms and input
+
+- [Input](components/input.md) — A single line to type into, with icons, units and buttons set inside its box.
+- [Select](components/select.md) — A button that opens a list of options and shows the one chosen.
+- [Textarea](components/textarea.md) — A field for more than one line that grows as it is written in, up to a limit.
+
 ## Overlays
 
 - [Command Dock](components/command-dock.md) — A small button that opens into a field, with the answer arriving under it a row at a time.
@@ -29,3 +39,7 @@ Generated from the collection's source. Read a component's own file before using
 
 - [Feedback](components/feedback.md) — A dialog with a well to write in and two actions in the band around it.
 - [Not Found](components/not-found.md) — An error code drawn in pixels that come apart near the pointer, with a title and a way out.
+
+## AI components
+
+- [Prompt](components/prompt.md) — A field for writing to an assistant, with its files, model and tools in one card.

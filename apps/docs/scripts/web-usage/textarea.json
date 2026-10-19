@@ -1,0 +1,19 @@
+{
+  "slug": "textarea",
+  "demo": "grows",
+  "demoOptions": {
+    "height": 260
+  },
+  "intro": "Use it for text that runs to more than one line: a comment, a description, a message. For one line, use [Input](/docs/web/components/input).\n\nIt grows a line at a time as it is written in, from `minRows` to `maxRows`, and scrolls after that. Set `autoResize={false}` for one that keeps its size and can be resized by hand.\n\nFor a message to an assistant, with files and a send button, use [Prompt](/docs/web/components/prompt), which is built on it.",
+  "usage": "<Textarea placeholder=\"What changed?\" minRows={2} maxRows={6} />",
+  "anatomy": "<Textarea />",
+  "examples": [
+    {
+      "title": "Inside a card",
+      "description": "`variant=\"ghost\"` drops the border, background and ring, for a field set inside something that draws its own box.",
+      "demo": "ghost",
+      "height": 320
+    }
+  ],
+  "notes": "### Growing\n\nThe height is measured from the text before the page is painted, so a field with a value already in it opens at the right height, and so does one whose value is set from outside. Past `maxRows` it scrolls with a thin scrollbar in the theme's border colour.\n\n### Sizes\n\n`size` is `sm`, `md` or `lg` and sets the text size and line height. The rows are counted in that line height.\n\n### Every attribute passes through\n\n`Textarea` renders a `<textarea>` and passes everything to it, so `name`, `maxLength`, `required` and the rest work as they do on the element. `rows` is used only with `autoResize={false}`."
+}

@@ -1,0 +1,29 @@
+{
+  "slug": "input",
+  "demo": "fields",
+  "demoOptions": {
+    "height": 340
+  },
+  "intro": "Use it for one line of text: a name, an email address, a search. For more than one line, use [Textarea](/docs/web/components/textarea), and for a choice from a fixed list, [Select](/docs/web/components/select).\n\n`Input.Group` draws one box round the input and anything set beside it, an icon, a unit or a button, so they read as one field and the focus ring goes round all of it.\n\nIt has no label of its own. Put it in a field with a label, or give it an `aria-label` where the label is somewhere a screen reader cannot tie to it.",
+  "usage": "<Input placeholder=\"you@company.com\" type=\"email\" />\n\n<Input.Group>\n  <Input.Addon>\n    <SearchIcon />\n  </Input.Addon>\n  <Input placeholder=\"Search\" aria-label=\"Search\" />\n  <Input.Addon align=\"end\">\n    <kbd>⌘K</kbd>\n  </Input.Addon>\n</Input.Group>",
+  "anatomy": "<Input />\n\n<Input.Group>\n  <Input.Addon />\n  <Input />\n  <Input.Addon align=\"end\" />\n</Input.Group>",
+  "parts": {
+    "Group": "One box round the input and its addons. It takes the `size`, and draws the border, background and focus ring the input drops inside it.",
+    "Addon": "An icon, text, shortcut or button beside the input, inside the box. `align=\"end\"` puts it after the input. Pressing it, where it is not a button, puts focus in the input."
+  },
+  "examples": [
+    {
+      "title": "Addons",
+      "description": "Text on either side for an address or a unit, and a button at the end for an action on the value. A rule between the prefix and the input is one class on the addon.",
+      "demo": "addons",
+      "height": 260
+    },
+    {
+      "title": "Sizes",
+      "description": "`sm`, `md` and `lg`. In a group, set `size` on the group, and the input and addons follow it.",
+      "demo": "sizes",
+      "height": 220
+    }
+  ],
+  "notes": "### Invalid\n\nSet `aria-invalid` on the input when its value is wrong. The border turns to the destructive colour, on the input alone or on the group round it, and a screen reader announces the field as invalid. Say what is wrong in text near it as well.\n\n### Disabled\n\nA disabled input is faded and cannot be focused. In a group the whole group fades with it.\n\n### Every attribute passes through\n\n`Input` renders an `<input>` and passes everything to it, so `name`, `required`, `autoComplete`, `inputMode` and the rest work as they do on the element."
+}

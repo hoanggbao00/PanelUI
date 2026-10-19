@@ -162,5 +162,50 @@
       "category": "feedback",
       "title": "Not Found"
     }
+  ],
+  "button": [
+    "Button",
+    "Something to press, in the weight its action deserves, with a spinner for while it works.",
+    "react button component variants loading",
+    {
+      "addedIn": "0.5.0",
+      "category": "actions"
+    }
+  ],
+  "input": [
+    "Input",
+    "A single line to type into, with icons, units and buttons set inside its box.",
+    "react input text field component addon",
+    {
+      "addedIn": "0.5.0",
+      "category": "forms"
+    }
+  ],
+  "textarea": [
+    "Textarea",
+    "A field for more than one line that grows as it is written in, up to a limit.",
+    "react textarea autosize auto grow component",
+    {
+      "addedIn": "0.5.0",
+      "category": "forms"
+    }
+  ],
+  "select": [
+    "Select",
+    "A button that opens a list of options and shows the one chosen.",
+    "react select dropdown listbox component",
+    {
+      "addedIn": "0.5.0",
+      "category": "forms"
+    }
+  ],
+  "prompt": [
+    "Prompt",
+    "A field for writing to an assistant, with its files, model and tools in one card.",
+    "react prompt input chat composer ai component",
+    {
+      "addedIn": "0.5.0",
+      "category": "ai"
+    }
   ]
 }

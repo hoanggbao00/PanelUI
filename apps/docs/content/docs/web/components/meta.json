@@ -3,20 +3,25 @@
   "pages": [
     "!index",
     "bar-picker",
+    "button",
     "card",
     "command-dock",
     "day-grid",
     "feedback",
     "flow",
     "frame",
+    "input",
     "kpi",
     "lane-board",
     "not-found",
     "planet",
+    "prompt",
     "range-meter",
     "rolling-number",
+    "select",
     "sheet",
     "stat",
+    "textarea",
     "tilt-card"
   ]
 }

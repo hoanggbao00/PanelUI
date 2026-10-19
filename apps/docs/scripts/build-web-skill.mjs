@@ -32,6 +32,7 @@ const meta = JSON.parse(fs.readFileSync(path.join(HERE, 'web-meta.json'), 'utf8'
 const api = readWebApi();
 
 const SECTIONS = {
+  actions: 'Actions',
   forms: 'Forms and input',
   overlays: 'Overlays',
   navigation: 'Navigation',
@@ -39,6 +40,7 @@ const SECTIONS = {
   data: 'Data',
   feedback: 'Feedback and status',
   media: 'Media and motion',
+  ai: 'AI components',
 };
 
 const titleOf = (entry) => entry[3]?.title ?? entry[0];

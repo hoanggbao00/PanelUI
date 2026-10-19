@@ -1,0 +1,218 @@
+---
+title: Button
+description: Something to press, in the weight its action deserves, with a spinner for while it works.
+status: new
+---
+
+<ComponentPreview name="button/variants" height={200}>
+
+```tsx lineNumbers
+import { Button } from '@/components/panelui/button';
+
+export default function ButtonVariants() {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-3">
+      <Button>Publish</Button>
+      <Button variant="secondary">Save draft</Button>
+      <Button variant="outline">Preview</Button>
+      <Button variant="ghost">Cancel</Button>
+      <Button variant="destructive">Delete</Button>
+      <Button variant="link">Learn more</Button>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it for an action: saving, sending, opening something. For moving to another page, use a link.
+
+The variant says how much the action asks to be pressed. `default` is the one action a view is for, `secondary` and `outline` are the ones beside it, `ghost` is for actions in a toolbar or a row that should not draw the eye, and `destructive` is for one that cannot be undone.
+
+A view usually has one `default` button. Two of them leave the reader to work out which one matters.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/button.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/button` instead of `@/components/panelui/button`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/button.tsx`:
+
+<RegistrySource name="button" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Button } from "@/components/panelui/button"
+```
+
+```tsx
+<Button>Publish</Button>
+<Button variant="outline">Preview</Button>
+<Button variant="ghost" size="icon" aria-label="Close">
+  <XIcon />
+</Button>
+```
+
+## Composition
+
+```tsx
+<Button />
+```
+
+## Examples
+
+### Sizes and shapes
+
+`sm`, `md` and `lg` set the height and text. The `icon` sizes are square, for a button that holds only an icon; give one an `aria-label`. `shape="pill"` rounds the ends fully.
+
+<ComponentPreview name="button/sizes" height={240}>
+
+```tsx lineNumbers
+import { PlusIcon, SendIcon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+
+export default function ButtonSizes() {
+  return (
+    <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Button size="sm">Small</Button>
+        <Button size="md">Medium</Button>
+        <Button size="lg">Large</Button>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Button size="icon-sm" variant="outline" aria-label="Add">
+          <PlusIcon />
+        </Button>
+        <Button size="icon" variant="outline" aria-label="Add">
+          <PlusIcon />
+        </Button>
+        <Button size="icon-lg" variant="outline" aria-label="Add">
+          <PlusIcon />
+        </Button>
+        <Button shape="pill">
+          <SendIcon />
+          Send invite
+        </Button>
+        <Button size="icon" shape="pill" aria-label="Send">
+          <SendIcon />
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Loading
+
+`loading` sets a spinner over the label and stops presses until it is cleared. The label stays in place, hidden, so the button keeps its width.
+
+<ComponentPreview name="button/loading" height={180}>
+
+```tsx lineNumbers
+'use client';
+
+import { CheckIcon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { useState } from 'react';
+
+export default function ButtonLoading() {
+  const [state, setState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const save = () => {
+    setState('saving');
+    window.setTimeout(() => setState('saved'), 1600);
+    window.setTimeout(() => setState('idle'), 3400);
+  };
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-3">
+      <Button loading={state === 'saving'} onClick={save}>
+        {state === 'saved' ? (
+          <>
+            <CheckIcon />
+            Saved
+          </>
+        ) : (
+          'Save changes'
+        )}
+      </Button>
+      <Button variant="outline" loading>
+        Uploading
+      </Button>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Button
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `ButtonVariant` | `default` | How much the button asks to be pressed. Default `default`. |
+| `size` | `ButtonSize` | `md` | Its height and padding. The `icon` sizes are square, for a button that holds only an icon. Default `md`. |
+| `shape` | `'default' \| 'pill'` | `default` | `pill` rounds the ends fully. Default `default`. |
+| `loading` | `boolean` | `false` | Shows a spinner over the label, sets `aria-busy` and stops presses, keeping the width. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Icons
+
+Put an icon before or after the text as a child. It is sized to 16 pixels unless it carries a `size-*` class of its own, and the gap between it and the text is set by the button.
+
+### Type
+
+The button is `type="button"` unless you say otherwise, so one inside a form does not send the form by accident. Set `type="submit"` on the one that should.
+
+### Loading
+
+While `loading` is true the button is disabled and has `aria-busy`, so a screen reader announces it as busy and a second press is not possible. Clear it when the work is done, whether it worked or not.
+
+### Server Components
+
+It holds no state, so a Server Component can render it. Its `onClick` needs a client component, as any event handler does.

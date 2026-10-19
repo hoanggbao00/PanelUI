@@ -1,0 +1,252 @@
+---
+title: Input
+description: A single line to type into, with icons, units and buttons set inside its box.
+status: new
+---
+
+<ComponentPreview name="input/fields" height={340}>
+
+```tsx lineNumbers
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
+import { MailIcon, SearchIcon } from 'lucide-react';
+import { Input } from '@/components/panelui/input';
+
+export default function InputFields() {
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-5">
+      <Input.Group>
+        <Input.Addon>
+          <SearchIcon />
+        </Input.Addon>
+        <Input placeholder="Search the handbook" aria-label="Search the handbook" />
+        <Input.Addon align="end">
+          <kbd>⌘K</kbd>
+        </Input.Addon>
+      </Input.Group>
+      <Field>
+        <FieldLabel>Work email</FieldLabel>
+        <Input.Group>
+          <Input.Addon>
+            <MailIcon />
+          </Input.Addon>
+          <Input type="email" placeholder="you@company.com" />
+        </Input.Group>
+        <FieldDescription>We send the receipt here.</FieldDescription>
+      </Field>
+      <Field>
+        <FieldLabel>Display name</FieldLabel>
+        <Input defaultValue="Rosa Okafor" />
+      </Field>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it for one line of text: a name, an email address, a search. For more than one line, use [Textarea](/docs/web/components/textarea), and for a choice from a fixed list, [Select](/docs/web/components/select).
+
+`Input.Group` draws one box round the input and anything set beside it, an icon, a unit or a button, so they read as one field and the focus ring goes round all of it.
+
+It has no label of its own. Put it in a field with a label, or give it an `aria-label` where the label is somewhere a screen reader cannot tie to it.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/input.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/input` instead of `@/components/panelui/input`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/input.tsx`:
+
+<RegistrySource name="input" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Input } from "@/components/panelui/input"
+```
+
+```tsx
+<Input placeholder="you@company.com" type="email" />
+
+<Input.Group>
+  <Input.Addon>
+    <SearchIcon />
+  </Input.Addon>
+  <Input placeholder="Search" aria-label="Search" />
+  <Input.Addon align="end">
+    <kbd>⌘K</kbd>
+  </Input.Addon>
+</Input.Group>
+```
+
+## Composition
+
+```tsx
+<Input />
+
+<Input.Group>
+  <Input.Addon />
+  <Input />
+  <Input.Addon align="end" />
+</Input.Group>
+```
+
+- **`Input.Group`** — One box round the input and its addons. It takes the `size`, and draws the border, background and focus ring the input drops inside it.
+- **`Input.Addon`** — An icon, text, shortcut or button beside the input, inside the box. `align="end"` puts it after the input. Pressing it, where it is not a button, puts focus in the input.
+
+## Examples
+
+### Addons
+
+Text on either side for an address or a unit, and a button at the end for an action on the value. A rule between the prefix and the input is one class on the addon.
+
+<ComponentPreview name="input/addons" height={260}>
+
+```tsx lineNumbers
+'use client';
+
+import { CopyIcon, CheckIcon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Input } from '@/components/panelui/input';
+import { useState } from 'react';
+
+export default function InputAddons() {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-4">
+      <Input.Group>
+        <Input.Addon className="border-e pe-3">https://</Input.Addon>
+        <Input placeholder="your-studio" aria-label="Site address" />
+        <Input.Addon align="end">.panel.site</Input.Addon>
+      </Input.Group>
+      <Input.Group>
+        <Input type="number" defaultValue={40} aria-label="Storage limit" />
+        <Input.Addon align="end">GB</Input.Addon>
+      </Input.Group>
+      <Input.Group>
+        <Input readOnly value="pk_live_7Hq2…a91c" aria-label="Publishable key" className="font-mono text-xs" />
+        <Input.Addon align="end" className="pe-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={copied ? 'Copied' : 'Copy key'}
+            onClick={() => {
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1400);
+            }}
+            className="size-7"
+          >
+            {copied ? <CheckIcon /> : <CopyIcon />}
+          </Button>
+        </Input.Addon>
+      </Input.Group>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Sizes
+
+`sm`, `md` and `lg`. In a group, set `size` on the group, and the input and addons follow it.
+
+<ComponentPreview name="input/sizes" height={220}>
+
+```tsx lineNumbers
+import { Input } from '@/components/panelui/input';
+
+export default function InputSizes() {
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-3">
+      <Input size="sm" placeholder="Small" aria-label="Small" />
+      <Input size="md" placeholder="Medium" aria-label="Medium" />
+      <Input size="lg" placeholder="Large" aria-label="Large" />
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Input
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `InputSize` | `md` | Its height and text size. Inside a group, set it on the group instead. Default `md`. |
+
+### Input.Group
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `InputSize` | `md` | The height of the input and its addons together. Default `md`. |
+
+### Input.Addon
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `align` | `'start' \| 'end'` | `start` | Which side of the input it sits on, whatever its place in the markup. Default `start`. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Invalid
+
+Set `aria-invalid` on the input when its value is wrong. The border turns to the destructive colour, on the input alone or on the group round it, and a screen reader announces the field as invalid. Say what is wrong in text near it as well.
+
+### Disabled
+
+A disabled input is faded and cannot be focused. In a group the whole group fades with it.
+
+### Every attribute passes through
+
+`Input` renders an `<input>` and passes everything to it, so `name`, `required`, `autoComplete`, `inputMode` and the rest work as they do on the element.
+
+### Server Components
+
+`Input` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Input.Group` off the import, so each part is also exported by name: `InputGroup` is `Input.Group`, and so on for the others.
+
+```tsx
+import { Input, InputGroup, InputAddon } from "@/components/panelui/input"
+```
