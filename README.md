@@ -364,6 +364,7 @@ A clear bug report is how most fixes here start. Thank you to everyone who took 
   <a href="https://github.com/Cyberistic" title="@Cyberistic"><img src="https://github.com/Cyberistic.png?size=112" width="56" height="56" alt="@Cyberistic" /></a>
   <a href="https://github.com/aymkopi" title="@aymkopi"><img src="https://github.com/aymkopi.png?size=112" width="56" height="56" alt="@aymkopi" /></a>
   <a href="https://github.com/techzealot" title="@techzealot"><img src="https://github.com/techzealot.png?size=112" width="56" height="56" alt="@techzealot" /></a>
+  <a href="https://github.com/kirianL" title="@kirianL"><img src="https://github.com/kirianL.png?size=112" width="56" height="56" alt="@kirianL" /></a>
 </p>
 
 ## License
