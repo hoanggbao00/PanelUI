@@ -6,6 +6,12 @@ import type { ComponentType } from 'react';
 
 /** Every demo a docs page shows, each in a chunk of its own. */
 export const WEB_DEMOS: Record<string, ComponentType> = {
+  'avatar/badges': dynamic(() => import('./avatar/badges')),
+  'avatar/fallback': dynamic(() => import('./avatar/fallback')),
+  'avatar/group': dynamic(() => import('./avatar/group')),
+  'avatar/sizes': dynamic(() => import('./avatar/sizes')),
+  'avatar/team': dynamic(() => import('./avatar/team')),
+  'avatar/thumb': dynamic(() => import('./avatar/thumb')),
   'bar-picker/coverage': dynamic(() => import('./bar-picker/coverage')),
   'bar-picker/deploys': dynamic(() => import('./bar-picker/deploys')),
   'bar-picker/thumb': dynamic(() => import('./bar-picker/thumb')),

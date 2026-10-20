@@ -225,5 +225,14 @@
       "addedIn": "0.6.0",
       "category": "forms"
     }
+  ],
+  "avatar": [
+    "Avatar",
+    "A person or a team as a picture, or their initials in a colour of their own, with a badge and a group that opens up.",
+    "react avatar group status badge initials component",
+    {
+      "addedIn": "0.6.0",
+      "category": "data"
+    }
   ]
 }

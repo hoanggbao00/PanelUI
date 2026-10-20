@@ -28,6 +28,7 @@ Generated from the collection's source. Read a component's own file before using
 
 ## Data
 
+- [Avatar](components/avatar.md) — A person or a team as a picture, or their initials in a colour of their own, with a badge and a group that opens up.
 - [Bar Picker](components/bar-picker.md) — A short run of values as columns of lights, one column picked.
 - [Day Grid](components/day-grid.md) — A run of days as a field of dots, each sized by how much happened on it.
 - [Flow](components/flow.md) — A canvas of nodes joined by edges, that you pan, zoom and rearrange.

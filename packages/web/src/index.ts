@@ -417,3 +417,15 @@ export {
   type MenuShortcutProps,
   type MenuBadgeProps,
 } from './components/menu';
+export {
+  Avatar,
+  AvatarBadge,
+  AvatarGroup,
+  type AvatarProps,
+  type AvatarBadgeProps,
+  type AvatarGroupProps,
+  type AvatarSize,
+  type AvatarShape,
+  type AvatarColor,
+  type AvatarStatus,
+} from './components/avatar';

@@ -4,6 +4,24 @@
   "homepage": "https://panelui.dev/docs/web",
   "items": [
     {
+      "name": "avatar",
+      "type": "registry:component",
+      "title": "Avatar",
+      "description": "A person or a team as a picture, or their initials in a colour of their own, with a badge and a group that opens up.",
+      "dependencies": [
+        "@base-ui/react",
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/avatar.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/avatar.tsx"
+        }
+      ]
+    },
+    {
       "name": "bar-picker",
       "type": "registry:component",
       "title": "Bar Picker",

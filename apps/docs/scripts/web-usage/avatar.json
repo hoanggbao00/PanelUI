@@ -1,0 +1,41 @@
+{
+  "slug": "avatar",
+  "demo": "team",
+  "demoOptions": {
+    "height": 500
+  },
+  "intro": "Use it to show who someone is: the author of a comment, the people on a team, who has read a document. It shows `src` once the picture has loaded, and until then, or if it never loads, the initials of `name`.\n\nThe initials sit on a tint of one of the theme's chart colours, picked from the name. The same person gets the same colour everywhere, so a list of people without pictures can still be told apart.\n\nA badge and an overlapping avatar are cut out of the avatar beneath them, not drawn with a ring. The gap shows whatever the avatar sits on, so it works on a card, a tinted row or a photograph without a colour to match.\n\n`name` is also what a screen reader says, with the badge's status after it. Pass `alt` when something else should be said.",
+  "usage": "<Avatar src=\"/photos/ines.jpg\" name=\"Ines Duarte\" />\n\n<Avatar name=\"Kofi Mensah\" size=\"lg\">\n  <Avatar.Badge status=\"online\" />\n</Avatar>\n\n<Avatar.Group max={4} label=\"Read by\">\n  {people.map((person) => (\n    <Avatar key={person.id} src={person.photo} name={person.name} />\n  ))}\n</Avatar.Group>",
+  "anatomy": "<Avatar>\n  <Avatar.Badge />\n</Avatar>\n\n<Avatar.Group>\n  <Avatar />\n</Avatar.Group>",
+  "parts": {
+    "Badge": "A dot or a small icon on the avatar's lower trailing edge. `status` draws a presence dot: `online`, `away`, `busy`, or a hollow `offline`. For an icon, such as a check on a verified account, pass the icon as children and a `color`. `label` is what a screen reader says after the name.",
+    "Group": "A row of avatars overlapping one another. It sets the `size` and `shape` of every avatar in it. Hovered or focused, it opens up so each face can be seen whole. Past `max`, the rest are counted in a last circle that opens a list of their names."
+  },
+  "examples": [
+    {
+      "title": "Sizes and shapes",
+      "description": "`xs`, `sm`, `md`, `lg` and `xl`. `circle` is for people. `square` is for teams, projects and things, with corners that grow with the size.",
+      "demo": "sizes",
+      "height": 240
+    },
+    {
+      "title": "Without a picture",
+      "description": "Each name lands on a colour of its own. A picture that fails to load falls back to the initials. `fallback` replaces the initials with something else, such as an icon for a bot, and with no name at all the avatar shows a person's outline.",
+      "demo": "fallback",
+      "height": 260
+    },
+    {
+      "title": "Badges",
+      "description": "`status` draws a presence dot, and `offline` is hollow. A badge can hold an icon instead. The second row sits on a gradient to show the gap round each badge is cut through to whatever is behind.",
+      "demo": "badges",
+      "height": 280
+    },
+    {
+      "title": "Groups",
+      "description": "Hover over a group, or move focus into it, and it opens up. Press the count to see who it stands for. In a group of `square` avatars, each is cut round the shape of the one over it.",
+      "demo": "group",
+      "height": 260
+    }
+  ],
+  "notes": "### Loading\n\nThe initials show from the start and the picture replaces them once it has loaded, so nothing flickers between an empty circle and a face.\n\n### Reduced motion\n\nWith reduced motion turned on, a group does not open up when hovered.\n\n### In a group\n\nA group is a `role=\"group\"`. Give it a `label` that says who the people are, such as \"Members\" or \"Read by\"."
+}
