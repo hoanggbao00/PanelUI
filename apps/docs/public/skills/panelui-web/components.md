@@ -49,4 +49,5 @@ Generated from the collection's source. Read a component's own file before using
 
 ## AI components
 
+- [Message](components/message.md) — One turn of a conversation with an assistant: a person's bubble, or an answer set as prose with actions under it.
 - [Prompt](components/prompt.md) — A field for writing to an assistant, with its files, model and tools in one card.

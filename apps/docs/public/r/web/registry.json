@@ -311,6 +311,32 @@
       ]
     },
     {
+      "name": "message",
+      "type": "registry:component",
+      "title": "Message",
+      "description": "One turn of a conversation with an assistant: a person's bubble, or an answer set as prose with actions under it.",
+      "dependencies": [
+        "@base-ui/react",
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "cssVars": {
+        "light": {
+          "success": "oklch(0.696 0.17 162.48)"
+        },
+        "dark": {
+          "success": "oklch(0.696 0.17 162.48)"
+        }
+      },
+      "files": [
+        {
+          "path": "components/panelui/message.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/message.tsx"
+        }
+      ]
+    },
+    {
       "name": "not-found",
       "type": "registry:component",
       "title": "Not Found",

@@ -31,7 +31,9 @@ export default function LabelActions() {
               size="sm"
               className="-my-1 h-6 px-1.5 text-xs"
               onClick={() => {
-                navigator.clipboard?.writeText(KEY).catch(() => {});
+                try {
+                  void navigator.clipboard?.writeText(KEY).catch(() => {});
+                } catch {}
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1600);
               }}

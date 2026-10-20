@@ -243,5 +243,14 @@
       "addedIn": "0.6.0",
       "category": "navigation"
     }
+  ],
+  "message": [
+    "Message",
+    "One turn of a conversation with an assistant: a person's bubble, or an answer set as prose with actions under it.",
+    "react ai chat message bubble assistant component",
+    {
+      "addedIn": "0.6.0",
+      "category": "ai"
+    }
   ]
 }
