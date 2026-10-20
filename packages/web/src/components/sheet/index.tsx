@@ -34,6 +34,13 @@
  * still shows, and dimmed. Only the first sheet darkens the page, so two open
  * sheets do not stack two shades of black.
  *
+ * The next sheet is declared once, as `Sheet.Next` with a `name`, and opened
+ * by any `Sheet.Trigger to="name"` in the sheet: a row in the body, an icon in
+ * the header, a button in the footer. The trigger and the sheet it opens are
+ * apart in the markup because they are apart on the screen: a list of rows
+ * that each open a sheet should not have to wrap every row in one. A trigger
+ * can carry a `payload`, so one `Sheet.Next` serves every row of a list.
+ *
  * ## The hand decides
  *
  * Every sheet follows a drag and leaves on a flick toward its own edge. The
@@ -61,7 +68,7 @@ import { tv } from 'tailwind-variants';
  * where a symmetric ease reads as a slide show.
  */
 const MOVE =
-  '[transition:transform_450ms_cubic-bezier(0.32,0.72,0,1),border-radius_450ms_cubic-bezier(0.32,0.72,0,1),margin_450ms_cubic-bezier(0.32,0.72,0,1)]';
+  '[transition:transform_450ms_cubic-bezier(0.32,0.72,0,1),border-radius_450ms_cubic-bezier(0.32,0.72,0,1),margin_450ms_cubic-bezier(0.32,0.72,0,1),height_450ms_cubic-bezier(0.32,0.72,0,1)]';
 
 const sheetVariants = tv({
   slots: {
@@ -96,6 +103,17 @@ const sheetVariants = tv({
       // same way in either theme, instead of going grey under a black tint.
       "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-popover after:opacity-0 after:transition-opacity after:duration-[450ms] after:content-['']",
       'data-nested-drawer-open:after:opacity-50',
+    ],
+    /*
+     * A top or bottom sheet behind another takes the front one's height, so
+     * the strip that shows past it is the same whichever of the two is taller.
+     * A taller sheet behind would otherwise stand above the stack, and a
+     * shorter one would vanish behind the front one entirely.
+     */
+    stacked: [
+      'data-nested-drawer-open:h-(--drawer-frontmost-height) data-nested-drawer-open:overflow-hidden',
+      // Lets the height animate to and from `auto` where the browser can.
+      '[interpolate-size:allow-keywords]',
     ],
     grabber: [
       'pointer-events-none absolute inset-x-0 z-10 mx-auto flex h-6 w-24 justify-center',
@@ -230,8 +248,33 @@ const SWIPE: Record<SheetSide, 'down' | 'up' | 'left' | 'right'> = {
   right: 'right',
 };
 
+/**
+ * The sheets declared with `Sheet.Next` in one stack, by name. One map serves
+ * the whole stack, so a trigger finds its sheet wherever each of them sits.
+ */
+interface SheetStack {
+  handle(name: string): DrawerHandle<unknown>;
+}
+
+type DrawerHandle<Payload> = ReturnType<typeof Drawer.createHandle<Payload>>;
+
+function createStack(): SheetStack {
+  const handles = new Map<string, DrawerHandle<unknown>>();
+  return {
+    handle(name) {
+      let handle = handles.get(name);
+      if (!handle) {
+        handle = Drawer.createHandle<unknown>();
+        handles.set(name, handle);
+      }
+      return handle;
+    },
+  };
+}
+
 interface SheetContextValue {
   side: SheetSide;
+  stack: SheetStack;
   /** Opened from inside another sheet, which already darkens the page. */
   nested: boolean;
   /** Set by `Sheet.Content`. */
@@ -275,17 +318,31 @@ export interface SheetProps {
   dismissible?: boolean;
 }
 
-function SheetRoot({
+function SheetRoot(props: SheetProps) {
+  return <SheetFrame {...props} />;
+}
+SheetRoot.displayName = 'Sheet';
+
+interface SheetFrameProps extends Omit<SheetProps, 'children'> {
+  children?: ReactNode | ((payload: unknown) => ReactNode);
+  /** Set by `Sheet.Next`: the handle its triggers open it through. */
+  handle?: DrawerHandle<unknown>;
+}
+
+function SheetFrame({
   children,
   open,
   onOpenChange,
   defaultOpen = false,
   side = 'bottom',
   dismissible = true,
-}: SheetProps) {
+  handle: drawerHandle,
+}: SheetFrameProps) {
   // A sheet inside another sheet's content finds that sheet's context.
   const parent = useContext(SheetContext);
   const nested = parent !== null && !parent.inline;
+  const [ownStack] = useState(createStack);
+  const stack = nested && parent ? parent.stack : ownStack;
   // Held here as well as by the primitive, so a sheet opened from this one
   // can close it.
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
@@ -318,6 +375,7 @@ function SheetRoot({
   const context = useMemo<SheetContextValue>(
     () => ({
       side,
+      stack,
       nested,
       inline: false,
       showClose: true,
@@ -328,13 +386,14 @@ function SheetRoot({
       closeTree: handle.closeTree,
       hasOpenChild: () => [...opened.current].some((child) => child.isOpen()),
     }),
-    [side, nested, handle]
+    [side, stack, nested, handle]
   );
 
   return (
     <SheetContext.Provider value={context}>
       <Drawer.Root
         open={isOpen}
+        handle={drawerHandle}
         swipeDirection={SWIPE[side]}
         disablePointerDismissal={!dismissible}
         onOpenChange={(next, details) => {
@@ -351,12 +410,13 @@ function SheetRoot({
           setOpen(next);
         }}
       >
-        {children}
+        {typeof children === 'function'
+          ? ({ payload }: { payload: unknown }) => children(payload)
+          : children}
       </Drawer.Root>
     </SheetContext.Provider>
   );
 }
-SheetRoot.displayName = 'Sheet';
 
 export interface SheetTriggerProps extends Omit<ComponentProps<'button'>, 'children'> {
   children?: ReactNode;
@@ -365,10 +425,32 @@ export interface SheetTriggerProps extends Omit<ComponentProps<'button'>, 'child
    * the click handler and the attributes that tie it to the sheet.
    */
   render?: ReactElement;
+  /**
+   * The `name` of a `Sheet.Next` to open instead of the sheet this trigger is
+   * in. Any button in a sheet can open the next one this way, wherever it sits.
+   */
+  to?: string;
+  /**
+   * Handed to the `Sheet.Next` that `to` names, as the argument of its
+   * children function. Use it to open one sheet for every row of a list.
+   */
+  payload?: unknown;
 }
 
-/** What opens the sheet. A plain button unless `render` supplies one. */
-function SheetTrigger({ render, children, ...props }: SheetTriggerProps) {
+/**
+ * What opens a sheet: its own, or with `to`, the `Sheet.Next` of that name.
+ * A plain button unless `render` supplies one.
+ */
+function SheetTrigger({ render, children, to, payload, ...props }: SheetTriggerProps) {
+  const sheet = useContext(SheetContext);
+  if (to !== undefined) {
+    if (!sheet) throw new Error('Sheet.Trigger with `to` must be used inside a <Sheet>.');
+    return (
+      <Drawer.Trigger handle={sheet.stack.handle(to)} payload={payload} render={render} {...props}>
+        {children}
+      </Drawer.Trigger>
+    );
+  }
   return (
     <Drawer.Trigger render={render} {...props}>
       {children}
@@ -376,6 +458,56 @@ function SheetTrigger({ render, children, ...props }: SheetTriggerProps) {
   );
 }
 SheetTrigger.displayName = 'Sheet.Trigger';
+
+export interface SheetNextProps extends Omit<SheetContentProps, 'children' | 'inline'> {
+  /** What a `Sheet.Trigger` passes as `to` to open this sheet. Unique within one stack of sheets. */
+  name: string;
+  /**
+   * The sheet's parts. Pass a function to read the `payload` of the trigger
+   * that opened it; it is `undefined` when that trigger has none.
+   */
+  children?: ReactNode | ((payload: any) => ReactNode);
+  /** The edge it rises from. Default: the edge of the sheet it is declared in. */
+  side?: SheetSide;
+  /** Whether a click outside, a swipe or Escape closes it. Default true. */
+  dismissible?: boolean;
+  /** Called when it opens or closes. */
+  onOpenChange?: (open: boolean) => void;
+}
+
+/**
+ * A sheet opened from the one it is declared in, by any `Sheet.Trigger` whose
+ * `to` is its `name`. Put it anywhere inside the first sheet's content; it
+ * takes `Sheet.Content`'s props and draws its own content, so its children are
+ * the header, body and footer.
+ */
+function SheetNext({ name, children, side, dismissible, onOpenChange, ...content }: SheetNextProps) {
+  const parent = useSheet('Sheet.Next');
+  return (
+    <SheetFrame
+      handle={parent.stack.handle(name)}
+      side={side ?? parent.side}
+      dismissible={dismissible}
+      onOpenChange={onOpenChange}
+    >
+      {(payload) => (
+        <SheetContent {...content}>
+          {typeof children === 'function' ? <NextParts render={children} payload={payload} /> : children}
+        </SheetContent>
+      )}
+    </SheetFrame>
+  );
+}
+SheetNext.displayName = 'Sheet.Next';
+
+/**
+ * Calls a `Sheet.Next` children function. As a component of its own it only
+ * runs once the sheet is open and its content mounted, which is when the
+ * trigger has handed over its payload.
+ */
+function NextParts({ render, payload }: { render: (payload: any) => ReactNode; payload: unknown }) {
+  return <>{render(payload)}</>;
+}
 
 export interface SheetContentProps extends Omit<ComponentProps<'div'>, 'children'> {
   children?: ReactNode;
@@ -456,7 +588,7 @@ function SheetContent({
         />
       )}
       <Drawer.Viewport className={slots.viewport()}>
-        <Drawer.Popup className={slots.popup({ className })} {...props}>
+        <Drawer.Popup className={slots.popup({ className: [vertical && slots.stacked(), className] })} {...props}>
           {/* The popup is portalled out from under the provider, so the
               context is given again for the parts inside it. */}
           <SheetContext.Provider value={context}>{inside}</SheetContext.Provider>
@@ -610,6 +742,7 @@ SheetStage.displayName = 'Sheet.Stage';
 
 export const Sheet = Object.assign(SheetRoot, {
   Trigger: SheetTrigger,
+  Next: SheetNext,
   Content: SheetContent,
   Header: SheetHeader,
   Title: SheetTitle,
@@ -622,6 +755,7 @@ export const Sheet = Object.assign(SheetRoot, {
 
 export {
   SheetTrigger,
+  SheetNext,
   SheetContent,
   SheetHeader,
   SheetTitle,

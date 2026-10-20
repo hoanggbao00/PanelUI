@@ -14,7 +14,7 @@ Use it for a task that belongs to the page but should not leave it: answering an
 
 A sheet that needs the whole height can meet the edges instead: set `size="full"` or `detached={false}`.
 
-Open a sheet from inside another and the first one steps back behind it. Wrap the app in `Sheet.Stage` and the page steps back too.
+A sheet can open another. Declare the second one inside the first as `Sheet.Next` with a `name`, and any `Sheet.Trigger to="name"` in the first opens it: a row in the body, an icon in the header, a button in the footer. The first sheet steps back behind it. Wrap the app in `Sheet.Stage` and the page steps back too.
 
 For a decision that needs an answer before anything else, use a dialog. For one question with a written answer, use [Feedback](/docs/web/components/feedback).
 
@@ -50,17 +50,25 @@ For a decision that needs an answer before anything else, use a dialog. For one 
         <Sheet.Title />
         <Sheet.Description />
       </Sheet.Header>
-      <Sheet.Body />
+      <Sheet.Body>
+        <Sheet.Trigger to="details" />
+      </Sheet.Body>
       <Sheet.Footer>
         <Sheet.Close />
       </Sheet.Footer>
+      <Sheet.Next name="details">
+        <Sheet.Header />
+        <Sheet.Body />
+        <Sheet.Footer />
+      </Sheet.Next>
     </Sheet.Content>
   </Sheet>
 </Sheet.Stage>
 ```
 
-- `Sheet.Trigger` — What opens the sheet. A plain button, or your own through `render`.
+- `Sheet.Trigger` — What opens a sheet. A plain button, or your own through `render`. With `to`, it opens the `Sheet.Next` of that name instead, and `payload` is handed to that sheet.
 - `Sheet.Content` — The sheet and the backdrop behind it. It draws the grabber on a top or bottom sheet and the round close button; `showGrabber` and `showClose` turn them off. `inline` draws it in the page instead of over it.
+- `Sheet.Next` — A second sheet, opened from the first by any `Sheet.Trigger` whose `to` is its `name`. Declare it anywhere inside the first sheet's content. It takes the same props as `Content` and draws its own, so its children are the header, body and footer. Pass a function as its children to read the opening trigger's `payload`.
 - `Sheet.Header` — The title and a line under it, as `title` and `description` or as `Title` and `Description` children. It leaves room for the close button on the same line.
 - `Sheet.Title` — The sheet's name. It is also what a screen reader announces when the sheet opens.
 - `Sheet.Description` — A sentence under the title, read out after it.
@@ -80,7 +88,7 @@ Every part also takes the props of the element it renders, and a `className`.
 | `open` | `boolean` | — | Whether the sheet is open, when the caller holds that. |
 | `onOpenChange` | `(open: boolean) => void` | — | Called when the sheet asks to open or close. |
 | `defaultOpen` | `boolean` | `false` | Whether it starts open, when the caller does not hold it. |
-| `side` | `SheetSide` | `'bottom'` | The edge it rises from and is swiped back to. Default `bottom`. |
+| `side` | `SheetSide` | `bottom` | The edge it rises from and is swiped back to. Default `bottom`. |
 | `dismissible` | `boolean` | `true` | Whether a click outside, a swipe or Escape closes it. Turn it off for a sheet that must be answered; `Sheet.Close` still works. |
 
 #### `SheetTriggerProps`
@@ -88,6 +96,17 @@ Every part also takes the props of the element it renders, and a `className`.
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `render` | `ReactElement` | — | Your own element to be the trigger, such as a styled button. It is given the click handler and the attributes that tie it to the sheet. |
+| `to` | `string` | — | The `name` of a `Sheet.Next` to open instead of the sheet this trigger is in. Any button in a sheet can open the next one this way, wherever it sits. |
+| `payload` | `unknown` | — | Handed to the `Sheet.Next` that `to` names, as the argument of its children function. Use it to open one sheet for every row of a list. |
+
+#### `SheetNextProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `name` | `string` | **required** | What a `Sheet.Trigger` passes as `to` to open this sheet. Unique within one stack of sheets. |
+| `side` | `SheetSide` | `bottom` | The edge it rises from. Default: the edge of the sheet it is declared in. |
+| `dismissible` | `boolean` | `true` | Whether a click outside, a swipe or Escape closes it. Default true. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called when it opens or closes. |
 
 #### `SheetContentProps`
 
@@ -116,9 +135,21 @@ Every part also takes the props of the element it renders, and a `className`.
 
 ## In a Server Component
 
-`Sheet` is a client component. A Server Component cannot read `Sheet.Trigger` off the import, so import each part by name: `SheetTrigger`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`, `SheetBody`, `SheetFooter`, `SheetClose`, `SheetStage`.
+`Sheet` is a client component. A Server Component cannot read `Sheet.Trigger` off the import, so import each part by name: `SheetTrigger`, `SheetNext`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`, `SheetBody`, `SheetFooter`, `SheetClose`, `SheetStage`.
 
 ## Notes
+
+#### Closing a stack
+
+A press outside the sheets closes all of them. Escape, a swipe and `Sheet.Close` close only the one on top, and the one behind it comes forward again.
+
+#### Names
+
+A `Sheet.Next` name is shared by every sheet in one stack, so a trigger finds its sheet however deep either of them is. Use each name once per stack.
+
+A sheet written as a plain `<Sheet>` inside another sheet's content also stacks. That needs its trigger wrapped in it, so use `Sheet.Next` when the trigger and the sheet are apart.
+
+#### Gestures
 
 Swiping follows the pointer, and a quick flick toward the edge closes the sheet even when it has not moved far.
 

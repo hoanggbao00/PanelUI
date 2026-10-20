@@ -91,6 +91,7 @@ export {
 export {
   Sheet,
   SheetTrigger,
+  SheetNext,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -102,6 +103,7 @@ export {
   type SheetProps,
   type SheetSide,
   type SheetTriggerProps,
+  type SheetNextProps,
   type SheetContentProps,
   type SheetHeaderProps,
   type SheetTitleProps,

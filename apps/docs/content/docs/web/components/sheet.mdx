@@ -62,7 +62,7 @@ Use it for a task that belongs to the page but should not leave it: answering an
 
 A sheet that needs the whole height can meet the edges instead: set `size="full"` or `detached={false}`.
 
-Open a sheet from inside another and the first one steps back behind it. Wrap the app in `Sheet.Stage` and the page steps back too.
+A sheet can open another. Declare the second one inside the first as `Sheet.Next` with a `name`, and any `Sheet.Trigger to="name"` in the first opens it: a row in the body, an icon in the header, a button in the footer. The first sheet steps back behind it. Wrap the app in `Sheet.Stage` and the page steps back too.
 
 For a decision that needs an answer before anything else, use a dialog. For one question with a written answer, use [Feedback](/docs/web/components/feedback).
 
@@ -148,17 +148,25 @@ import { Sheet } from "@/components/panelui/sheet"
         <Sheet.Title />
         <Sheet.Description />
       </Sheet.Header>
-      <Sheet.Body />
+      <Sheet.Body>
+        <Sheet.Trigger to="details" />
+      </Sheet.Body>
       <Sheet.Footer>
         <Sheet.Close />
       </Sheet.Footer>
+      <Sheet.Next name="details">
+        <Sheet.Header />
+        <Sheet.Body />
+        <Sheet.Footer />
+      </Sheet.Next>
     </Sheet.Content>
   </Sheet>
 </Sheet.Stage>
 ```
 
-- **`Sheet.Trigger`** — What opens the sheet. A plain button, or your own through `render`.
+- **`Sheet.Trigger`** — What opens a sheet. A plain button, or your own through `render`. With `to`, it opens the `Sheet.Next` of that name instead, and `payload` is handed to that sheet.
 - **`Sheet.Content`** — The sheet and the backdrop behind it. It draws the grabber on a top or bottom sheet and the round close button; `showGrabber` and `showClose` turn them off. `inline` draws it in the page instead of over it.
+- **`Sheet.Next`** — A second sheet, opened from the first by any `Sheet.Trigger` whose `to` is its `name`. Declare it anywhere inside the first sheet's content. It takes the same props as `Content` and draws its own, so its children are the header, body and footer. Pass a function as its children to read the opening trigger's `payload`.
 - **`Sheet.Header`** — The title and a line under it, as `title` and `description` or as `Title` and `Description` children. It leaves room for the close button on the same line.
 - **`Sheet.Title`** — The sheet's name. It is also what a screen reader announces when the sheet opens.
 - **`Sheet.Description`** — A sentence under the title, read out after it.
@@ -210,19 +218,39 @@ export default function SheetSides() {
 
 ### A sheet from a sheet
 
-Put a second `Sheet` inside the first one's content. It slides over from the same edge, and the first one steps back: a little smaller, pushed inward, and faded. Only the first sheet darkens the page. A press outside them closes both. Escape and a swipe close only the one on top.
+Declare the second sheet as `Sheet.Next` inside the first, and give a `Sheet.Trigger` in the first its `name` as `to`. The trigger can be anything in the sheet. Here it is each row of a list, made pressable by `render`. The second sheet slides over from the same edge, and the first one steps back: a little smaller, pushed inward, and faded. Only the first sheet darkens the page.
 
 <ComponentPreview name="sheet/nested" height={160}>
 
 ```tsx lineNumbers
 'use client';
 
+import { ImageIcon, LogOutIcon, UsersRoundIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Frame } from '@/components/panelui/frame';
 import { Sheet } from '@/components/panelui/sheet';
+
+const PEOPLE = [
+  { name: 'Noor Haddad', role: 'Owner' },
+  { name: 'Tomás Ferreira', role: 'Can add photos' },
+  { name: 'Aiko Mori', role: 'Can add photos' },
+  { name: 'Kwame Asante', role: 'Can view' },
+  { name: 'Lena Vogt', role: 'Can view' },
+];
+
+// Stand-ins for six photos from the album.
+const COVERS = [
+  'from-chart-1 to-chart-4',
+  'from-chart-2 to-chart-3',
+  'from-chart-3 to-chart-1',
+  'from-chart-4 to-chart-5',
+  'from-chart-5 to-chart-2',
+  'from-muted-foreground/50 to-chart-3',
+];
 
 export default function SheetNested() {
   return (
@@ -235,32 +263,386 @@ export default function SheetNested() {
             <FieldLabel>Name</FieldLabel>
             <Input defaultValue="Porto, May" />
           </Field>
-          <Field>
-            <Label className="w-full justify-between">
-              Let others add photos
-              <Switch defaultChecked />
-            </Label>
-            <FieldDescription>Everyone in the album can upload and remove their own.</FieldDescription>
-          </Field>
+          <Label className="w-full justify-between">
+            Let others add photos
+            <Switch defaultChecked />
+          </Label>
+          {/* Each row opens a sheet of its own. They sit wherever the layout wants them. */}
+          <Frame variant="plain">
+            <Frame.Panel>
+              <Sheet.Trigger to="people" render={<Frame.Row chevron />}>
+                <Frame.Media className="text-muted-foreground">
+                  <UsersRoundIcon className="size-4" />
+                </Frame.Media>
+                <Frame.Content>
+                  <Frame.Title as="p">People</Frame.Title>
+                </Frame.Content>
+                <Frame.Actions className="text-sm text-muted-foreground">5</Frame.Actions>
+              </Sheet.Trigger>
+              <Sheet.Trigger to="cover" render={<Frame.Row chevron />}>
+                <Frame.Media className="text-muted-foreground">
+                  <ImageIcon className="size-4" />
+                </Frame.Media>
+                <Frame.Content>
+                  <Frame.Title as="p">Cover photo</Frame.Title>
+                </Frame.Content>
+              </Sheet.Trigger>
+            </Frame.Panel>
+          </Frame>
+          <Sheet.Trigger to="leave" render={<Button variant="destructive-outline" />}>
+            <LogOutIcon />
+            Leave album
+          </Sheet.Trigger>
         </Sheet.Body>
         <Sheet.Footer>
           <Sheet.Close render={<Button size="lg" />}>Done</Sheet.Close>
-          <Sheet>
-            <Sheet.Trigger render={<Button size="lg" variant="destructive-outline" />}>
-              Leave album
-            </Sheet.Trigger>
-            <Sheet.Content>
-              <Sheet.Header
-                title="Leave “Porto, May”?"
-                description="The photos you added stay in the album. Anyone in it can invite you back."
-              />
-              <Sheet.Footer>
-                <Sheet.Close render={<Button size="lg" variant="destructive" />}>Leave album</Sheet.Close>
-                <Sheet.Close render={<Button size="lg" variant="ghost" />}>Stay</Sheet.Close>
-              </Sheet.Footer>
-            </Sheet.Content>
-          </Sheet>
         </Sheet.Footer>
+
+        <Sheet.Next name="people">
+          <Sheet.Header title="People" description="Everyone the album is shared with." />
+          <Sheet.Body>
+            <Frame variant="plain">
+              <Frame.Panel>
+                {PEOPLE.map((person) => (
+                  <Frame.Row key={person.name}>
+                    <Frame.Content>
+                      <Frame.Title as="p">{person.name}</Frame.Title>
+                      <Frame.Description>{person.role}</Frame.Description>
+                    </Frame.Content>
+                  </Frame.Row>
+                ))}
+              </Frame.Panel>
+            </Frame>
+          </Sheet.Body>
+          <Sheet.Footer>
+            <Sheet.Close render={<Button size="lg" />}>Done</Sheet.Close>
+          </Sheet.Footer>
+        </Sheet.Next>
+
+        <Sheet.Next name="cover">
+          <Sheet.Header title="Cover photo" description="Shown on the album in everyone’s library." />
+          <Sheet.Body>
+            <div className="grid grid-cols-3 gap-2">
+              {COVERS.map((tone, index) => (
+                <Sheet.Close
+                  key={tone}
+                  aria-label={`Photo ${index + 1}`}
+                  className={`aspect-square cursor-pointer rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring bg-linear-to-br ${tone}`}
+                />
+              ))}
+            </div>
+          </Sheet.Body>
+          <Sheet.Footer />
+        </Sheet.Next>
+
+        <Sheet.Next name="leave">
+          <Sheet.Header
+            title="Leave “Porto, May”?"
+            description="The photos you added stay in the album. Anyone in it can invite you back."
+          />
+          <Sheet.Footer>
+            <Sheet.Close render={<Button size="lg" variant="destructive" />}>Leave album</Sheet.Close>
+            <Sheet.Close render={<Button size="lg" variant="ghost" />}>Stay</Sheet.Close>
+          </Sheet.Footer>
+        </Sheet.Next>
+      </Sheet.Content>
+    </Sheet>
+  );
+}
+```
+
+</ComponentPreview>
+
+### One sheet for every row
+
+A trigger's `payload` reaches the `Sheet.Next` it opens. Give the sheet a function as its children and it is called with the payload, so one declaration serves every row of a list.
+
+<ComponentPreview name="sheet/payload" height={160}>
+
+```tsx lineNumbers
+'use client';
+
+import { PhoneIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Frame } from '@/components/panelui/frame';
+import { Sheet } from '@/components/panelui/sheet';
+
+interface Engineer {
+  name: string;
+  shift: string;
+  area: string;
+  phone: string;
+}
+
+const ROTA: Engineer[] = [
+  { name: 'Ifeoma Okafor', shift: 'Mon–Tue · 08:00–20:00', area: 'Payments API', phone: '+44 20 7946 0112' },
+  { name: 'Mateo Rossi', shift: 'Wed–Thu · 08:00–20:00', area: 'Search', phone: '+44 20 7946 0347' },
+  { name: 'Hana Sato', shift: 'Fri–Sat · 20:00–08:00', area: 'Storage', phone: '+44 20 7946 0581' },
+  { name: 'Samir Haddad', shift: 'Sun · all day', area: 'Edge network', phone: '+44 20 7946 0926' },
+];
+
+export default function SheetPayload() {
+  return (
+    <Sheet>
+      <Sheet.Trigger render={<Button variant="outline" />}>On call this week</Sheet.Trigger>
+      <Sheet.Content>
+        <Sheet.Header title="On call" description="19–25 October · four engineers" />
+        <Sheet.Body>
+          <Frame variant="plain">
+            <Frame.Panel>
+              {/* Every row opens the same sheet, filled with that row's engineer. */}
+              {ROTA.map((engineer) => (
+                <Sheet.Trigger key={engineer.name} to="engineer" payload={engineer} render={<Frame.Row chevron />}>
+                  <Frame.Content>
+                    <Frame.Title as="p">{engineer.name}</Frame.Title>
+                    <Frame.Description>{engineer.shift}</Frame.Description>
+                  </Frame.Content>
+                </Sheet.Trigger>
+              ))}
+            </Frame.Panel>
+          </Frame>
+        </Sheet.Body>
+        <Sheet.Footer />
+
+        <Sheet.Next name="engineer">
+          {(engineer: Engineer) => (
+            <>
+              <Sheet.Header title={engineer.name} description={engineer.area} />
+              <Sheet.Body>
+                <Frame variant="plain">
+                  <Frame.Panel>
+                    <Frame.Row>
+                      <Frame.Content>
+                        <Frame.Description>Shift</Frame.Description>
+                        <Frame.Title as="p">{engineer.shift}</Frame.Title>
+                      </Frame.Content>
+                    </Frame.Row>
+                    <Frame.Row>
+                      <Frame.Content>
+                        <Frame.Description>Phone</Frame.Description>
+                        <Frame.Title as="p" className="tabular-nums">
+                          {engineer.phone}
+                        </Frame.Title>
+                      </Frame.Content>
+                      <Frame.Actions className="text-muted-foreground">
+                        <PhoneIcon className="size-4" />
+                      </Frame.Actions>
+                    </Frame.Row>
+                  </Frame.Panel>
+                </Frame>
+              </Sheet.Body>
+              <Sheet.Footer>
+                <Sheet.Close render={<Button size="lg" />}>Page {engineer.name.split(' ')[0]}</Sheet.Close>
+                <Sheet.Close render={<Button size="lg" variant="ghost" />}>Ask to swap shifts</Sheet.Close>
+              </Sheet.Footer>
+            </>
+          )}
+        </Sheet.Next>
+      </Sheet.Content>
+    </Sheet>
+  );
+}
+```
+
+</ComponentPreview>
+
+### From the header
+
+A trigger in the header, beside the title, for an action on the whole sheet's subject.
+
+<ComponentPreview name="sheet/header" height={160}>
+
+```tsx lineNumbers
+'use client';
+
+import { FileTextIcon, UserPlusIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Frame } from '@/components/panelui/frame';
+import { Sheet } from '@/components/panelui/sheet';
+
+const DETAILS = [
+  ['Size', '18.4 MB'],
+  ['Pages', '42'],
+  ['Uploaded', '14 October by Ruth Adeyemi'],
+  ['Folder', 'Harbour Road / Surveys'],
+];
+
+export default function SheetHeaderTrigger() {
+  return (
+    <Sheet>
+      <Sheet.Trigger render={<Button variant="outline" />}>File details</Sheet.Trigger>
+      <Sheet.Content>
+        <Sheet.Header>
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <FileTextIcon className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <Sheet.Title className="truncate">Site survey.pdf</Sheet.Title>
+              <Sheet.Description>Only you can open it</Sheet.Description>
+            </div>
+            {/* A trigger in the header, beside the title. */}
+            <Sheet.Trigger
+              to="share"
+              aria-label="Share"
+              render={<Button size="icon" variant="outline" className="rounded-full" />}
+            >
+              <UserPlusIcon />
+            </Sheet.Trigger>
+          </div>
+        </Sheet.Header>
+        <Sheet.Body>
+          <Frame variant="plain">
+            <Frame.Panel>
+              {DETAILS.map(([label, value]) => (
+                <Frame.Row key={label}>
+                  <Frame.Content>
+                    <Frame.Description>{label}</Frame.Description>
+                  </Frame.Content>
+                  <Frame.Actions className="text-sm">{value}</Frame.Actions>
+                </Frame.Row>
+              ))}
+            </Frame.Panel>
+          </Frame>
+        </Sheet.Body>
+        <Sheet.Footer>
+          <Sheet.Close render={<Button size="lg" />}>Open</Sheet.Close>
+        </Sheet.Footer>
+
+        <Sheet.Next name="share">
+          <Sheet.Header title="Share “Site survey.pdf”" description="People you add can open and comment." />
+          <Sheet.Body>
+            <Field>
+              <FieldLabel>Email</FieldLabel>
+              <Input type="email" placeholder="name@harbour.works" />
+            </Field>
+          </Sheet.Body>
+          <Sheet.Footer>
+            <Sheet.Close render={<Button size="lg" />}>Share</Sheet.Close>
+          </Sheet.Footer>
+        </Sheet.Next>
+      </Sheet.Content>
+    </Sheet>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Three deep
+
+A `Sheet.Next` can hold its own `Sheet.Next`. Here an item opens from the order, and removing it asks first, in a third sheet. Each sheet behind the front one steps back a little further.
+
+<ComponentPreview name="sheet/deep" height={160}>
+
+```tsx lineNumbers
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Frame } from '@/components/panelui/frame';
+import { Sheet } from '@/components/panelui/sheet';
+
+interface Item {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+const ITEMS: Item[] = [
+  { id: 'oats', name: 'Rolled oats, 1 kg', quantity: 2, price: 3.4 },
+  { id: 'figs', name: 'Dried figs', quantity: 1, price: 4.25 },
+  { id: 'milk', name: 'Oat milk, 1 L', quantity: 4, price: 1.95 },
+  { id: 'coffee', name: 'Coffee beans, 500 g', quantity: 1, price: 11.9 },
+];
+
+const money = (value: number) => `£${value.toFixed(2)}`;
+
+export default function SheetDeep() {
+  const [items, setItems] = useState(ITEMS);
+  const total = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+
+  return (
+    <Sheet onOpenChange={(open) => open && setItems(ITEMS)}>
+      <Sheet.Trigger render={<Button variant="outline" />}>Review order</Sheet.Trigger>
+      <Sheet.Content>
+        <Sheet.Header title="Order 2841" description={`Delivery Saturday, 09:00–11:00 · ${money(total)}`} />
+        <Sheet.Body>
+          <Frame variant="plain">
+            <Frame.Panel>
+              {items.map((item) => (
+                <Sheet.Trigger key={item.id} to="item" payload={item} render={<Frame.Row chevron />}>
+                  <Frame.Content>
+                    <Frame.Title as="p">{item.name}</Frame.Title>
+                    <Frame.Description>
+                      {item.quantity} × {money(item.price)}
+                    </Frame.Description>
+                  </Frame.Content>
+                  <Frame.Actions className="text-sm tabular-nums">{money(item.quantity * item.price)}</Frame.Actions>
+                </Sheet.Trigger>
+              ))}
+            </Frame.Panel>
+          </Frame>
+        </Sheet.Body>
+        <Sheet.Footer>
+          <Sheet.Close render={<Button size="lg" />}>Place order</Sheet.Close>
+        </Sheet.Footer>
+
+        {/* The second sheet: one for every item. */}
+        <Sheet.Next name="item">
+          {(item: Item) => (
+            <>
+              <Sheet.Header title={item.name} description={`${money(item.price)} each`} />
+              <Sheet.Body className="flex flex-col gap-4">
+                <Field>
+                  <FieldLabel>Quantity</FieldLabel>
+                  <Input type="number" min={1} defaultValue={item.quantity} />
+                </Field>
+                <Field>
+                  <FieldLabel>Note for the picker</FieldLabel>
+                  <Input placeholder="A substitute is fine" />
+                </Field>
+              </Sheet.Body>
+              <Sheet.Footer>
+                <Sheet.Close render={<Button size="lg" />}>Save</Sheet.Close>
+                <Sheet.Trigger to="remove" payload={item} render={<Button size="lg" variant="destructive-outline" />}>
+                  Remove from order
+                </Sheet.Trigger>
+              </Sheet.Footer>
+
+              {/* The third, opened from the second. */}
+              <Sheet.Next name="remove">
+                {(target: Item) => (
+                  <>
+                    <Sheet.Header
+                      title={`Remove ${target.name.toLowerCase()}?`}
+                      description="You can add it again until the order is packed on Friday evening."
+                    />
+                    <Sheet.Footer>
+                      <Sheet.Close
+                        render={
+                          <Button
+                            size="lg"
+                            variant="destructive"
+                            onClick={() => setItems((all) => all.filter((each) => each.id !== target.id))}
+                          />
+                        }
+                      >
+                        Remove
+                      </Sheet.Close>
+                      <Sheet.Close render={<Button size="lg" variant="ghost" />}>Keep it</Sheet.Close>
+                    </Sheet.Footer>
+                  </>
+                )}
+              </Sheet.Next>
+            </>
+          )}
+        </Sheet.Next>
       </Sheet.Content>
     </Sheet>
   );
@@ -271,16 +653,18 @@ export default function SheetNested() {
 
 ### A sheet from a sheet, from any edge
 
-Stacking works from every side. The sheet behind is pushed inward from its own edge, so a strip of it still shows.
+Stacking works from every side. A `Sheet.Next` rises from the edge of the sheet it is declared in unless it is given a `side`. The sheet behind is pushed inward from its own edge, so a strip of it still shows.
 
 <ComponentPreview name="sheet/nested-sides" height={160}>
 
 ```tsx lineNumbers
 'use client';
 
+import { UsersRoundIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Frame } from '@/components/panelui/frame';
 import { Sheet, type SheetSide } from '@/components/panelui/sheet';
 
 const SIDES: SheetSide[] = ['top', 'right', 'bottom', 'left'];
@@ -291,30 +675,42 @@ function Workspace({ side }: { side: SheetSide }) {
       <Sheet.Trigger render={<Button variant="outline" className="capitalize" />}>{side}</Sheet.Trigger>
       <Sheet.Content>
         <Sheet.Header title="Workspace" description="Northwind Studio · 12 members" />
-        <Sheet.Body>
+        <Sheet.Body className="flex flex-col gap-6">
           <Field>
             <FieldLabel>Workspace name</FieldLabel>
             <Input defaultValue="Northwind Studio" />
           </Field>
+          <Frame variant="plain">
+            <Frame.Panel>
+              <Sheet.Trigger to="invite" render={<Frame.Row chevron />}>
+                <Frame.Media className="text-muted-foreground">
+                  <UsersRoundIcon className="size-4" />
+                </Frame.Media>
+                <Frame.Content>
+                  <Frame.Title as="p">Invite people</Frame.Title>
+                  <Frame.Description>They join as members</Frame.Description>
+                </Frame.Content>
+              </Sheet.Trigger>
+            </Frame.Panel>
+          </Frame>
         </Sheet.Body>
         <Sheet.Footer>
-          {/* The second sheet comes from the same edge and the first steps back. */}
-          <Sheet side={side}>
-            <Sheet.Trigger render={<Button size="lg" />}>Invite people</Sheet.Trigger>
-            <Sheet.Content>
-              <Sheet.Header title="Invite people" description="They join as members and can be promoted later." />
-              <Sheet.Body>
-                <Field>
-                  <FieldLabel>Email</FieldLabel>
-                  <Input type="email" placeholder="name@northwind.studio" />
-                </Field>
-              </Sheet.Body>
-              <Sheet.Footer>
-                <Sheet.Close render={<Button size="lg" />}>Send invite</Sheet.Close>
-              </Sheet.Footer>
-            </Sheet.Content>
-          </Sheet>
+          <Sheet.Close render={<Button size="lg" />}>Save</Sheet.Close>
         </Sheet.Footer>
+
+        {/* It comes from the same edge, and the first sheet steps back. */}
+        <Sheet.Next name="invite">
+          <Sheet.Header title="Invite people" description="They join as members and can be promoted later." />
+          <Sheet.Body>
+            <Field>
+              <FieldLabel>Email</FieldLabel>
+              <Input type="email" placeholder="name@northwind.studio" />
+            </Field>
+          </Sheet.Body>
+          <Sheet.Footer>
+            <Sheet.Close render={<Button size="lg" />}>Send invite</Sheet.Close>
+          </Sheet.Footer>
+        </Sheet.Next>
       </Sheet.Content>
     </Sheet>
   );
@@ -411,7 +807,7 @@ export default function SheetStageDemo() {
 | `open` | `boolean` | — | Whether the sheet is open, when the caller holds that. |
 | `onOpenChange` | `(open: boolean) => void` | — | Called when the sheet asks to open or close. |
 | `defaultOpen` | `boolean` | `false` | Whether it starts open, when the caller does not hold it. |
-| `side` | `SheetSide` | `'bottom'` | The edge it rises from and is swiped back to. Default `bottom`. |
+| `side` | `SheetSide` | `bottom` | The edge it rises from and is swiped back to. Default `bottom`. |
 | `dismissible` | `boolean` | `true` | Whether a click outside, a swipe or Escape closes it. Turn it off for a sheet that must be answered; `Sheet.Close` still works. |
 
 ### Sheet.Trigger
@@ -419,6 +815,17 @@ export default function SheetStageDemo() {
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `render` | `ReactElement` | — | Your own element to be the trigger, such as a styled button. It is given the click handler and the attributes that tie it to the sheet. |
+| `to` | `string` | — | The `name` of a `Sheet.Next` to open instead of the sheet this trigger is in. Any button in a sheet can open the next one this way, wherever it sits. |
+| `payload` | `unknown` | — | Handed to the `Sheet.Next` that `to` names, as the argument of its children function. Use it to open one sheet for every row of a list. |
+
+### Sheet.Next
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | — | What a `Sheet.Trigger` passes as `to` to open this sheet. Unique within one stack of sheets. |
+| `side` | `SheetSide` | `bottom` | The edge it rises from. Default: the edge of the sheet it is declared in. |
+| `dismissible` | `boolean` | `true` | Whether a click outside, a swipe or Escape closes it. Default true. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called when it opens or closes. |
 
 ### Sheet.Content
 
@@ -449,6 +856,18 @@ Every part also takes the props of the element it renders, and a `className`.
 
 ## Notes
 
+### Closing a stack
+
+A press outside the sheets closes all of them. Escape, a swipe and `Sheet.Close` close only the one on top, and the one behind it comes forward again.
+
+### Names
+
+A `Sheet.Next` name is shared by every sheet in one stack, so a trigger finds its sheet however deep either of them is. Use each name once per stack.
+
+A sheet written as a plain `<Sheet>` inside another sheet's content also stacks. That needs its trigger wrapped in it, so use `Sheet.Next` when the trigger and the sheet are apart.
+
+### Gestures
+
 Swiping follows the pointer, and a quick flick toward the edge closes the sheet even when it has not moved far.
 
 `dismissible={false}` keeps a click outside, Escape and a swipe from closing it. Only `Sheet.Close` and your own `open` state close it then.
@@ -464,5 +883,5 @@ With reduced motion turned on, the sheet appears and disappears without sliding.
 `Sheet` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Sheet.Trigger` off the import, so each part is also exported by name: `SheetTrigger` is `Sheet.Trigger`, and so on for the others.
 
 ```tsx
-import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter, SheetClose, SheetStage } from "@/components/panelui/sheet"
+import { Sheet, SheetTrigger, SheetNext, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter, SheetClose, SheetStage } from "@/components/panelui/sheet"
 ```
