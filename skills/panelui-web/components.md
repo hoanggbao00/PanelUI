@@ -11,6 +11,7 @@ Generated from the collection's source. Read a component's own file before using
 - [Input](components/input.md) — A single line to type into, with icons, units and buttons set inside its box.
 - [Label](components/label.md) — The name of a field, with its required mark, a hint and an action on one line.
 - [Select](components/select.md) — A button that opens a list of options and shows the one chosen.
+- [Switch](components/switch.md) — On or off, for a setting that takes effect the moment it changes.
 - [Textarea](components/textarea.md) — A field for more than one line that grows as it is written in, up to a limit.
 
 ## Overlays
@@ -51,4 +52,3 @@ Generated from the collection's source. Read a component's own file before using
 
 - [Message](components/message.md) — One turn of a conversation with an assistant: a person's bubble, or an answer set as prose with actions under it.
 - [Prompt](components/prompt.md) — A field for writing to an assistant, with its files, model and tools in one card.
-- [Sources](components/sources.md) — The pages an answer was written from, and which claim in it rests on which page.

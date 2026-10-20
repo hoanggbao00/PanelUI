@@ -519,24 +519,6 @@
       ]
     },
     {
-      "name": "sources",
-      "type": "registry:component",
-      "title": "Sources",
-      "description": "The pages an answer was written from, and which claim in it rests on which page.",
-      "dependencies": [
-        "@base-ui/react",
-        "tailwind-variants"
-      ],
-      "registryDependencies": [],
-      "files": [
-        {
-          "path": "components/panelui/sources.tsx",
-          "type": "registry:component",
-          "target": "@components/panelui/sources.tsx"
-        }
-      ]
-    },
-    {
       "name": "stat",
       "type": "registry:component",
       "title": "Stat",
@@ -550,6 +532,34 @@
           "path": "components/panelui/stat.tsx",
           "type": "registry:component",
           "target": "@components/panelui/stat.tsx"
+        }
+      ]
+    },
+    {
+      "name": "switch",
+      "type": "registry:component",
+      "title": "Switch",
+      "description": "On or off, for a setting that takes effect the moment it changes.",
+      "dependencies": [
+        "@base-ui/react",
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "cssVars": {
+        "light": {
+          "success": "oklch(0.696 0.17 162.48)",
+          "info": "oklch(0.623 0.214 259.815)"
+        },
+        "dark": {
+          "success": "oklch(0.696 0.17 162.48)",
+          "info": "oklch(0.623 0.214 259.815)"
+        }
+      },
+      "files": [
+        {
+          "path": "components/panelui/switch.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/switch.tsx"
         }
       ]
     },

@@ -1,0 +1,308 @@
+---
+title: Switch
+description: On or off, for a setting that takes effect the moment it changes.
+status: new
+---
+
+<ComponentPreview name="switch/overview" height={180}>
+
+```tsx lineNumbers
+'use client';
+
+import { Switch } from '@/components/panelui/switch';
+
+export default function SwitchOverview() {
+  return (
+    <div className="flex items-center gap-6">
+      <Switch label="Wi-Fi" size="lg" />
+      <Switch label="Bluetooth" size="lg" defaultChecked />
+      <Switch label="Airplane mode" size="lg" defaultChecked disabled />
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it for a setting that takes effect as soon as it changes: notifications on, dark mode off. There is nothing to save afterwards.
+
+For a choice that only applies when a form is sent, such as agreeing to terms, use a checkbox. For a choice between more than two options, use [Tabs](/docs/web/components/tabs) or a radio group.
+
+Give every switch a name. Wrap it in a [Label](/docs/web/components/label), tie a label to its `id`, or pass `label` when the name is shown elsewhere on the screen.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/switch.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/switch` instead of `@/components/panelui/switch`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="@base-ui/react tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/switch.tsx`:
+
+<RegistrySource name="switch" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Switch } from "@/components/panelui/switch"
+```
+
+```tsx
+<Switch label="Dark mode" defaultChecked />
+
+<Label>
+  <Label.Text>Email me a receipt</Label.Text>
+  <Label.Action>
+    <Switch />
+  </Label.Action>
+</Label>
+```
+
+## Examples
+
+### With a label
+
+Inside a `Label`, the whole line turns the switch on and off. `Label.Action` sets the switch at the end of the line. A disabled switch fades its label with it, with nothing passed.
+
+<ComponentPreview name="switch/labels" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { Label } from '@/components/panelui/label';
+import { Switch } from '@/components/panelui/switch';
+
+export default function SwitchLabels() {
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-5">
+      {/* Wrapped in its label: the whole line is pressable. */}
+      <Label>
+        <Label.Text>Show week numbers</Label.Text>
+        <Label.Action>
+          <Switch defaultChecked />
+        </Label.Action>
+      </Label>
+      <Label>
+        <Label.Text>Start the week on Monday</Label.Text>
+        <Label.Action>
+          <Switch />
+        </Label.Action>
+      </Label>
+      {/* A switch that is off and cannot be turned on fades its label with it. */}
+      <Label>
+        <Label.Text>Sync with the shared calendar</Label.Text>
+        <Label.Hint>Ask an admin</Label.Hint>
+        <Label.Action>
+          <Switch disabled />
+        </Label.Action>
+      </Label>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Sizes
+
+`xs`, `sm`, `md`, `lg` and `xl`. The thumb stays a circle at every size, and the track is the room it travels.
+
+<ComponentPreview name="switch/sizes" height={160}>
+
+```tsx lineNumbers
+'use client';
+
+import { Switch, type SwitchSize } from '@/components/panelui/switch';
+
+const SIZES: SwitchSize[] = ['xs', 'sm', 'md', 'lg', 'xl'];
+
+export default function SwitchSizes() {
+  return (
+    <div className="flex items-center gap-5">
+      {SIZES.map((size) => (
+        <Switch key={size} size={size} label={`Size ${size}`} defaultChecked />
+      ))}
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Colours
+
+`color` sets what it fills with when on. Keep `primary` for most switches. Use `success`, `info` or `destructive` where the setting's meaning calls for it, such as a switch that deletes things.
+
+<ComponentPreview name="switch/colors" height={280}>
+
+```tsx lineNumbers
+'use client';
+
+import { Label } from '@/components/panelui/label';
+import { Switch } from '@/components/panelui/switch';
+
+export default function SwitchColors() {
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-5">
+      <Label>
+        <Label.Text>Notifications</Label.Text>
+        <Label.Action>
+          <Switch defaultChecked />
+        </Label.Action>
+      </Label>
+      <Label>
+        <Label.Text>Automatic backups</Label.Text>
+        <Label.Action>
+          <Switch color="success" defaultChecked />
+        </Label.Action>
+      </Label>
+      <Label>
+        <Label.Text>Beta features</Label.Text>
+        <Label.Action>
+          <Switch color="info" defaultChecked />
+        </Label.Action>
+      </Label>
+      <Label>
+        <Label.Text>Delete files after 30 days</Label.Text>
+        <Label.Action>
+          <Switch color="destructive" defaultChecked />
+        </Label.Action>
+      </Label>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Saving a change
+
+`pending` turns a ring in the thumb and stops the switch being pressed again. Show the new state at once, set `pending` while the change is saved, and put the old state back if it fails. Here the second change of each setting fails.
+
+<ComponentPreview name="switch/pending" height={200}>
+
+```tsx lineNumbers
+'use client';
+
+import { useRef, useState } from 'react';
+import { Label } from '@/components/panelui/label';
+import { Switch } from '@/components/panelui/switch';
+
+/** Stands in for a request: a second to answer, and the second change of each setting fails. */
+function save(attempt: number) {
+  return new Promise<void>((resolve, reject) =>
+    window.setTimeout(() => (attempt % 2 === 1 ? reject(new Error('offline')) : resolve()), 1100)
+  );
+}
+
+function Setting({ title }: { title: string }) {
+  const [on, setOn] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const attempts = useRef(0);
+
+  const change = async (next: boolean) => {
+    // Shown at once, and put back if the save fails.
+    setOn(next);
+    setFailed(false);
+    setPending(true);
+    try {
+      await save(attempts.current++);
+    } catch {
+      setOn(!next);
+      setFailed(true);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <Label invalid={failed}>
+      <Label.Text>{title}</Label.Text>
+      {failed ? <Label.Hint>Not saved, try again</Label.Hint> : pending ? <Label.Hint>Saving</Label.Hint> : null}
+      <Label.Action>
+        <Switch checked={on} onCheckedChange={change} pending={pending} />
+      </Label.Action>
+    </Label>
+  );
+}
+
+export default function SwitchPending() {
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-5">
+      <Setting title="Public profile" />
+      <Setting title="Show me in search" />
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Switch
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `SwitchSize` | — | Default `md`. |
+| `color` | `SwitchColor` | `primary` | The colour it fills with when on. `primary` by default; pick another for what it means. |
+| `label` | `string` | — | What a screen reader calls it, when there is no visible label tied to it. A `Label` wrapped round it, or pointing at its `id`, is better when there is room. |
+| `pending` | `boolean` | — | A change is being saved: a ring turns in the thumb, and it cannot be pressed again until it is done. |
+| `className` | `string` | — |  |
+| `style` | `CSSProperties` | — |  |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Motion
+
+The colour sweeps along the track behind the thumb rather than fading in. While the switch is pressed, the thumb stretches towards where it will go. With reduced motion turned on, it switches in place.
+
+### Keyboard
+
+The switch is a button with `role="switch"`. Space and Enter flip it.
+
+### In a form
+
+Pass `name` and the switch submits with the form, as a checkbox does. `required` makes it one that must be on.
+
+### Built on
+
+It is the Base UI switch, which the package depends on directly.

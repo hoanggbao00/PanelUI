@@ -253,13 +253,13 @@
       "category": "ai"
     }
   ],
-  "sources": [
-    "Sources",
-    "The pages an answer was written from, and which claim in it rests on which page.",
-    "react ai sources citations search results component",
+  "switch": [
+    "Switch",
+    "On or off, for a setting that takes effect the moment it changes.",
+    "react switch toggle component",
     {
       "addedIn": "0.6.0",
-      "category": "ai"
+      "category": "forms"
     }
   ]
 }

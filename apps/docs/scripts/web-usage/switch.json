@@ -1,0 +1,36 @@
+{
+  "slug": "switch",
+  "demo": "overview",
+  "demoOptions": {
+    "height": 180
+  },
+  "intro": "Use it for a setting that takes effect as soon as it changes: notifications on, dark mode off. There is nothing to save afterwards.\n\nFor a choice that only applies when a form is sent, such as agreeing to terms, use a checkbox. For a choice between more than two options, use [Tabs](/docs/web/components/tabs) or a radio group.\n\nGive every switch a name. Wrap it in a [Label](/docs/web/components/label), tie a label to its `id`, or pass `label` when the name is shown elsewhere on the screen.",
+  "usage": "<Switch label=\"Dark mode\" defaultChecked />\n\n<Label>\n  <Label.Text>Email me a receipt</Label.Text>\n  <Label.Action>\n    <Switch />\n  </Label.Action>\n</Label>",
+  "examples": [
+    {
+      "title": "With a label",
+      "description": "Inside a `Label`, the whole line turns the switch on and off. `Label.Action` sets the switch at the end of the line. A disabled switch fades its label with it, with nothing passed.",
+      "demo": "labels",
+      "height": 240
+    },
+    {
+      "title": "Sizes",
+      "description": "`xs`, `sm`, `md`, `lg` and `xl`. The thumb stays a circle at every size, and the track is the room it travels.",
+      "demo": "sizes",
+      "height": 160
+    },
+    {
+      "title": "Colours",
+      "description": "`color` sets what it fills with when on. Keep `primary` for most switches. Use `success`, `info` or `destructive` where the setting's meaning calls for it, such as a switch that deletes things.",
+      "demo": "colors",
+      "height": 280
+    },
+    {
+      "title": "Saving a change",
+      "description": "`pending` turns a ring in the thumb and stops the switch being pressed again. Show the new state at once, set `pending` while the change is saved, and put the old state back if it fails. Here the second change of each setting fails.",
+      "demo": "pending",
+      "height": 200
+    }
+  ],
+  "notes": "### Motion\n\nThe colour sweeps along the track behind the thumb rather than fading in. While the switch is pressed, the thumb stretches towards where it will go. With reduced motion turned on, it switches in place.\n\n### Keyboard\n\nThe switch is a button with `role=\"switch\"`. Space and Enter flip it.\n\n### In a form\n\nPass `name` and the switch submits with the form, as a checkbox does. `required` makes it one that must be on.\n\n### Built on\n\nIt is the Base UI switch, which the package depends on directly."
+}

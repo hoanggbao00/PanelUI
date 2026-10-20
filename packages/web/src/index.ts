@@ -302,6 +302,7 @@ export {
 export { Button, buttonVariants, type ButtonProps, type ButtonVariant, type ButtonSize } from './components/button';
 export { Input, InputGroup, InputAddon, type InputProps, type InputGroupProps, type InputAddonProps, type InputSize } from './components/input';
 export { Textarea, type TextareaProps } from './components/textarea';
+export { Switch, type SwitchProps, type SwitchSize, type SwitchColor } from './components/switch';
 export {
   Label,
   LabelText,
@@ -473,16 +474,3 @@ export {
   type MessageAttachmentsProps,
   type MessageAttachmentProps,
 } from './components/message';
-export {
-  Sources,
-  SourcesTrigger,
-  SourcesContent,
-  SourcesSource,
-  SourcesCitation,
-  type SourcesProps,
-  type SourcesStatus,
-  type SourcesTriggerProps,
-  type SourcesContentProps,
-  type SourcesSourceProps,
-  type SourcesCitationProps,
-} from './components/sources';
