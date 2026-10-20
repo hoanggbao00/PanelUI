@@ -32,6 +32,12 @@
       "height": 220
     },
     {
+      "title": "Blurred backdrop",
+      "description": "`blur` on `Feedback.Content` frosts the page behind the dialog as well as dimming it. The dim is lighter than without it, so what is behind still reads as the page the question is about, just out of focus.",
+      "demo": "blur",
+      "height": 220
+    },
+    {
       "title": "A send that fails",
       "description": "Because `Submit` leaves the dialog open, a failed request can say so in the panel, with the message still in the field. This demo fails the first time and succeeds on the retry.",
       "demo": "failed",

@@ -26,6 +26,7 @@ export const WEB_DEMOS: Record<string, ComponentType> = {
   'day-grid/pick-a-day': dynamic(() => import('./day-grid/pick-a-day')),
   'day-grid/thumb': dynamic(() => import('./day-grid/thumb')),
   'day-grid/writing': dynamic(() => import('./day-grid/writing')),
+  'feedback/blur': dynamic(() => import('./feedback/blur')),
   'feedback/dialog': dynamic(() => import('./feedback/dialog')),
   'feedback/draft': dynamic(() => import('./feedback/draft')),
   'feedback/failed': dynamic(() => import('./feedback/failed')),

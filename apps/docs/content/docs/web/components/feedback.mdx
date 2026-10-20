@@ -216,6 +216,50 @@ export default function FeedbackDialog() {
 
 </ComponentPreview>
 
+### Blurred backdrop
+
+`blur` on `Feedback.Content` frosts the page behind the dialog as well as dimming it. The dim is lighter than without it, so what is behind still reads as the page the question is about, just out of focus.
+
+<ComponentPreview name="feedback/blur" height={220}>
+
+```tsx lineNumbers
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Feedback } from '@/components/panelui/feedback';
+
+export default function FeedbackBlur() {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+
+  return (
+    <Feedback open={open} onOpenChange={setOpen} value={message} onValueChange={setMessage}>
+      <Feedback.Trigger render={<Button variant="outline" />}>Suggest a feature</Feedback.Trigger>
+      {/* `blur` frosts the page behind the dialog instead of only darkening it. */}
+      <Feedback.Content blur>
+        <Feedback.Panel>
+          <Feedback.Title>What would you add to the calendar?</Feedback.Title>
+          <Feedback.Close />
+          <Feedback.Field autoFocus placeholder="A view, a shortcut, a setting…" />
+        </Feedback.Panel>
+        <Feedback.Footer>
+          <Feedback.Cancel />
+          <Feedback.Submit
+            onSubmit={() => {
+              setOpen(false);
+              setMessage('');
+            }}
+          />
+        </Feedback.Footer>
+      </Feedback.Content>
+    </Feedback>
+  );
+}
+```
+
+</ComponentPreview>
+
 ### A send that fails
 
 Because `Submit` leaves the dialog open, a failed request can say so in the panel, with the message still in the field. This demo fails the first time and succeeds on the retry.
