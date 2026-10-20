@@ -1,19 +1,13 @@
 'use client';
 
-import { RotateCcwIcon, SparklesIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Avatar } from 'panelui-web/avatar';
-import { Button } from 'panelui-web/button';
-import { Message } from 'panelui-web/message';
 import { Sources } from 'panelui-web/sources';
-
-const QUERY = 'sourdough dense crumb causes';
 
 const PAGES = [
   {
     href: 'https://breadlab.org/guides/underproofed-dough',
     title: 'Reading an under-proofed loaf',
-    snippet: 'A tight, gummy crumb with a few large holes near the top is the usual sign the dough went into the oven too early.',
+    snippet: 'A tight, gummy crumb with a few large holes near the top means the dough went into the oven too early.',
   },
   {
     href: 'https://flourandwater.co/notes/starter-strength',
@@ -33,81 +27,49 @@ const PAGES = [
   {
     href: 'https://millersalmanac.com/flour/protein',
     title: 'Protein content in bread flour',
-    snippet: 'Below about 11% protein, the dough struggles to hold the gas a long fermentation makes.',
+    snippet: 'Below about 11% protein, dough struggles to hold the gas a long rise makes.',
   },
 ];
 
-type Phase = 'searching' | 'writing' | 'done';
-
 export default function SourcesAnswer() {
-  const [run, setRun] = useState(0);
-  const [found, setFound] = useState(0);
-  const [phase, setPhase] = useState<Phase>('searching');
-
   // Stands in for a model: the pages arrive one at a time, then the answer.
+  const [found, setFound] = useState(0);
   useEffect(() => {
-    setFound(0);
-    setPhase('searching');
-    const timers: number[] = [];
-    PAGES.forEach((_, at) => timers.push(window.setTimeout(() => setFound(at + 1), 700 + at * 550)));
-    timers.push(window.setTimeout(() => setPhase('writing'), 700 + PAGES.length * 550));
-    timers.push(window.setTimeout(() => setPhase('done'), 1600 + PAGES.length * 550));
+    const timers = PAGES.map((_, at) => window.setTimeout(() => setFound(at + 1), 600 + at * 500));
     return () => timers.forEach(window.clearTimeout);
-  }, [run]);
+  }, []);
+  const done = found === PAGES.length;
 
   return (
-    <div className="flex w-full max-w-xl flex-col gap-6">
-      <Message from="user">
-        <Message.Content>
-          <Message.Bubble>
-            <Message.BubbleContent>Why is my sourdough always dense in the middle?</Message.BubbleContent>
-          </Message.Bubble>
-        </Message.Content>
-      </Message>
-
-      <Message from="assistant" streaming={phase === 'writing'}>
-        <Message.Avatar>
-          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-        </Message.Avatar>
-        <Message.Content className="gap-3">
-          {/* The answer sits inside Sources, so its citations can find their pages. */}
-          <Sources status={phase === 'searching' ? 'searching' : 'done'} query={QUERY} total={PAGES.length}>
-            <Sources.Trigger />
-            <Sources.Content>
-              {PAGES.slice(0, found).map((page) => (
-                <Sources.Source key={page.href} {...page} />
-              ))}
-            </Sources.Content>
-            {phase !== 'searching' ? (
-              <Message.Bubble className="mt-3">
-                <Message.BubbleContent>
-                  <p>
-                    Most often it is under-proofing: the dough is baked before it has risen enough, which leaves a
-                    tight, gummy middle <Sources.Citation index={1} />. Two things usually cause it.
-                  </p>
-                  <ul>
-                    <li>
-                      A slow starter. It should double within six hours of a feed <Sources.Citation index={2} />.
-                    </li>
-                    <li>
-                      A cool kitchen. Each 2 °C cooler adds about an hour to the rise <Sources.Citation index={3} />
-                      <Sources.Citation index={4} />.
-                    </li>
-                  </ul>
-                  <p>
-                    Let the bulk rise go until the dough is about half again as big, however long that takes. If it still
-                    spreads flat, try a flour with more protein <Sources.Citation index={5} />.
-                  </p>
-                </Message.BubbleContent>
-              </Message.Bubble>
-            ) : null}
-          </Sources>
-        </Message.Content>
-      </Message>
-
-      <Button variant="outline" size="sm" className="self-start" onClick={() => setRun(run + 1)}>
-        <RotateCcwIcon /> Replay
-      </Button>
-    </div>
+    <Sources
+      status={done ? 'done' : 'searching'}
+      query="sourdough dense crumb"
+      total={PAGES.length}
+      className="w-full max-w-xl"
+    >
+      <Sources.Trigger />
+      <Sources.Content>
+        {PAGES.slice(0, found).map((page) => (
+          <Sources.Source key={page.href} {...page} />
+        ))}
+      </Sources.Content>
+      {done ? (
+        <div className="mt-3 flex flex-col gap-3 text-[0.9375rem] leading-7 transition-opacity duration-500 starting:opacity-0">
+          <p>
+            Most often it is under-proofing: the dough is baked before it has risen enough, which{' '}
+            <Sources.Citation index={1}>leaves a tight, gummy middle</Sources.Citation>. Two things usually cause it. A
+            starter that is too slow <Sources.Citation index={2}>should double within six hours of a feed</Sources.Citation>
+            , and a cool kitchen stretches the rise, since{' '}
+            <Sources.Citation index={3}>each 2 °C cooler adds about an hour</Sources.Citation>
+            <Sources.Citation index={4} />.
+          </p>
+          <p>
+            Let the dough rise until it is about half again as big, however long that takes
+            <Sources.Citation index={3} />. If it still spreads flat,{' '}
+            <Sources.Citation index={5}>try a flour with more protein</Sources.Citation>.
+          </p>
+        </div>
+      ) : null}
+    </Sources>
   );
 }

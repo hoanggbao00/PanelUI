@@ -481,7 +481,6 @@ export {
   SourcesCitation,
   type SourcesProps,
   type SourcesStatus,
-  type SourcesLayout,
   type SourcesTriggerProps,
   type SourcesContentProps,
   type SourcesSourceProps,

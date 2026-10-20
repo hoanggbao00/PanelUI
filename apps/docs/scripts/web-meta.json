@@ -255,7 +255,7 @@
   ],
   "sources": [
     "Sources",
-    "The pages an answer was written from, and the numbered marks in the answer that point back at them.",
+    "The pages an answer was written from, and which claim in it rests on which page.",
     "react ai sources citations search results component",
     {
       "addedIn": "0.6.0",

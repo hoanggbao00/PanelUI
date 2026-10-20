@@ -522,7 +522,7 @@
       "name": "sources",
       "type": "registry:component",
       "title": "Sources",
-      "description": "The pages an answer was written from, and the numbered marks in the answer that point back at them.",
+      "description": "The pages an answer was written from, and which claim in it rests on which page.",
       "dependencies": [
         "@base-ui/react",
         "tailwind-variants"
