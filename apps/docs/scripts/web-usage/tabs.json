@@ -1,8 +1,8 @@
 {
   "slug": "tabs",
-  "demo": "project",
+  "demo": "overview",
   "demoOptions": {
-    "height": 460
+    "height": 220
   },
   "intro": "Use it to switch between a few views of the same thing: the overview, activity and files of one project, the sections of a settings page, a range on a chart. Only the chosen view is shown, and the others are a press away.\n\nThe views have to be peers. When one step leads to the next, use a sequence of steps instead. When the views are separate pages a reader should be able to link to, use links.\n\nTabs works best with two to six tabs. More than fit the row scroll sideways, with the end that has more faded, so a long row stays one line.",
   "usage": "<Tabs defaultValue=\"overview\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"overview\">Overview</Tabs.Trigger>\n    <Tabs.Trigger value=\"activity\">\n      Activity <Tabs.Badge>3</Tabs.Badge>\n    </Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"overview\">…</Tabs.Content>\n  <Tabs.Content value=\"activity\">…</Tabs.Content>\n</Tabs>",

@@ -28,9 +28,6 @@ It lays turns out and does not scroll them. Put the turns in a scrolling column 
 </Message>
 
 <Message from="assistant">
-  <Message.Avatar>
-    <Avatar alt="Assistant" shape="square" size="sm" fallback={<SparklesIcon />} />
-  </Message.Avatar>
   <Message.Content>
     <Message.Bubble>
       <Message.BubbleContent>Multiply by 1.5…</Message.BubbleContent>
@@ -68,7 +65,7 @@ It lays turns out and does not scroll them. Put the turns in a scrolling column 
 ```
 
 - `Message.Group` — Turns in a row from the same side, set closer together. Its `from` applies to every `Message` in it.
-- `Message.Avatar` — Who the turn is from, beside its first line. Put an [Avatar](/docs/web/components/avatar) in it. In a group, leave it empty on the later turns so they line up.
+- `Message.Avatar` — Optional: who the turn is from, beside its first line. An assistant's answer reads best without one, as plain text; use it where several people share a thread. Put an [Avatar](/docs/web/components/avatar) in it.
 - `Message.Content` — The column that holds the rest. On a person's turn it is at most 80% of the width.
 - `Message.Header` — A line above the turn: a name in `<strong>`, a time.
 - `Message.Attachments` — The files sent with a turn, above its bubble.
@@ -152,21 +149,13 @@ With reduced motion turned on, the caret does not pulse and the status line does
 ```tsx
 'use client';
 
-import { RotateCcwIcon, SparklesIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { RotateCcwIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Avatar } from '@/components/panelui/avatar';
 import { Message } from '@/components/panelui/message';
 
 const ANSWER =
   'Scale everything by 1.5, then round to what a kitchen measures. 300 g flour, 3 eggs, 375 ml milk and a pinch more salt. Bake in two tins rather than one deep one, at the same 180 °C for 25 minutes.';
 
-function Assistant() {
-  return (
-    <Message.Avatar>
-      <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-    </Message.Avatar>
-  );
-}
 
 export default function MessageConversation() {
   const [rating, setRating] = useState<'up' | 'down' | null>(null);
@@ -182,7 +171,6 @@ export default function MessageConversation() {
       </Message>
 
       <Message from="assistant">
-        <Assistant />
         <Message.Content>
           <Message.Bubble>
             <Message.BubbleContent>
@@ -221,7 +209,6 @@ export default function MessageConversation() {
       </Message>
 
       <Message from="assistant" streaming>
-        <Assistant />
         <Message.Content>
           <Message.Bubble>
             <Message.BubbleContent>

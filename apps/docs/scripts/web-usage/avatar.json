@@ -1,11 +1,11 @@
 {
   "slug": "avatar",
-  "demo": "team",
+  "demo": "overview",
   "demoOptions": {
-    "height": 500
+    "height": 240
   },
   "intro": "Use it to show who someone is: the author of a comment, the people on a team, who has read a document. It shows `src` once the picture has loaded, and until then, or if it never loads, the initials of `name`.\n\nThe initials sit on a tint of one of the theme's chart colours, picked from the name. The same person gets the same colour everywhere, so a list of people without pictures can still be told apart.\n\nA badge and an overlapping avatar are cut out of the avatar beneath them, not drawn with a ring. The gap shows whatever the avatar sits on, so it works on a card, a tinted row or a photograph without a colour to match.\n\n`name` is also what a screen reader says, with the badge's status after it. Pass `alt` when something else should be said.",
-  "usage": "<Avatar src=\"/photos/ines.jpg\" name=\"Ines Duarte\" />\n\n<Avatar name=\"Kofi Mensah\" size=\"lg\">\n  <Avatar.Badge status=\"online\" />\n</Avatar>\n\n<Avatar.Group max={4} label=\"Read by\">\n  {people.map((person) => (\n    <Avatar key={person.id} src={person.photo} name={person.name} />\n  ))}\n</Avatar.Group>",
+  "usage": "<Avatar src=\"/photos/khalid.jpg\" name=\"Khalid Abdi\" />\n\n<Avatar name=\"Kofi Mensah\" size=\"lg\">\n  <Avatar.Badge status=\"online\" />\n</Avatar>\n\n<Avatar.Group max={4} label=\"Read by\">\n  {people.map((person) => (\n    <Avatar key={person.id} src={person.photo} name={person.name} />\n  ))}\n</Avatar.Group>",
   "anatomy": "<Avatar>\n  <Avatar.Badge />\n</Avatar>\n\n<Avatar.Group>\n  <Avatar />\n</Avatar.Group>",
   "parts": {
     "Badge": "A dot or a small icon on the avatar's lower trailing edge. `status` draws a presence dot: `online`, `away`, `busy`, or a hollow `offline`. For an icon, such as a check on a verified account, pass the icon as children and a `color`. `label` is what a screen reader says after the name.",
@@ -26,9 +26,9 @@
     },
     {
       "title": "Badges",
-      "description": "`status` draws a presence dot, and `offline` is hollow. A badge can hold an icon instead. The second row sits on a gradient to show the gap round each badge is cut through to whatever is behind.",
+      "description": "`status` draws a presence dot, and `offline` is hollow. A badge can hold an icon instead, such as a check on a verified account. The gap round a badge is cut through the avatar, not painted, so it shows whatever the avatar sits on.",
       "demo": "badges",
-      "height": 280
+      "height": 200
     },
     {
       "title": "Groups",

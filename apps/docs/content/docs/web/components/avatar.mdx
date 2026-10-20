@@ -4,54 +4,30 @@ description: A person or a team as a picture, or their initials in a colour of t
 status: new
 ---
 
-<ComponentPreview name="avatar/team" height={500}>
+<ComponentPreview name="avatar/overview" height={240}>
 
 ```tsx lineNumbers
-'use client';
+import { Avatar } from '@/components/panelui/avatar';
 
-import { Avatar, type AvatarStatus } from '@/components/panelui/avatar';
-import { Frame } from '@/components/panelui/frame';
+const ME = 'https://avatars.githubusercontent.com/u/127331761?v=4';
 
-const TEAM: { name: string; role: string; status: AvatarStatus; photo?: string }[] = [
-  { name: 'Ines Duarte', role: 'Art director', status: 'online', photo: 'https://i.pravatar.cc/150?img=5' },
-  { name: 'Kofi Mensah', role: 'Illustrator', status: 'busy' },
-  { name: 'Yuki Tanabe', role: 'Motion designer', status: 'away', photo: 'https://i.pravatar.cc/150?img=44' },
-  { name: 'Ravi Patel', role: 'Producer', status: 'online', photo: 'https://i.pravatar.cc/150?img=59' },
-  { name: 'Selma Berg', role: 'Copywriter', status: 'offline' },
-];
-
-const SAY: Record<AvatarStatus, string> = { online: 'Online', busy: 'In a meeting', away: 'Away', offline: 'Offline' };
-
-export default function AvatarTeam() {
+export default function AvatarOverview() {
   return (
-    <Frame className="w-full max-w-sm">
-      <Frame.Header>
-        <Frame.Title>Studio</Frame.Title>
-        <Frame.Action>
-          <Avatar.Group size="xs" max={3} label="Online now">
-            {TEAM.filter((person) => person.status !== 'offline').map((person) => (
-              <Avatar key={person.name} name={person.name} src={person.photo} />
-            ))}
-          </Avatar.Group>
-        </Frame.Action>
-      </Frame.Header>
-      <Frame.Panel>
-        {TEAM.map((person) => (
-          <Frame.Row key={person.name}>
-            <Frame.Media>
-              <Avatar name={person.name} src={person.photo}>
-                <Avatar.Badge status={person.status} />
-              </Avatar>
-            </Frame.Media>
-            <Frame.Content>
-              <Frame.Title as="p">{person.name}</Frame.Title>
-              <Frame.Description>{person.role}</Frame.Description>
-            </Frame.Content>
-            <Frame.Actions className="text-xs text-muted-foreground">{SAY[person.status]}</Frame.Actions>
-          </Frame.Row>
-        ))}
-      </Frame.Panel>
-    </Frame>
+    <div className="flex flex-wrap items-center justify-center gap-8">
+      <Avatar src={ME} name="Khalid Abdi" size="xl">
+        <Avatar.Badge status="online" />
+      </Avatar>
+      <Avatar name="Noor Haddad" size="xl" />
+      <Avatar name="Harbour Works" shape="square" size="xl" />
+      <Avatar.Group size="lg" max={4} label="Editors">
+        <Avatar src={ME} name="Khalid Abdi" />
+        <Avatar name="Ines Duarte" />
+        <Avatar name="Kofi Mensah" />
+        <Avatar name="Yuki Tanabe" />
+        <Avatar name="Ravi Patel" />
+        <Avatar name="Selma Berg" />
+      </Avatar.Group>
+    </div>
   );
 }
 ```
@@ -119,7 +95,7 @@ import { Avatar } from "@/components/panelui/avatar"
 ```
 
 ```tsx
-<Avatar src="/photos/ines.jpg" name="Ines Duarte" />
+<Avatar src="/photos/khalid.jpg" name="Khalid Abdi" />
 
 <Avatar name="Kofi Mensah" size="lg">
   <Avatar.Badge status="online" />
@@ -158,6 +134,7 @@ import { Avatar } from "@/components/panelui/avatar"
 ```tsx lineNumbers
 import { Avatar, type AvatarSize } from '@/components/panelui/avatar';
 
+const ME = 'https://avatars.githubusercontent.com/u/127331761?v=4';
 const SIZES: AvatarSize[] = ['xs', 'sm', 'md', 'lg', 'xl'];
 
 export default function AvatarSizes() {
@@ -165,7 +142,7 @@ export default function AvatarSizes() {
     <div className="flex flex-col items-center gap-6">
       <div className="flex items-end gap-4">
         {SIZES.map((size) => (
-          <Avatar key={size} size={size} name="Lena Okoro" src="https://i.pravatar.cc/150?img=25" />
+          <Avatar key={size} size={size} name="Khalid Abdi" src={ME} />
         ))}
       </div>
       <div className="flex items-end gap-4">
@@ -218,48 +195,36 @@ export default function AvatarFallback() {
 
 ### Badges
 
-`status` draws a presence dot, and `offline` is hollow. A badge can hold an icon instead. The second row sits on a gradient to show the gap round each badge is cut through to whatever is behind.
+`status` draws a presence dot, and `offline` is hollow. A badge can hold an icon instead, such as a check on a verified account. The gap round a badge is cut through the avatar, not painted, so it shows whatever the avatar sits on.
 
-<ComponentPreview name="avatar/badges" height={280}>
+<ComponentPreview name="avatar/badges" height={200}>
 
 ```tsx lineNumbers
 import { BadgeCheckIcon } from 'lucide-react';
 import { Avatar } from '@/components/panelui/avatar';
 
+const ME = 'https://avatars.githubusercontent.com/u/127331761?v=4';
+
 export default function AvatarBadges() {
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="flex items-center gap-5">
-        <Avatar name="Marta Silva" src="https://i.pravatar.cc/150?img=9" size="lg">
-          <Avatar.Badge status="online" />
-        </Avatar>
-        <Avatar name="Omar Haddad" size="lg">
-          <Avatar.Badge status="away" />
-        </Avatar>
-        <Avatar name="Pia Lund" src="https://i.pravatar.cc/150?img=16" size="lg">
-          <Avatar.Badge status="busy" />
-        </Avatar>
-        <Avatar name="Quentin Roy" size="lg">
-          <Avatar.Badge status="offline" />
-        </Avatar>
-        <Avatar name="Harbour Works" shape="square" size="lg">
-          <Avatar.Badge color="chart-2" label="verified">
-            <BadgeCheckIcon />
-          </Avatar.Badge>
-        </Avatar>
-      </div>
-      {/* The gap round a badge is cut, not painted, so it shows whatever is behind. */}
-      <div className="flex items-center gap-5 rounded-2xl bg-linear-to-r from-chart-1/60 via-chart-3/50 to-chart-2/60 px-6 py-4">
-        <Avatar name="Marta Silva" src="https://i.pravatar.cc/150?img=9" size="lg">
-          <Avatar.Badge status="online" />
-        </Avatar>
-        <Avatar name="Omar Haddad" size="lg">
-          <Avatar.Badge status="away" />
-        </Avatar>
-        <Avatar name="Quentin Roy" size="lg">
-          <Avatar.Badge status="offline" />
-        </Avatar>
-      </div>
+    <div className="flex flex-wrap items-center justify-center gap-5">
+      <Avatar name="Khalid Abdi" src={ME} size="lg">
+        <Avatar.Badge status="online" />
+      </Avatar>
+      <Avatar name="Omar Haddad" size="lg">
+        <Avatar.Badge status="away" />
+      </Avatar>
+      <Avatar name="Pia Lund" size="lg">
+        <Avatar.Badge status="busy" />
+      </Avatar>
+      <Avatar name="Quentin Roy" size="lg">
+        <Avatar.Badge status="offline" />
+      </Avatar>
+      <Avatar name="Harbour Works" shape="square" size="lg">
+        <Avatar.Badge color="chart-2" label="verified">
+          <BadgeCheckIcon />
+        </Avatar.Badge>
+      </Avatar>
     </div>
   );
 }
@@ -278,16 +243,8 @@ Hover over a group, or move focus into it, and it opens up. Press the count to s
 
 import { Avatar } from '@/components/panelui/avatar';
 
-const READERS = [
-  { name: 'Tomás Ferreira', photo: 'https://i.pravatar.cc/150?img=53' },
-  { name: 'Ama Boateng' },
-  { name: 'Lea Schmidt', photo: 'https://i.pravatar.cc/150?img=20' },
-  { name: 'Nikhil Rao' },
-  { name: 'Olga Petrova', photo: 'https://i.pravatar.cc/150?img=38' },
-  { name: 'Sami Laine' },
-  { name: 'Zoe Martin', photo: 'https://i.pravatar.cc/150?img=29' },
-];
-
+const ME = 'https://avatars.githubusercontent.com/u/127331761?v=4';
+const READERS = ['Tomás Ferreira', 'Ama Boateng', 'Lea Schmidt', 'Nikhil Rao', 'Olga Petrova', 'Sami Laine'];
 const TEAMS = ['Design', 'Platform', 'Growth', 'Support', 'Finance'];
 
 export default function AvatarGroupDemo() {
@@ -295,8 +252,9 @@ export default function AvatarGroupDemo() {
     <div className="flex flex-col items-center gap-8">
       {/* Hover or tab into it and it opens up. Press the count to see the rest. */}
       <Avatar.Group max={4} size="lg" label="Read by">
-        {READERS.map((reader) => (
-          <Avatar key={reader.name} name={reader.name} src={reader.photo} />
+        <Avatar name="Khalid Abdi" src={ME} />
+        {READERS.map((name) => (
+          <Avatar key={name} name={name} />
         ))}
       </Avatar.Group>
       <Avatar.Group shape="square" label="Teams">

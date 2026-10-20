@@ -51,4 +51,4 @@ Generated from the collection's source. Read a component's own file before using
 
 - [Message](components/message.md) — One turn of a conversation with an assistant: a person's bubble, or an answer set as prose with actions under it.
 - [Prompt](components/prompt.md) — A field for writing to an assistant, with its files, model and tools in one card.
-- [Sources](components/sources.md) — The pages an answer was written from, and the numbered marks in the answer that point back at them.
+- [Sources](components/sources.md) — The pages an answer was written from, and which claim in it rests on which page.

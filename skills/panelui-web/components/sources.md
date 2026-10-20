@@ -1,6 +1,6 @@
 # Sources
 
-The pages an answer was written from, and the numbered marks in the answer that point back at them.
+The pages an answer was written from, and which claim in it rests on which page.
 
 ```tsx
 import { Sources } from "@/components/panelui/sources"
@@ -10,16 +10,18 @@ From npm the path is `panelui-web/sources`. Install with `npx shadcn@latest add 
 
 ## When to use it
 
-Use it under an assistant's answer to show the pages the answer was written from. Each page has a number, and `Sources.Citation` puts that number in the answer where the page is used. Point at a citation and its page lights up in the list, with a card of what the page says. Point at a page and its citations light up.
+Use it with an assistant's answer to show the pages the answer was written from, and which claim rests on which page.
 
-While the search runs, set `status="searching"` with the `query`. The line says what is being searched for, a ruler fills a tick for each page read, and pages still to come hold their place as empty cards, so the list does not jump. Once the list is final, set `status="done"` and the line reads "Read 5 sources".
+It stays out of the answer's way. Once the search is done it is one line above the answer, "Read 5 sources", which opens into a list. The line begins with a bar for each page, as tall as the number of times the answer cites it, so you can see at a glance whether the answer leans on one page or several.
 
-The answer has to sit inside `Sources`, because that is how its citations find their pages. When the answer is a [Message](/docs/web/components/message), put `Sources` inside its content.
+While the search runs, set `status="searching"` and pass the `query`. The list is open, the pages arrive in it one by one, and those still to come hold their place. Set `status="done"` when the list is final and it folds back to its line.
+
+`Sources.Citation` goes in the answer after a claim. Wrap the claim in it, and pointing at the number lights the claim, its bar and its page, and opens a card of what the page says. Pointing at a page in the list lights every claim that rests on it. The answer has to sit inside `Sources` for its citations to find their pages.
 
 ## Usage
 
 ```tsx
-<Sources status="done" query="sourdough dense crumb">
+<Sources status="done">
   <Sources.Trigger />
   <Sources.Content>
     {pages.map((page) => (
@@ -27,7 +29,8 @@ The answer has to sit inside `Sources`, because that is how its citations find t
     ))}
   </Sources.Content>
   <p>
-    Most often it is under-proofing <Sources.Citation index={1} />.
+    Most often it is under-proofing, which{' '}
+    <Sources.Citation index={1}>leaves a tight, gummy middle</Sources.Citation>.
   </p>
 </Sources>
 ```
@@ -44,10 +47,10 @@ The answer has to sit inside `Sources`, because that is how its citations find t
 </Sources>
 ```
 
-- `Sources.Trigger` — The line over the list: the sites' icons, what is happening, a ruler with a tick for each page, and a chevron. Pressing it folds the list away. `icons` sets how many site icons it stacks, and `0` hides them.
-- `Sources.Content` — The pages, numbered by their place. `layout="cards"`, the default, is a row of cards that scrolls sideways and snaps, with arrows and a fade at the end that has more. `layout="list"` is a column of single lines. While searching, it adds an empty card for each page still to come, up to `total`.
-- `Sources.Source` — One page: its number, the site's icon and name, its `title` and a `snippet` of what it says. It opens `href` in a new tab. With no `icon`, the site's first letter is drawn on a tint picked from its name. `unreachable` keeps a page that could not be read in the list, marked, with its tick in the ruler turned red.
-- `Sources.Citation` — A numbered mark in the answer that points at the source with that `index`. Pointing at it or focusing it lights the source and opens a card with its title and snippet. Pressing it opens the page.
+- `Sources.Trigger` — The line: a bar for each page, then "Searching …" or "Read 5 sources", then a chevron. A bar is a dot until its page is read, and then grows with each citation of it. A page that could not be read is an empty bar. Pressing the line opens and folds the list once the search is done.
+- `Sources.Content` — The list of pages, numbered by their place from 1. While searching, it is open, and it holds a place for each page still to come, up to `total`.
+- `Sources.Source` — One page: its number, its `title`, its site and a line of what it says, the `snippet`. It opens `href` in a new tab. Dots at its end count how many times the answer cites it. `unreachable` keeps a page that could not be opened in the list, marked as such.
+- `Sources.Citation` — The number of a page, set after a claim in the answer. Give it the claim as children to tie the two together: pointing at either lights both. Pointing at the number also opens a card with the page's title, its snippet and how many claims it backs. Pressing it opens the page.
 
 ## Props
 
@@ -57,41 +60,29 @@ Every part also takes the props of the element it renders, and a `className`.
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `status` | `SourcesStatus` | `'done'` | `searching` while pages are still being read; `done` once the list is final. Default `done`. |
-| `query` | `string` | — | What was searched for. Shown while searching. |
-| `total` | `number` | — | How many pages the search will read. While searching, the ones not in yet hold their place as empty cards. Defaults to the number of sources given. |
-| `open` | `boolean` | — | Whether the list is shown, when you hold that. |
-| `defaultOpen` | `boolean` | `true` | Whether it starts shown. Default true. |
+| `status` | `SourcesStatus` | `'done'` | `searching` while pages are still being read: the list is open and they arrive in it. `done` once it is final: the list folds to its line. Default `done`. |
+| `query` | `string` | — | What was searched for. Shown in the line while searching. |
+| `total` | `number` | — | How many pages the search will read. While searching, the ones not in yet hold their place in the list. Defaults to the number of sources given. |
+| `open` | `boolean` | — | Whether the list is open once the search is done, when you hold that. |
+| `defaultOpen` | `boolean` | `false` | Whether the list starts open once the search is done. Default false. |
 | `onOpenChange` | `(open: boolean) => void` | — | — |
-
-#### `SourcesTriggerProps`
-
-| Prop | Type | Default | What it does |
-| --- | --- | --- | --- |
-| `icons` | `number` | — | How many site icons to stack before the words. Default 4; 0 for none. |
-
-#### `SourcesContentProps`
-
-| Prop | Type | Default | What it does |
-| --- | --- | --- | --- |
-| `layout` | `SourcesLayout` | — | `cards`, a row that scrolls sideways, or `list`, a column of lines. Default `cards`. |
 
 #### `SourcesSourceProps`
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `href` | `string` | — | The page. Opened in a new tab. |
-| `title` | `string` | — | What the page is called. Falls back to its host, which is a better label than a long URL. |
-| `snippet` | `string` | — | A line or two from the page: what it says, as the answer used it. |
-| `icon` | `string \| ReactNode` | — | The site's icon: an image URL or an element. Its first letter on a tint when left out. |
+| `title` | `string` | — | What the page is called. Falls back to its host. |
+| `snippet` | `string` | — | A line from the page: what it says, as the answer used it. Shown under the title and in the citation's card. |
+| `icon` | `string` | — | The site's icon, as an image URL. Shown in the citation's card. |
 | `index` | `number` | — | Its number, which its citations use. Set for you by its place in `Sources.Content`. |
-| `unreachable` | `boolean` | `false` | The page could not be read. It stays in the list, marked, and its tick turns red. |
+| `unreachable` | `boolean` | `false` | The page could not be read. It stays in the list, marked, and its bar is left empty. |
 
 #### `SourcesCitationProps`
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `index` | `number` | **required** | The number of the source it points at. |
+| `index` | `number` | **required** | The number of the page it points at. |
 
 ## In a Server Component
 
@@ -101,39 +92,33 @@ Every part also takes the props of the element it renders, and a `className`.
 
 #### Where the pages come from
 
-With the AI SDK, the pages are the `source-url` parts of an assistant message: `part.url` is the `href` and `part.title` the `title`. Remove duplicates by URL first, because a model may cite the same page twice. A part with no title falls back to the page's host.
+With the AI SDK, the pages are the `source-url` parts of an assistant message: `part.url` is the `href` and `part.title` the `title`. Remove duplicates by URL first, because a model can cite the same page twice. A page with no title falls back to its host.
 
 #### Numbers
 
-A source is numbered by its place in `Sources.Content`, from 1. Pass `index` to number it yourself, for example when the model's citations already carry numbers.
+A source is numbered by its place in `Sources.Content`. Pass `index` to number it yourself, for example when the model's citations already carry numbers.
 
 #### Accessibility
 
-The trigger is a button with `aria-expanded`. Each source is a link that says it opens in a new tab, and each citation is named "Source 2: its title". The citation's card opens on focus as well as on hover.
+The line is a button with `aria-expanded`. Each source is a link that says it opens in a new tab and how many times it is cited. Each citation is named "Source 2: its title", and its card opens on focus as well as on hover.
 
 #### Reduced motion
 
-With reduced motion turned on, the searching line does not shimmer, the ruler does not pulse, and the list folds without sliding.
+With reduced motion turned on, the searching line does not shimmer, and the bars and the list change without moving.
 
 ## Example
 
 ```tsx
 'use client';
 
-import { RotateCcwIcon, SparklesIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Avatar } from '@/components/panelui/avatar';
-import { Button } from '@/components/panelui/button';
-import { Message } from '@/components/panelui/message';
 import { Sources } from '@/components/panelui/sources';
-
-const QUERY = 'sourdough dense crumb causes';
 
 const PAGES = [
   {
     href: 'https://breadlab.org/guides/underproofed-dough',
     title: 'Reading an under-proofed loaf',
-    snippet: 'A tight, gummy crumb with a few large holes near the top is the usual sign the dough went into the oven too early.',
+    snippet: 'A tight, gummy crumb with a few large holes near the top means the dough went into the oven too early.',
   },
   {
     href: 'https://flourandwater.co/notes/starter-strength',
@@ -153,82 +138,50 @@ const PAGES = [
   {
     href: 'https://millersalmanac.com/flour/protein',
     title: 'Protein content in bread flour',
-    snippet: 'Below about 11% protein, the dough struggles to hold the gas a long fermentation makes.',
+    snippet: 'Below about 11% protein, dough struggles to hold the gas a long rise makes.',
   },
 ];
 
-type Phase = 'searching' | 'writing' | 'done';
-
 export default function SourcesAnswer() {
-  const [run, setRun] = useState(0);
-  const [found, setFound] = useState(0);
-  const [phase, setPhase] = useState<Phase>('searching');
-
   // Stands in for a model: the pages arrive one at a time, then the answer.
+  const [found, setFound] = useState(0);
   useEffect(() => {
-    setFound(0);
-    setPhase('searching');
-    const timers: number[] = [];
-    PAGES.forEach((_, at) => timers.push(window.setTimeout(() => setFound(at + 1), 700 + at * 550)));
-    timers.push(window.setTimeout(() => setPhase('writing'), 700 + PAGES.length * 550));
-    timers.push(window.setTimeout(() => setPhase('done'), 1600 + PAGES.length * 550));
+    const timers = PAGES.map((_, at) => window.setTimeout(() => setFound(at + 1), 600 + at * 500));
     return () => timers.forEach(window.clearTimeout);
-  }, [run]);
+  }, []);
+  const done = found === PAGES.length;
 
   return (
-    <div className="flex w-full max-w-xl flex-col gap-6">
-      <Message from="user">
-        <Message.Content>
-          <Message.Bubble>
-            <Message.BubbleContent>Why is my sourdough always dense in the middle?</Message.BubbleContent>
-          </Message.Bubble>
-        </Message.Content>
-      </Message>
-
-      <Message from="assistant" streaming={phase === 'writing'}>
-        <Message.Avatar>
-          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-        </Message.Avatar>
-        <Message.Content className="gap-3">
-          {/* The answer sits inside Sources, so its citations can find their pages. */}
-          <Sources status={phase === 'searching' ? 'searching' : 'done'} query={QUERY} total={PAGES.length}>
-            <Sources.Trigger />
-            <Sources.Content>
-              {PAGES.slice(0, found).map((page) => (
-                <Sources.Source key={page.href} {...page} />
-              ))}
-            </Sources.Content>
-            {phase !== 'searching' ? (
-              <Message.Bubble className="mt-3">
-                <Message.BubbleContent>
-                  <p>
-                    Most often it is under-proofing: the dough is baked before it has risen enough, which leaves a
-                    tight, gummy middle <Sources.Citation index={1} />. Two things usually cause it.
-                  </p>
-                  <ul>
-                    <li>
-                      A slow starter. It should double within six hours of a feed <Sources.Citation index={2} />.
-                    </li>
-                    <li>
-                      A cool kitchen. Each 2 °C cooler adds about an hour to the rise <Sources.Citation index={3} />
-                      <Sources.Citation index={4} />.
-                    </li>
-                  </ul>
-                  <p>
-                    Let the bulk rise go until the dough is about half again as big, however long that takes. If it still
-                    spreads flat, try a flour with more protein <Sources.Citation index={5} />.
-                  </p>
-                </Message.BubbleContent>
-              </Message.Bubble>
-            ) : null}
-          </Sources>
-        </Message.Content>
-      </Message>
-
-      <Button variant="outline" size="sm" className="self-start" onClick={() => setRun(run + 1)}>
-        <RotateCcwIcon /> Replay
-      </Button>
-    </div>
+    <Sources
+      status={done ? 'done' : 'searching'}
+      query="sourdough dense crumb"
+      total={PAGES.length}
+      className="w-full max-w-xl"
+    >
+      <Sources.Trigger />
+      <Sources.Content>
+        {PAGES.slice(0, found).map((page) => (
+          <Sources.Source key={page.href} {...page} />
+        ))}
+      </Sources.Content>
+      {done ? (
+        <div className="mt-3 flex flex-col gap-3 text-[0.9375rem] leading-7 transition-opacity duration-500 starting:opacity-0">
+          <p>
+            Most often it is under-proofing: the dough is baked before it has risen enough, which{' '}
+            <Sources.Citation index={1}>leaves a tight, gummy middle</Sources.Citation>. Two things usually cause it. A
+            starter that is too slow <Sources.Citation index={2}>should double within six hours of a feed</Sources.Citation>
+            , and a cool kitchen stretches the rise, since{' '}
+            <Sources.Citation index={3}>each 2 °C cooler adds about an hour</Sources.Citation>
+            <Sources.Citation index={4} />.
+          </p>
+          <p>
+            Let the dough rise until it is about half again as big, however long that takes
+            <Sources.Citation index={3} />. If it still spreads flat,{' '}
+            <Sources.Citation index={5}>try a flour with more protein</Sources.Citation>.
+          </p>
+        </div>
+      ) : null}
+    </Sources>
   );
 }
 ```

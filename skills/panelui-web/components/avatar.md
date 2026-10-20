@@ -21,7 +21,7 @@ A badge and an overlapping avatar are cut out of the avatar beneath them, not dr
 ## Usage
 
 ```tsx
-<Avatar src="/photos/ines.jpg" name="Ines Duarte" />
+<Avatar src="/photos/khalid.jpg" name="Khalid Abdi" />
 
 <Avatar name="Kofi Mensah" size="lg">
   <Avatar.Badge status="online" />
@@ -103,51 +103,27 @@ A group is a `role="group"`. Give it a `label` that says who the people are, suc
 ## Example
 
 ```tsx
-'use client';
+import { Avatar } from '@/components/panelui/avatar';
 
-import { Avatar, type AvatarStatus } from '@/components/panelui/avatar';
-import { Frame } from '@/components/panelui/frame';
+const ME = 'https://avatars.githubusercontent.com/u/127331761?v=4';
 
-const TEAM: { name: string; role: string; status: AvatarStatus; photo?: string }[] = [
-  { name: 'Ines Duarte', role: 'Art director', status: 'online', photo: 'https://i.pravatar.cc/150?img=5' },
-  { name: 'Kofi Mensah', role: 'Illustrator', status: 'busy' },
-  { name: 'Yuki Tanabe', role: 'Motion designer', status: 'away', photo: 'https://i.pravatar.cc/150?img=44' },
-  { name: 'Ravi Patel', role: 'Producer', status: 'online', photo: 'https://i.pravatar.cc/150?img=59' },
-  { name: 'Selma Berg', role: 'Copywriter', status: 'offline' },
-];
-
-const SAY: Record<AvatarStatus, string> = { online: 'Online', busy: 'In a meeting', away: 'Away', offline: 'Offline' };
-
-export default function AvatarTeam() {
+export default function AvatarOverview() {
   return (
-    <Frame className="w-full max-w-sm">
-      <Frame.Header>
-        <Frame.Title>Studio</Frame.Title>
-        <Frame.Action>
-          <Avatar.Group size="xs" max={3} label="Online now">
-            {TEAM.filter((person) => person.status !== 'offline').map((person) => (
-              <Avatar key={person.name} name={person.name} src={person.photo} />
-            ))}
-          </Avatar.Group>
-        </Frame.Action>
-      </Frame.Header>
-      <Frame.Panel>
-        {TEAM.map((person) => (
-          <Frame.Row key={person.name}>
-            <Frame.Media>
-              <Avatar name={person.name} src={person.photo}>
-                <Avatar.Badge status={person.status} />
-              </Avatar>
-            </Frame.Media>
-            <Frame.Content>
-              <Frame.Title as="p">{person.name}</Frame.Title>
-              <Frame.Description>{person.role}</Frame.Description>
-            </Frame.Content>
-            <Frame.Actions className="text-xs text-muted-foreground">{SAY[person.status]}</Frame.Actions>
-          </Frame.Row>
-        ))}
-      </Frame.Panel>
-    </Frame>
+    <div className="flex flex-wrap items-center justify-center gap-8">
+      <Avatar src={ME} name="Khalid Abdi" size="xl">
+        <Avatar.Badge status="online" />
+      </Avatar>
+      <Avatar name="Noor Haddad" size="xl" />
+      <Avatar name="Harbour Works" shape="square" size="xl" />
+      <Avatar.Group size="lg" max={4} label="Editors">
+        <Avatar src={ME} name="Khalid Abdi" />
+        <Avatar name="Ines Duarte" />
+        <Avatar name="Kofi Mensah" />
+        <Avatar name="Yuki Tanabe" />
+        <Avatar name="Ravi Patel" />
+        <Avatar name="Selma Berg" />
+      </Avatar.Group>
+    </div>
   );
 }
 ```
