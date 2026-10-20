@@ -228,6 +228,23 @@
       ]
     },
     {
+      "name": "label",
+      "type": "registry:component",
+      "title": "Label",
+      "description": "The name of a field, with its required mark, a hint and an action on one line.",
+      "dependencies": [
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/label.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/label.tsx"
+        }
+      ]
+    },
+    {
       "name": "lane-board",
       "type": "registry:component",
       "title": "Lane Board",

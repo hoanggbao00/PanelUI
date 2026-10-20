@@ -1,0 +1,36 @@
+{
+  "slug": "label",
+  "demo": "fields",
+  "demoOptions": {
+    "height": 620
+  },
+  "intro": "Use it to name a field. It also carries what a reader needs to know about the field before filling it in: whether it must be filled, a hint such as a format or a limit, and an action at the far end of the line, such as a link to reset a password or a count of characters left.\n\nTie it to its control with `htmlFor`, or wrap it round the control. A label wrapped round a checkbox or switch reads that control's state: it fades when the control is disabled and turns to the destructive colour when the control is invalid. A label tied by `htmlFor` cannot see its control, so pass it `invalid` and `disabled` yourself.\n\n`required` draws a mark for the eye only. Set `required` on the control too, because that is what a screen reader announces.",
+  "usage": "<Label htmlFor=\"email\" required>\n  Email\n</Label>\n<Input id=\"email\" type=\"email\" required />\n\n<Label htmlFor=\"password\">\n  <Label.Text>Password</Label.Text>\n  <Label.Action>\n    <a href=\"/reset\">Forgot it?</a>\n  </Label.Action>\n</Label>\n<Input id=\"password\" type=\"password\" />",
+  "anatomy": "<Label>\n  <Label.Text />\n  <Label.Hint />\n  <Label.Action />\n</Label>",
+  "parts": {
+    "Text": "The field's name. A string passed straight to `Label` is wrapped in it for you. It truncates rather than pushing the action off the line, and the required mark is drawn after it.",
+    "Hint": "A quieter word or two after the name: a format, a limit, a unit. On an invalid label it turns to the destructive colour, so it can say what is wrong. Give it an `id` and point the control's `aria-describedby` at it, so a screen reader reads it too.",
+    "Action": "Pushed to the far end of the line, whatever its place in the markup: a link, a count, a small button, a switch."
+  },
+  "examples": [
+    {
+      "title": "Actions on the line",
+      "description": "`Label.Action` sits at the end of the line: here a link to reset a password and a button that copies a key. A link inside it is drawn in the foreground colour and underlined on hover.",
+      "demo": "actions",
+      "height": 260
+    },
+    {
+      "title": "Invalid and disabled",
+      "description": "A label tied by `htmlFor` takes `invalid` and `disabled`. When it is invalid, its hint turns to the destructive colour as well, so the hint can be the reason. Type a name that is not taken to clear it.",
+      "demo": "states",
+      "height": 260
+    },
+    {
+      "title": "Wrapped round a control",
+      "description": "Wrapped round a checkbox or a switch, the label reads the control: the disabled checkbox fades its label with nothing passed. Put a switch in `Label.Action` to set it at the end of the line.",
+      "demo": "controls",
+      "height": 240
+    }
+  ],
+  "notes": "### Required and optional\n\n`required` draws an asterisk after the text. `optional` writes \"Optional\" after it instead, for a form where most fields are required and the few that are not need saying.\n\n### Every attribute passes through\n\n`Label` renders a `<label>` and passes everything to it, so `htmlFor`, `id` and the rest work as they do on the element.\n\n### It renders on the server\n\n`Label` has no client JavaScript. Its state reaches its parts through data attributes and CSS."
+}

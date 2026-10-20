@@ -303,6 +303,16 @@ export { Button, buttonVariants, type ButtonProps, type ButtonVariant, type Butt
 export { Input, InputGroup, InputAddon, type InputProps, type InputGroupProps, type InputAddonProps, type InputSize } from './components/input';
 export { Textarea, type TextareaProps } from './components/textarea';
 export {
+  Label,
+  LabelText,
+  LabelHint,
+  LabelAction,
+  type LabelProps,
+  type LabelTextProps,
+  type LabelHintProps,
+  type LabelActionProps,
+} from './components/label';
+export {
   Select,
   SelectTrigger,
   SelectValue,

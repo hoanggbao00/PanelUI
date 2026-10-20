@@ -1,0 +1,336 @@
+---
+title: Label
+description: The name of a field, with its required mark, a hint and an action on one line.
+status: new
+---
+
+<ComponentPreview name="label/fields" height={620}>
+
+```tsx lineNumbers
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/panelui/button';
+import { Card } from '@/components/panelui/card';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+import { Textarea } from '@/components/panelui/textarea';
+
+const LIMIT = 160;
+
+export default function LabelFields() {
+  const [note, setNote] = useState('');
+
+  return (
+    <Card className="w-full max-w-sm">
+      <Card.Header>
+        <Card.Title>Book a table</Card.Title>
+        <Card.Description>Saturday 24 October · four people · 19:30</Card.Description>
+      </Card.Header>
+      <Card.Content className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="booking-name" required>
+            Name
+          </Label>
+          <Input id="booking-name" autoComplete="name" required />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="booking-email" required>
+            <Label.Text>Email</Label.Text>
+            <Label.Hint>For the confirmation</Label.Hint>
+          </Label>
+          <Input id="booking-email" type="email" autoComplete="email" required />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="booking-phone" optional>
+            Phone
+          </Label>
+          <Input id="booking-phone" type="tel" autoComplete="tel" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="booking-note" optional>
+            <Label.Text>Anything we should know</Label.Text>
+            <Label.Action className="tabular-nums">
+              {note.length}/{LIMIT}
+            </Label.Action>
+          </Label>
+          <Textarea
+            id="booking-note"
+            maxLength={LIMIT}
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="A high chair, an allergy, a birthday"
+          />
+        </div>
+      </Card.Content>
+      <Card.Footer>
+        <Button className="w-full">Book the table</Button>
+      </Card.Footer>
+    </Card>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it to name a field. It also carries what a reader needs to know about the field before filling it in: whether it must be filled, a hint such as a format or a limit, and an action at the far end of the line, such as a link to reset a password or a count of characters left.
+
+Tie it to its control with `htmlFor`, or wrap it round the control. A label wrapped round a checkbox or switch reads that control's state: it fades when the control is disabled and turns to the destructive colour when the control is invalid. A label tied by `htmlFor` cannot see its control, so pass it `invalid` and `disabled` yourself.
+
+`required` draws a mark for the eye only. Set `required` on the control too, because that is what a screen reader announces.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/label.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/label` instead of `@/components/panelui/label`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/label.tsx`:
+
+<RegistrySource name="label" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Label } from "@/components/panelui/label"
+```
+
+```tsx
+<Label htmlFor="email" required>
+  Email
+</Label>
+<Input id="email" type="email" required />
+
+<Label htmlFor="password">
+  <Label.Text>Password</Label.Text>
+  <Label.Action>
+    <a href="/reset">Forgot it?</a>
+  </Label.Action>
+</Label>
+<Input id="password" type="password" />
+```
+
+## Composition
+
+```tsx
+<Label>
+  <Label.Text />
+  <Label.Hint />
+  <Label.Action />
+</Label>
+```
+
+- **`Label.Text`** — The field's name. A string passed straight to `Label` is wrapped in it for you. It truncates rather than pushing the action off the line, and the required mark is drawn after it.
+- **`Label.Hint`** — A quieter word or two after the name: a format, a limit, a unit. On an invalid label it turns to the destructive colour, so it can say what is wrong. Give it an `id` and point the control's `aria-describedby` at it, so a screen reader reads it too.
+- **`Label.Action`** — Pushed to the far end of the line, whatever its place in the markup: a link, a count, a small button, a switch.
+
+## Examples
+
+### Actions on the line
+
+`Label.Action` sits at the end of the line: here a link to reset a password and a button that copies a key. A link inside it is drawn in the foreground colour and underlined on hover.
+
+<ComponentPreview name="label/actions" height={260}>
+
+```tsx lineNumbers
+'use client';
+
+import { CheckIcon, CopyIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/panelui/button';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+
+const KEY = 'pk_live_51HqT2c8Rwz';
+
+export default function LabelActions() {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="action-password">
+          <Label.Text>Password</Label.Text>
+          <Label.Action>
+            <a href="#reset">Forgot it?</a>
+          </Label.Action>
+        </Label>
+        <Input id="action-password" type="password" defaultValue="correct horse" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="action-key">
+          <Label.Text>Publishable key</Label.Text>
+          <Label.Action>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-my-1 h-6 px-1.5 text-xs"
+              onClick={() => {
+                navigator.clipboard?.writeText(KEY).catch(() => {});
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1600);
+              }}
+            >
+              {copied ? <CheckIcon /> : <CopyIcon />}
+              {copied ? 'Copied' : 'Copy'}
+            </Button>
+          </Label.Action>
+        </Label>
+        <Input id="action-key" readOnly value={KEY} className="font-mono" />
+      </div>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Invalid and disabled
+
+A label tied by `htmlFor` takes `invalid` and `disabled`. When it is invalid, its hint turns to the destructive colour as well, so the hint can be the reason. Type a name that is not taken to clear it.
+
+<ComponentPreview name="label/states" height={260}>
+
+```tsx lineNumbers
+'use client';
+
+import { useState } from 'react';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+
+const TAKEN = ['admin', 'support', 'mira'];
+
+export default function LabelStates() {
+  const [handle, setHandle] = useState('mira');
+  const taken = TAKEN.includes(handle.trim().toLowerCase());
+
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="state-handle" invalid={taken}>
+          <Label.Text>Username</Label.Text>
+          <Label.Hint id="state-handle-hint">{taken ? 'Already taken' : 'Available'}</Label.Hint>
+        </Label>
+        <Input
+          id="state-handle"
+          value={handle}
+          onChange={(event) => setHandle(event.target.value)}
+          aria-invalid={taken}
+          aria-describedby="state-handle-hint"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="state-plan" disabled>
+          <Label.Text>Plan</Label.Text>
+          <Label.Hint>Set by your organisation</Label.Hint>
+        </Label>
+        <Input id="state-plan" defaultValue="Team, annual" disabled />
+      </div>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Wrapped round a control
+
+Wrapped round a checkbox or a switch, the label reads the control: the disabled checkbox fades its label with nothing passed. Put a switch in `Label.Action` to set it at the end of the line.
+
+<ComponentPreview name="label/controls" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/panelui/label';
+
+export default function LabelControls() {
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-4">
+      {/* Wrapped round its control, the label reads the control's state on its own. */}
+      <Label>
+        <Checkbox defaultChecked />
+        <Label.Text>Email me a receipt</Label.Text>
+      </Label>
+      <Label>
+        <Checkbox disabled />
+        <Label.Text>Split the bill</Label.Text>
+        <Label.Hint>Two or more cards</Label.Hint>
+      </Label>
+      <Label>
+        <Label.Text>Remember this device</Label.Text>
+        <Label.Action>
+          <Switch defaultChecked />
+        </Label.Action>
+      </Label>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Label
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `required` | `boolean` | `false` | Marks the field as one that must be filled. The mark is for the eye; set `required` on the control as well, which is what a screen reader announces. |
+| `optional` | `boolean` | `false` | Shows "Optional" after the text, for a form where most fields are required. |
+| `invalid` | `boolean` | `false` | Turns the label to the destructive colour. Needed when the label is tied to its control by `htmlFor`; a label wrapped round its control reads it. |
+| `disabled` | `boolean` | `false` | Fades the label. As with `invalid`, a wrapped control is read on its own. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Required and optional
+
+`required` draws an asterisk after the text. `optional` writes "Optional" after it instead, for a form where most fields are required and the few that are not need saying.
+
+### Every attribute passes through
+
+`Label` renders a `<label>` and passes everything to it, so `htmlFor`, `id` and the rest work as they do on the element.
+
+### It renders on the server
+
+`Label` has no client JavaScript. Its state reaches its parts through data attributes and CSS.

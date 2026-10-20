@@ -216,5 +216,14 @@
       "addedIn": "0.5.0",
       "category": "overlays"
     }
+  ],
+  "label": [
+    "Label",
+    "The name of a field, with its required mark, a hint and an action on one line.",
+    "react label form field required optional component",
+    {
+      "addedIn": "0.6.0",
+      "category": "forms"
+    }
   ]
 }
