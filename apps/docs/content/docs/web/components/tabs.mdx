@@ -1,0 +1,502 @@
+---
+title: Tabs
+description: A few views of one thing, one at a time, chosen from a row of tabs whose marker slides to the one chosen.
+status: new
+---
+
+<ComponentPreview name="tabs/project" height={460}>
+
+```tsx lineNumbers
+'use client';
+
+import { FileTextIcon, ImageIcon, SheetIcon } from 'lucide-react';
+import { Avatar } from '@/components/panelui/avatar';
+import { Card } from '@/components/panelui/card';
+import { Frame } from '@/components/panelui/frame';
+import { Stat } from '@/components/panelui/stat';
+import { Tabs } from '@/components/panelui/tabs';
+
+const ACTIVITY = [
+  { who: 'Ines Duarte', what: 'moved “Cover” to review', when: '4 min' },
+  { who: 'Kofi Mensah', what: 'uploaded 12 illustrations', when: '1 h' },
+  { who: 'Ravi Patel', what: 'set the print date to 9 November', when: '3 h' },
+];
+
+const FILES = [
+  { name: 'Brief.pdf', size: '240 KB', Icon: FileTextIcon },
+  { name: 'Cover, v4.png', size: '8.1 MB', Icon: ImageIcon },
+  { name: 'Print schedule.xlsx', size: '36 KB', Icon: SheetIcon },
+];
+
+export default function TabsProject() {
+  return (
+    <Card className="w-full max-w-md">
+      <Card.Header>
+        <Card.Title>Autumn catalogue</Card.Title>
+        <Card.Description>Print run of 4,000 · due 9 November</Card.Description>
+      </Card.Header>
+      <Card.Content>
+        <Tabs defaultValue="overview">
+          <Tabs.List>
+            <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+            <Tabs.Trigger value="activity">
+              Activity <Tabs.Badge>3</Tabs.Badge>
+            </Tabs.Trigger>
+            <Tabs.Trigger value="files">Files</Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="overview" className="grid grid-cols-2 gap-3">
+            <Stat>
+              <Stat.Content>
+                <Stat.Label>Pages done</Stat.Label>
+                <Stat.Value>
+                  38<Stat.Unit>of 64</Stat.Unit>
+                </Stat.Value>
+              </Stat.Content>
+            </Stat>
+            <Stat>
+              <Stat.Content>
+                <Stat.Label>Days to print</Stat.Label>
+                <Stat.Value>20</Stat.Value>
+              </Stat.Content>
+            </Stat>
+          </Tabs.Content>
+          <Tabs.Content value="activity">
+            <Frame variant="plain">
+              <Frame.Panel>
+                {ACTIVITY.map((item) => (
+                  <Frame.Row key={item.what}>
+                    <Frame.Media>
+                      <Avatar name={item.who} size="sm" />
+                    </Frame.Media>
+                    <Frame.Content>
+                      <Frame.Title as="p">{item.who}</Frame.Title>
+                      <Frame.Description>{item.what}</Frame.Description>
+                    </Frame.Content>
+                    <Frame.Actions className="text-xs text-muted-foreground">{item.when}</Frame.Actions>
+                  </Frame.Row>
+                ))}
+              </Frame.Panel>
+            </Frame>
+          </Tabs.Content>
+          <Tabs.Content value="files">
+            <Frame variant="plain">
+              <Frame.Panel>
+                {FILES.map(({ name, size, Icon }) => (
+                  <Frame.Row key={name} href="#files" chevron>
+                    <Frame.Media className="text-muted-foreground">
+                      <Icon className="size-4" />
+                    </Frame.Media>
+                    <Frame.Content>
+                      <Frame.Title as="p">{name}</Frame.Title>
+                      <Frame.Description>{size}</Frame.Description>
+                    </Frame.Content>
+                  </Frame.Row>
+                ))}
+              </Frame.Panel>
+            </Frame>
+          </Tabs.Content>
+        </Tabs>
+      </Card.Content>
+    </Card>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it to switch between a few views of the same thing: the overview, activity and files of one project, the sections of a settings page, a range on a chart. Only the chosen view is shown, and the others are a press away.
+
+The views have to be peers. When one step leads to the next, use a sequence of steps instead. When the views are separate pages a reader should be able to link to, use links.
+
+Tabs works best with two to six tabs. More than fit the row scroll sideways, with the end that has more faded, so a long row stays one line.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/tabs.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/tabs` instead of `@/components/panelui/tabs`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="@base-ui/react tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/tabs.tsx`:
+
+<RegistrySource name="tabs" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Tabs } from "@/components/panelui/tabs"
+```
+
+```tsx
+<Tabs defaultValue="overview">
+  <Tabs.List>
+    <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+    <Tabs.Trigger value="activity">
+      Activity <Tabs.Badge>3</Tabs.Badge>
+    </Tabs.Trigger>
+  </Tabs.List>
+  <Tabs.Content value="overview">…</Tabs.Content>
+  <Tabs.Content value="activity">…</Tabs.Content>
+</Tabs>
+```
+
+## Composition
+
+```tsx
+<Tabs>
+  <Tabs.List>
+    <Tabs.Trigger>
+      <Tabs.Badge />
+    </Tabs.Trigger>
+  </Tabs.List>
+  <Tabs.Content />
+</Tabs>
+```
+
+- **`Tabs.List`** — The row of tabs, and the marker under the chosen one. Give it an `aria-label` when nothing on the page names the tabs. It scrolls sideways when the tabs do not fit.
+- **`Tabs.Trigger`** — One tab. Its `value` names the `Tabs.Content` it shows. An icon and a `Tabs.Badge` can sit beside the label. `disabled` keeps it from being chosen.
+- **`Tabs.Badge`** — A count beside a tab's label: unread, open, waiting. It follows the tab's colour when the tab is chosen.
+- **`Tabs.Content`** — What one tab shows. Only the chosen one is in the page; `keepMounted` keeps the others there, hidden, for content that is expensive to build again.
+
+## Examples
+
+### Variants
+
+`segmented` raises the chosen tab out of a track, for switching what a panel shows. `underline` is lighter, for the sections of a page; its line stretches as it moves. `pills` fills the chosen tab with the primary colour, for a filter that should be seen at a glance.
+
+<ComponentPreview name="tabs/variants" height={260}>
+
+```tsx lineNumbers
+'use client';
+
+import { Tabs, type TabsVariant } from '@/components/panelui/tabs';
+
+const VARIANTS: TabsVariant[] = ['segmented', 'underline', 'pills'];
+const RANGES = ['Day', 'Week', 'Month', 'Year'];
+
+export default function TabsVariants() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-8">
+      {VARIANTS.map((variant) => (
+        <Tabs key={variant} variant={variant} defaultValue="Week">
+          <Tabs.List aria-label={`Range, ${variant}`}>
+            {RANGES.map((range) => (
+              <Tabs.Trigger key={range} value={range}>
+                {range}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+        </Tabs>
+      ))}
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Icons and counts
+
+An icon before the label and a `Tabs.Badge` after it. The count says how much is waiting behind a tab without opening it.
+
+<ComponentPreview name="tabs/icons" height={200}>
+
+```tsx lineNumbers
+'use client';
+
+import { ArchiveIcon, AtSignIcon, InboxIcon, SendIcon } from 'lucide-react';
+import { Tabs } from '@/components/panelui/tabs';
+
+export default function TabsIcons() {
+  return (
+    <Tabs variant="underline" defaultValue="inbox" className="w-full max-w-lg">
+      <Tabs.List aria-label="Mail">
+        <Tabs.Trigger value="inbox">
+          <InboxIcon /> Inbox <Tabs.Badge>14</Tabs.Badge>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="mentions">
+          <AtSignIcon /> Mentions <Tabs.Badge>2</Tabs.Badge>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="sent">
+          <SendIcon /> Sent
+        </Tabs.Trigger>
+        <Tabs.Trigger value="archive">
+          <ArchiveIcon /> Archive
+        </Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="inbox" className="text-sm text-muted-foreground">
+        Fourteen unread, the oldest from Monday.
+      </Tabs.Content>
+      <Tabs.Content value="mentions" className="text-sm text-muted-foreground">
+        Two threads mention you.
+      </Tabs.Content>
+      <Tabs.Content value="sent" className="text-sm text-muted-foreground">
+        Last sent yesterday at 18:12.
+      </Tabs.Content>
+      <Tabs.Content value="archive" className="text-sm text-muted-foreground">
+        1,208 archived conversations.
+      </Tabs.Content>
+    </Tabs>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Vertical
+
+`orientation="vertical"` puts the tabs in a column beside the content, for a settings page with more sections than fit across. The up and down arrow keys move between them.
+
+<ComponentPreview name="tabs/vertical" height={280}>
+
+```tsx lineNumbers
+'use client';
+
+import { BellIcon, CreditCardIcon, ShieldIcon, UserRoundIcon } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+import { Tabs } from '@/components/panelui/tabs';
+
+export default function TabsVertical() {
+  return (
+    <Tabs variant="underline" orientation="vertical" defaultValue="profile" className="w-full max-w-xl gap-6">
+      <Tabs.List aria-label="Settings">
+        <Tabs.Trigger value="profile">
+          <UserRoundIcon /> Profile
+        </Tabs.Trigger>
+        <Tabs.Trigger value="alerts">
+          <BellIcon /> Notifications
+        </Tabs.Trigger>
+        <Tabs.Trigger value="security">
+          <ShieldIcon /> Security
+        </Tabs.Trigger>
+        <Tabs.Trigger value="billing">
+          <CreditCardIcon /> Billing
+        </Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="profile" className="flex flex-col gap-2">
+        <Label htmlFor="tabs-name">Display name</Label>
+        <Input id="tabs-name" defaultValue="Ines Duarte" />
+      </Tabs.Content>
+      <Tabs.Content value="alerts" className="flex flex-col gap-4">
+        <Label>
+          <Label.Text>Comments on my work</Label.Text>
+          <Label.Action>
+            <Switch defaultChecked />
+          </Label.Action>
+        </Label>
+        <Label>
+          <Label.Text>Weekly summary</Label.Text>
+          <Label.Action>
+            <Switch />
+          </Label.Action>
+        </Label>
+      </Tabs.Content>
+      <Tabs.Content value="security" className="flex flex-col gap-2">
+        <Label htmlFor="tabs-password">
+          <Label.Text>Password</Label.Text>
+          <Label.Hint>Changed 3 months ago</Label.Hint>
+        </Label>
+        <Input id="tabs-password" type="password" defaultValue="hunter2hunter2" />
+      </Tabs.Content>
+      <Tabs.Content value="billing" className="text-sm text-muted-foreground">
+        Team plan, renews 1 December.
+      </Tabs.Content>
+    </Tabs>
+  );
+}
+```
+
+</ComponentPreview>
+
+### More tabs than fit
+
+The row scrolls sideways, with a wheel, a trackpad or a swipe, and fades at the end that has more.
+
+<ComponentPreview name="tabs/overflow" height={200}>
+
+```tsx lineNumbers
+'use client';
+
+import { Tabs } from '@/components/panelui/tabs';
+
+const STATIONS = [
+  'Lisbon',
+  'Porto',
+  'Coimbra',
+  'Aveiro',
+  'Braga',
+  'Faro',
+  'Évora',
+  'Setúbal',
+  'Viseu',
+  'Guimarães',
+  'Leiria',
+  'Funchal',
+];
+
+export default function TabsOverflow() {
+  return (
+    <Tabs variant="pills" defaultValue="Lisbon" className="w-full max-w-sm">
+      <Tabs.List aria-label="Station">
+        {STATIONS.map((station) => (
+          <Tabs.Trigger key={station} value={station}>
+            {station}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      {STATIONS.map((station, index) => (
+        <Tabs.Content key={station} value={station} className="text-sm text-muted-foreground">
+          {station}: next departure in {(index * 7) % 23 + 2} minutes.
+        </Tabs.Content>
+      ))}
+    </Tabs>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Held by you
+
+Pass `value` and `onValueChange` to hold the chosen tab yourself, here so the Back and Next buttons can move between the same views as the tabs.
+
+<ComponentPreview name="tabs/controlled" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/panelui/button';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+import { Tabs } from '@/components/panelui/tabs';
+
+const STEPS = ['Basket', 'Delivery', 'Payment'];
+
+export default function TabsControlled() {
+  const [step, setStep] = useState('Basket');
+  const index = STEPS.indexOf(step);
+
+  return (
+    <Tabs value={step} onValueChange={(next) => setStep(next as string)} className="w-full max-w-sm">
+      <Tabs.List aria-label="Checkout">
+        {STEPS.map((name, at) => (
+          <Tabs.Trigger key={name} value={name}>
+            {at + 1}. {name}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      <Tabs.Content value="Basket" className="text-sm text-muted-foreground">
+        Three items, £42.80.
+      </Tabs.Content>
+      <Tabs.Content value="Delivery" className="flex flex-col gap-2">
+        <Label htmlFor="tabs-postcode" required>
+          Postcode
+        </Label>
+        <Input id="tabs-postcode" placeholder="E8 3RL" required />
+      </Tabs.Content>
+      <Tabs.Content value="Payment" className="text-sm text-muted-foreground">
+        Paid with the card ending 4417.
+      </Tabs.Content>
+      <div className="flex justify-between">
+        <Button variant="outline" size="sm" disabled={index === 0} onClick={() => setStep(STEPS[index - 1]!)}>
+          Back
+        </Button>
+        <Button size="sm" disabled={index === STEPS.length - 1} onClick={() => setStep(STEPS[index + 1]!)}>
+          Next
+        </Button>
+      </div>
+    </Tabs>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Tabs
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `TabsVariant` | `segmented` | How the tabs are drawn. Default `segmented`. |
+| `className` | `string` | — |  |
+
+### Tabs.List
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Tabs.Trigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+### Tabs.Content
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `className` | `string` | — |  |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Keyboard
+
+The arrow keys move focus between tabs, Home and End go to the first and last, and Enter or Space chooses the one focused. Pass `activateOnFocus` to `Tabs.List` to choose a tab as soon as it is reached.
+
+### Reduced motion
+
+With reduced motion turned on, the marker and the new view appear in place without sliding.
+
+### Built on
+
+The tabs are the Base UI tabs, which the package depends on directly.
+
+### Server Components
+
+`Tabs` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Tabs.List` off the import, so each part is also exported by name: `TabsList` is `Tabs.List`, and so on for the others.
+
+```tsx
+import { Tabs, TabsList, TabsTrigger, TabsBadge, TabsContent } from "@/components/panelui/tabs"
+```

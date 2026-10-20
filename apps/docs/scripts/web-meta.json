@@ -234,5 +234,14 @@
       "addedIn": "0.6.0",
       "category": "data"
     }
+  ],
+  "tabs": [
+    "Tabs",
+    "A few views of one thing, one at a time, chosen from a row of tabs whose marker slides to the one chosen.",
+    "react tabs segmented control underline component",
+    {
+      "addedIn": "0.6.0",
+      "category": "navigation"
+    }
   ]
 }

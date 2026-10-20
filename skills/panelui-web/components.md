@@ -19,6 +19,10 @@ Generated from the collection's source. Read a component's own file before using
 - [Menu](components/menu.md) — A list of actions that opens from a button, with shortcuts, checks and submenus.
 - [Sheet](components/sheet.md) — A panel that rises from an edge of the screen, floating clear of it, and leaves with a swipe.
 
+## Navigation
+
+- [Tabs](components/tabs.md) — A few views of one thing, one at a time, chosen from a row of tabs whose marker slides to the one chosen.
+
 ## Layout and structure
 
 - [Card](components/card.md) — A surface that holds one thing, with a heading, an action beside it and a footer.

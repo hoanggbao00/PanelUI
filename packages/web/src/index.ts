@@ -429,3 +429,16 @@ export {
   type AvatarColor,
   type AvatarStatus,
 } from './components/avatar';
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsBadge,
+  TabsContent,
+  type TabsProps,
+  type TabsVariant,
+  type TabsListProps,
+  type TabsTriggerProps,
+  type TabsBadgeProps,
+  type TabsContentProps,
+} from './components/tabs';

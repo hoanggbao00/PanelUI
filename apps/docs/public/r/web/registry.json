@@ -510,6 +510,24 @@
       ]
     },
     {
+      "name": "tabs",
+      "type": "registry:component",
+      "title": "Tabs",
+      "description": "A few views of one thing, one at a time, chosen from a row of tabs whose marker slides to the one chosen.",
+      "dependencies": [
+        "@base-ui/react",
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/tabs.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/tabs.tsx"
+        }
+      ]
+    },
+    {
       "name": "textarea",
       "type": "registry:component",
       "title": "Textarea",

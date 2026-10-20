@@ -1,0 +1,49 @@
+{
+  "slug": "tabs",
+  "demo": "project",
+  "demoOptions": {
+    "height": 460
+  },
+  "intro": "Use it to switch between a few views of the same thing: the overview, activity and files of one project, the sections of a settings page, a range on a chart. Only the chosen view is shown, and the others are a press away.\n\nThe views have to be peers. When one step leads to the next, use a sequence of steps instead. When the views are separate pages a reader should be able to link to, use links.\n\nTabs works best with two to six tabs. More than fit the row scroll sideways, with the end that has more faded, so a long row stays one line.",
+  "usage": "<Tabs defaultValue=\"overview\">\n  <Tabs.List>\n    <Tabs.Trigger value=\"overview\">Overview</Tabs.Trigger>\n    <Tabs.Trigger value=\"activity\">\n      Activity <Tabs.Badge>3</Tabs.Badge>\n    </Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content value=\"overview\">…</Tabs.Content>\n  <Tabs.Content value=\"activity\">…</Tabs.Content>\n</Tabs>",
+  "anatomy": "<Tabs>\n  <Tabs.List>\n    <Tabs.Trigger>\n      <Tabs.Badge />\n    </Tabs.Trigger>\n  </Tabs.List>\n  <Tabs.Content />\n</Tabs>",
+  "parts": {
+    "List": "The row of tabs, and the marker under the chosen one. Give it an `aria-label` when nothing on the page names the tabs. It scrolls sideways when the tabs do not fit.",
+    "Trigger": "One tab. Its `value` names the `Tabs.Content` it shows. An icon and a `Tabs.Badge` can sit beside the label. `disabled` keeps it from being chosen.",
+    "Badge": "A count beside a tab's label: unread, open, waiting. It follows the tab's colour when the tab is chosen.",
+    "Content": "What one tab shows. Only the chosen one is in the page; `keepMounted` keeps the others there, hidden, for content that is expensive to build again."
+  },
+  "examples": [
+    {
+      "title": "Variants",
+      "description": "`segmented` raises the chosen tab out of a track, for switching what a panel shows. `underline` is lighter, for the sections of a page; its line stretches as it moves. `pills` fills the chosen tab with the primary colour, for a filter that should be seen at a glance.",
+      "demo": "variants",
+      "height": 260
+    },
+    {
+      "title": "Icons and counts",
+      "description": "An icon before the label and a `Tabs.Badge` after it. The count says how much is waiting behind a tab without opening it.",
+      "demo": "icons",
+      "height": 200
+    },
+    {
+      "title": "Vertical",
+      "description": "`orientation=\"vertical\"` puts the tabs in a column beside the content, for a settings page with more sections than fit across. The up and down arrow keys move between them.",
+      "demo": "vertical",
+      "height": 280
+    },
+    {
+      "title": "More tabs than fit",
+      "description": "The row scrolls sideways, with a wheel, a trackpad or a swipe, and fades at the end that has more.",
+      "demo": "overflow",
+      "height": 200
+    },
+    {
+      "title": "Held by you",
+      "description": "Pass `value` and `onValueChange` to hold the chosen tab yourself, here so the Back and Next buttons can move between the same views as the tabs.",
+      "demo": "controlled",
+      "height": 240
+    }
+  ],
+  "notes": "### Keyboard\n\nThe arrow keys move focus between tabs, Home and End go to the first and last, and Enter or Space chooses the one focused. Pass `activateOnFocus` to `Tabs.List` to choose a tab as soon as it is reached.\n\n### Reduced motion\n\nWith reduced motion turned on, the marker and the new view appear in place without sliding.\n\n### Built on\n\nThe tabs are the Base UI tabs, which the package depends on directly."
+}
