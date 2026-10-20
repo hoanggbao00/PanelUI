@@ -91,7 +91,7 @@
       "addedIn": "0.1.0",
       "category": "data",
       "title": "Flow",
-      "updatedIn": "0.3.0"
+      "updatedIn": "0.6.0"
     }
   ],
   "tilt-card": [
@@ -122,7 +122,8 @@
     "react sheet bottom sheet drawer ios component",
     {
       "addedIn": "0.2.0",
-      "category": "overlays"
+      "category": "overlays",
+      "updatedIn": "0.6.0"
     }
   ],
   "card": [
