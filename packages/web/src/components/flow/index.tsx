@@ -32,6 +32,10 @@
  * a new `position` and the node goes to it, which is how nodes are driven
  * from outside.
  *
+ * A node drawn inside a `Flow.Group` is positioned within it, and travels
+ * with it. `confine` keeps its drag inside the group's box; `pinned` gives the
+ * drag to the group instead, so the node moves only when the group does.
+ *
  * Edges are drawn from the boxes of the nodes they join, measured off the
  * page. An edge therefore follows a node whatever is inside it, and redraws
  * as either end is dragged.
@@ -170,13 +174,16 @@ interface HandleEntry {
 
 interface FlowContextValue {
   viewport: FlowViewport;
+  /** Every box on the graph, in graph coordinates. What edges are drawn from. */
   rects: Record<string, FlowRect>;
+  /** The same boxes as they were placed: a node in a group, relative to the group. */
+  local: Record<string, FlowRect>;
   handles: Record<string, HandleEntry[]>;
   locked: boolean;
   size: { width: number; height: number };
   underlay: HTMLElement | null;
   overlay: HTMLElement | null;
-  place(id: string, position: FlowNodePosition): void;
+  place(id: string, position: FlowNodePosition, group?: string | null): void;
   measure(id: string, width: number, height: number): void;
   forget(id: string): void;
   setHandle(node: string, key: string, entry: HandleEntry | null): void;
@@ -189,6 +196,8 @@ interface FlowContextValue {
 
 const FlowContext = createContext<FlowContextValue | null>(null);
 const NodeContext = createContext<string | null>(null);
+/** The group a node is drawn inside, if any. */
+const GroupContext = createContext<string | null>(null);
 
 function useFlow(part: string): FlowContextValue {
   const flow = useContext(FlowContext);
@@ -258,7 +267,18 @@ function FlowRoot({
   const slots = flowVariants();
   const root = useRef<HTMLDivElement>(null);
   const [viewport, setViewportState] = useState(defaultViewport);
-  const [rects, setRects] = useState<Record<string, FlowRect>>({});
+  const [local, setRects] = useState<Record<string, FlowRect>>({});
+  const [parents, setParents] = useState<Record<string, string>>({});
+  // A node in a group is placed relative to it; everything that draws or
+  // fits reads the box where it actually is on the graph.
+  const rects = useMemo(() => {
+    const out: Record<string, FlowRect> = {};
+    for (const [id, box] of Object.entries(local)) {
+      const parent = parents[id] ? local[parents[id]] : undefined;
+      out[id] = parent ? { ...box, x: parent.x + box.x, y: parent.y + box.y } : box;
+    }
+    return out;
+  }, [local, parents]);
   const [handles, setHandles] = useState<Record<string, HandleEntry[]>>({});
   const [locked, setLocked] = useState(false);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -439,7 +459,14 @@ function FlowRoot({
     [toGraph]
   );
 
-  const place = useCallback((id: string, position: FlowNodePosition) => {
+  const place = useCallback((id: string, position: FlowNodePosition, group?: string | null) => {
+    if (group !== undefined) {
+      setParents((current) => {
+        if ((current[id] ?? null) === group) return current;
+        const { [id]: _was, ...rest } = current;
+        return group ? { ...rest, [id]: group } : rest;
+      });
+    }
     setRects((current) => {
       const before = current[id];
       if (before && before.x === position.x && before.y === position.y) return current;
@@ -459,6 +486,11 @@ function FlowRoot({
   }, []);
 
   const forget = useCallback((id: string) => {
+    setParents((current) => {
+      if (!(id in current)) return current;
+      const { [id]: _gone, ...rest } = current;
+      return rest;
+    });
     setRects((current) => {
       if (!(id in current)) return current;
       const { [id]: _gone, ...rest } = current;
@@ -477,6 +509,7 @@ function FlowRoot({
     () => ({
       viewport,
       rects,
+      local,
       handles,
       locked,
       size,
@@ -495,6 +528,7 @@ function FlowRoot({
     [
       viewport,
       rects,
+      local,
       handles,
       locked,
       size,
@@ -639,6 +673,16 @@ export interface FlowNodeProps extends Omit<ComponentProps<'div'>, 'id'> {
   position: FlowNodePosition;
   /** Whether it can be dragged and moved with the arrow keys. */
   draggable?: boolean;
+  /**
+   * Inside a `Flow.Group`, stop a drag at the group's edge instead of letting
+   * the node leave it. Does nothing outside a group.
+   */
+  confine?: boolean;
+  /**
+   * Inside a `Flow.Group`, take no drag of its own: a drag that starts on it
+   * moves the group, and the node goes with it.
+   */
+  pinned?: boolean;
   /** Draws it as the one that has been picked. */
   selected?: boolean;
   /** Called when it is pressed without being dragged, or with Enter. */
@@ -654,20 +698,38 @@ function useMovable({
   id,
   position,
   draggable,
+  confine,
+  pinned,
+  group,
   onPress,
   onDelete,
   moveStep,
-}: Pick<FlowNodeProps, 'id' | 'position' | 'draggable' | 'onPress' | 'onDelete' | 'moveStep'>) {
+}: Pick<
+  FlowNodeProps,
+  'id' | 'position' | 'draggable' | 'confine' | 'pinned' | 'onPress' | 'onDelete' | 'moveStep'
+> & { group: string | null }) {
   const flow = useFlow('Flow.Node');
   const element = useRef<HTMLDivElement>(null);
   const { place, measure, forget } = flow;
   const step = moveStep ?? 24;
+  const movable = draggable !== false && !pinned && !flow.locked;
 
   useLayoutEffect(() => {
-    place(id, position);
+    place(id, position, group);
     // Only when the caller's position changes, not on every drawing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, position.x, position.y, place]);
+  }, [id, position.x, position.y, group, place]);
+
+  /** Where a move would put it, held inside its group when it is confined. */
+  const within = (next: FlowNodePosition): FlowNodePosition => {
+    const box = group && confine ? flow.local[group] : undefined;
+    if (!box || box.width === 0) return next;
+    const self = flow.local[id];
+    return {
+      x: clamp(next.x, 0, Math.max(0, box.width - (self?.width ?? 0))),
+      y: clamp(next.y, 0, Math.max(0, box.height - (self?.height ?? 0))),
+    };
+  };
 
   useLayoutEffect(() => {
     const node = element.current;
@@ -681,7 +743,7 @@ function useMovable({
 
   useEffect(() => () => forget(id), [id, forget]);
 
-  const at = flow.rects[id] ?? { ...position, width: 0, height: 0 };
+  const at = flow.local[id] ?? { ...position, width: 0, height: 0 };
   const drag = useRef<{ x: number; y: number; from: FlowNodePosition; moved: boolean } | null>(null);
   const latest = useRef(at);
   latest.current = at;
@@ -692,6 +754,9 @@ function useMovable({
     if ((event.target as HTMLElement).closest('[data-flow-handle], button, a, input, textarea, select, [data-no-drag]')) {
       return;
     }
+    // A pinned node lets the press through to the group it is in, which
+    // takes the drag.
+    if (pinned && group) return;
     // Kept from the pane, and from a group this node may be sitting in.
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -705,8 +770,8 @@ function useMovable({
     const dy = event.clientY - state.y;
     if (!state.moved && Math.hypot(dx, dy) < 3) return;
     state.moved = true;
-    if (draggable === false || flow.locked) return;
-    place(id, { x: state.from.x + dx / flow.viewport.zoom, y: state.from.y + dy / flow.viewport.zoom });
+    if (!movable) return;
+    place(id, within({ x: state.from.x + dx / flow.viewport.zoom, y: state.from.y + dy / flow.viewport.zoom }));
   };
 
   const onPointerUp = () => {
@@ -714,7 +779,7 @@ function useMovable({
     drag.current = null;
     if (!state) return;
     if (!state.moved) onPress?.();
-    else if (draggable !== false && !flow.locked) {
+    else if (movable) {
       flow.onNodeDragEnd?.(id, { x: latest.current.x, y: latest.current.y });
     }
   };
@@ -731,10 +796,10 @@ function useMovable({
     if (by) {
       // Kept from the canvas, which would pan on the same key.
       event.stopPropagation();
-      if (draggable === false || flow.locked) return;
+      if (!movable) return;
       event.preventDefault();
       const far = step * (event.shiftKey ? 4 : 1);
-      const next = { x: at.x + by[0] * far, y: at.y + by[1] * far };
+      const next = within({ x: at.x + by[0] * far, y: at.y + by[1] * far });
       place(id, next);
       flow.onNodeDragEnd?.(id, next);
     } else if (event.key === 'Enter' || event.key === ' ') {
@@ -767,6 +832,8 @@ function FlowNode({
   id,
   position,
   draggable = true,
+  confine = false,
+  pinned = false,
   selected = false,
   onPress,
   onDelete,
@@ -776,12 +843,14 @@ function FlowNode({
   children,
   ...props
 }: FlowNodeProps) {
-  const movable = useMovable({ id, position, draggable, onPress, onDelete, moveStep });
+  const group = useContext(GroupContext);
+  const movable = useMovable({ id, position, draggable, confine, pinned, group, onPress, onDelete, moveStep });
   return (
     <NodeContext.Provider value={id}>
       <div
         ref={movable.element}
         data-flow-node={id}
+        data-pinned={pinned && group ? '' : undefined}
         tabIndex={0}
         aria-roledescription="Node"
         aria-selected={selected || undefined}
@@ -797,9 +866,14 @@ function FlowNode({
 }
 FlowNode.displayName = 'Flow.Node';
 
-export interface FlowGroupProps extends FlowNodeProps {
+export interface FlowGroupProps extends Omit<FlowNodeProps, 'confine' | 'pinned'> {
   /** Written in the corner of the group. */
   label?: ReactNode;
+  /**
+   * A fixed size for the group. Give one when it holds `Flow.Node`s, which are
+   * placed inside it rather than laid out by it, so they do not size it.
+   */
+  size?: { width: number; height: number };
 }
 
 /**
@@ -815,28 +889,31 @@ function FlowGroup({
   onDelete,
   moveStep,
   label,
+  size,
   className,
   style,
   children,
   ...props
 }: FlowGroupProps) {
-  const movable = useMovable({ id, position, draggable, onPress, onDelete, moveStep });
+  const movable = useMovable({ id, position, draggable, group: null, onPress, onDelete, moveStep });
   return (
-    <NodeContext.Provider value={id}>
-      <div
-        ref={movable.element}
-        data-flow-node={id}
-        tabIndex={0}
-        aria-roledescription="Group"
-        className={flowVariants().group({ className })}
-        style={{ ...movable.style, ...style }}
-        {...movable.handlers}
-        {...props}
-      >
-        {label !== undefined ? <span className={flowVariants().groupLabel()}>{label}</span> : null}
-        {children}
-      </div>
-    </NodeContext.Provider>
+    <GroupContext.Provider value={id}>
+      <NodeContext.Provider value={id}>
+        <div
+          ref={movable.element}
+          data-flow-node={id}
+          tabIndex={0}
+          aria-roledescription="Group"
+          className={flowVariants().group({ className })}
+          style={{ ...movable.style, ...(size ? { width: size.width, height: size.height } : null), ...style }}
+          {...movable.handlers}
+          {...props}
+        >
+          {label !== undefined ? <span className={flowVariants().groupLabel()}>{label}</span> : null}
+          {children}
+        </div>
+      </NodeContext.Provider>
+    </GroupContext.Provider>
   );
 }
 FlowGroup.displayName = 'Flow.Group';
@@ -959,7 +1036,7 @@ FlowHandle.displayName = 'Flow.Handle';
 /* -------------------------------------------------------------------------- */
 
 export interface FlowEdgeProps {
-  /** Where it leaves from: a node's `id`, or `{ node, handle }`. */
+  /** Where it leaves from: a node's `id`, `"node.handle"` for one of its handles, or `{ node, handle }`. */
   from: FlowEndpointReference;
   /** Where it arrives. */
   to: FlowEndpointReference;
@@ -987,8 +1064,16 @@ export interface FlowEdgeProps {
   curvature?: number;
 }
 
-const endpoint = (reference: FlowEndpointReference): FlowEndpoint =>
-  typeof reference === 'string' ? { node: reference } : reference;
+/**
+ * `"node"`, `"node.handle"` or `{ node, handle }`. A string that is a node's
+ * whole id names that node, so an id with a dot in it still works.
+ */
+const endpoint = (reference: FlowEndpointReference, rects: Record<string, FlowRect>): FlowEndpoint => {
+  if (typeof reference !== 'string') return reference;
+  const dot = reference.lastIndexOf('.');
+  if (dot <= 0 || reference in rects) return { node: reference };
+  return { node: reference.slice(0, dot), handle: reference.slice(dot + 1) };
+};
 
 /** A line from one node to another, which follows them as they move. */
 function FlowEdge({
@@ -1017,8 +1102,8 @@ function FlowEdge({
     return () => query.removeEventListener('change', read);
   }, []);
 
-  const source = endpoint(from);
-  const target = endpoint(to);
+  const source = endpoint(from, flow.rects);
+  const target = endpoint(to, flow.rects);
   const a = flow.rects[source.node];
   const b = flow.rects[target.node];
   // Nothing to draw until both ends have been measured.

@@ -243,6 +243,128 @@ import { Flow } from "@/components/panelui/flow"
 
 ## Examples
 
+### Edges that pick their own side
+
+An edge with no `fromSide`, `toSide` or handle leaves from whichever face of its node is turned towards the other one. Drag one node past another and the edges turn to follow. Name the sides when the direction should not change.
+
+<ComponentPreview name="flow/map" height={448} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { DatabaseIcon, GlobeIcon, MailIcon, ServerIcon, ZapIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Flow } from '@/components/panelui/flow';
+
+function Service({ icon, name, detail, up = true }: { icon: ReactNode; name: string; detail: string; up?: boolean }) {
+  return (
+    <>
+      <Flow.NodeHeader>
+        <span className="flex items-center gap-2 text-muted-foreground [&_svg]:size-4">
+          {icon}
+          <Flow.NodeDescription>Service</Flow.NodeDescription>
+        </span>
+        <Flow.NodeBadge color={up ? 'success' : 'warning'}>{up ? 'Healthy' : 'Degraded'}</Flow.NodeBadge>
+      </Flow.NodeHeader>
+      <Flow.NodeContent>
+        <Flow.NodeTitle>{name}</Flow.NodeTitle>
+        <Flow.NodeDescription>{detail}</Flow.NodeDescription>
+      </Flow.NodeContent>
+    </>
+  );
+}
+
+export default function FlowMap() {
+  return (
+    <div className="h-[28rem] w-full">
+      <Flow fitViewOnMount fitViewPadding={40} label="Newsletter service" className="h-full rounded-none border-0">
+        <Flow.Background variant="dots" />
+        <Flow.Node id="site" position={{ x: 0, y: 120 }} className="w-52">
+          <Service icon={<GlobeIcon />} name="site" detail="Sign-up pages" />
+        </Flow.Node>
+        <Flow.Node id="api" position={{ x: 300, y: 120 }} className="w-52">
+          <Service icon={<ServerIcon />} name="api" detail="Three instances" />
+        </Flow.Node>
+        <Flow.Node id="db" position={{ x: 600, y: 0 }} className="w-52">
+          <Service icon={<DatabaseIcon />} name="subscribers-db" detail="48,210 rows" />
+        </Flow.Node>
+        <Flow.Node id="cache" position={{ x: 600, y: 250 }} className="w-52">
+          <Service icon={<ZapIcon />} name="cache" detail="92% hit rate" />
+        </Flow.Node>
+        <Flow.Node id="mailer" position={{ x: 300, y: 340 }} className="w-52">
+          <Service icon={<MailIcon />} name="mailer" detail="Sending issue 112" up={false} />
+        </Flow.Node>
+
+        {/* No sides are named, so each edge leaves from whichever face faces the
+            other node now. Drag one across another and watch them turn. */}
+        <Flow.Edge from="site" to="api" variant="smoothstep" arrow />
+        <Flow.Edge from="api" to="db" variant="smoothstep" arrow />
+        <Flow.Edge from="api" to="cache" variant="smoothstep" dashed arrow />
+        <Flow.Edge from="api" to="mailer" variant="smoothstep" animated arrow color="warning" />
+        <Flow.Controls position="top-left" lock={false} />
+      </Flow>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A mind map
+
+`bezier` edges from one centre, each in a theme colour of its own. With no sides named, a branch can be dragged anywhere round the centre.
+
+<ComponentPreview name="flow/mind-map" height={448} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { Flow, type FlowColor } from '@/components/panelui/flow';
+
+/** A trip being planned, and the five things it needs. */
+const BRANCHES: { id: string; title: string; detail: string; x: number; y: number; color: FlowColor }[] = [
+  { id: 'travel', title: 'Getting there', detail: 'Train, 2 h 50 min', x: -300, y: -150, color: 'primary' },
+  { id: 'stay', title: 'Where to stay', detail: 'Three shortlisted', x: 280, y: -170, color: 'info' },
+  { id: 'food', title: 'Food', detail: 'Market on Saturday', x: 340, y: 40, color: 'success' },
+  { id: 'walks', title: 'Walks', detail: 'Coast path, 11 km', x: -320, y: 120, color: 'warning' },
+  { id: 'budget', title: 'Budget', detail: '£640 for two', x: -20, y: 200, color: 'destructive' },
+];
+
+export default function FlowMindMap() {
+  return (
+    <div className="h-[28rem] w-full">
+      <Flow fitViewOnMount fitViewPadding={36} label="Trip plan" className="h-full rounded-none border-0">
+        <Flow.Background variant="cross" gap={32} />
+        <Flow.Node id="trip" position={{ x: -100, y: -36 }} className="w-56 rounded-3xl">
+          <Flow.NodeContent className="px-6 py-4 text-center">
+            <Flow.NodeTitle className="text-base">A weekend in Porto</Flow.NodeTitle>
+            <Flow.NodeDescription>14–16 November</Flow.NodeDescription>
+          </Flow.NodeContent>
+        </Flow.Node>
+
+        {BRANCHES.map((branch) => (
+          <Flow.Node key={branch.id} id={branch.id} position={{ x: branch.x, y: branch.y }} className="w-44">
+            <Flow.NodeContent>
+              <Flow.NodeTitle>{branch.title}</Flow.NodeTitle>
+              <Flow.NodeDescription>{branch.detail}</Flow.NodeDescription>
+            </Flow.NodeContent>
+          </Flow.Node>
+        ))}
+
+        {/* Curves with no fixed sides: drag a branch round the centre and its
+            edge leaves from the face that now points at it. */}
+        {BRANCHES.map((branch) => (
+          <Flow.Edge key={branch.id} from="trip" to={branch.id} variant="bezier" color={branch.color} width={2.5} />
+        ))}
+        <Flow.Controls position="top-left" zoom={false} lock={false} />
+      </Flow>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
 ### Wiring it up
 
 A `Flow.Handle` is somewhere to start a connection. Drag from one to another node and `onConnect` is told which two; the edges are yours to keep. `isValidConnection` refuses the ones you do not want, here a second wire between the same two steps.
@@ -364,6 +486,306 @@ export default function FlowWiring() {
           Reset
         </Button>
       </div>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Named ports
+
+`Flow.Handle` takes an `id`, a face and an `offset` along it, so one face can hold two. Join an edge to it as `"node.handle"`, and that end stays on the port however the node is dragged. Use ports where the side means something: here accepted leaves from one and rejected from the other.
+
+<ComponentPreview name="flow/ports" height={448} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { Flow } from '@/components/panelui/flow';
+
+export default function FlowPorts() {
+  return (
+    <div className="h-[28rem] w-full">
+      <Flow fitViewOnMount fitViewPadding={40} label="Photo uploads" className="h-full rounded-none border-0">
+        <Flow.Background variant="cross" gap={26} />
+
+        <Flow.Node id="upload" position={{ x: 0, y: 90 }} className="w-48">
+          <Flow.NodeContent>
+            <Flow.NodeTitle>upload</Flow.NodeTitle>
+            <Flow.NodeDescription>Checks type and size</Flow.NodeDescription>
+          </Flow.NodeContent>
+          {/* Two ports on one face, kept apart by their offsets. */}
+          <Flow.Handle id="ok" position="right" offset={0.3} />
+          <Flow.Handle id="rejected" position="right" offset={0.75} />
+        </Flow.Node>
+
+        <Flow.Node id="resize" position={{ x: 290, y: 0 }} className="w-44">
+          <Flow.NodeHeader>
+            <Flow.NodeDescription>Accepted</Flow.NodeDescription>
+            <Flow.NodeBadge color="success">ok</Flow.NodeBadge>
+          </Flow.NodeHeader>
+          <Flow.NodeContent>
+            <Flow.NodeTitle>resize</Flow.NodeTitle>
+          </Flow.NodeContent>
+          <Flow.Handle id="in" position="left" />
+          <Flow.Handle id="out" position="right" />
+        </Flow.Node>
+
+        <Flow.Node id="review" position={{ x: 290, y: 200 }} className="w-44">
+          <Flow.NodeHeader>
+            <Flow.NodeDescription>Rejected</Flow.NodeDescription>
+            <Flow.NodeBadge color="destructive">held</Flow.NodeBadge>
+          </Flow.NodeHeader>
+          <Flow.NodeContent>
+            <Flow.NodeTitle>review</Flow.NodeTitle>
+          </Flow.NodeContent>
+          <Flow.Handle id="in" position="left" />
+          <Flow.Handle id="out" position="right" />
+        </Flow.Node>
+
+        {/* A port on every face. The top and bottom ones have nothing wired to
+            them yet, and still read as somewhere to wire. */}
+        <Flow.Node id="gallery" position={{ x: 570, y: 70 }} className="w-52">
+          <Flow.NodeHeader>
+            <Flow.NodeDescription>Four ports</Flow.NodeDescription>
+          </Flow.NodeHeader>
+          <Flow.NodeContent>
+            <Flow.NodeTitle>gallery</Flow.NodeTitle>
+            <Flow.NodeDescription>new · approved on the left</Flow.NodeDescription>
+          </Flow.NodeContent>
+          <Flow.Handle id="new" position="left" offset={0.35} />
+          <Flow.Handle id="approved" position="left" offset={0.75} />
+          <Flow.Handle id="feed" position="top" />
+          <Flow.Handle id="archive" position="bottom" />
+        </Flow.Node>
+
+        {/* `node.handle` pins each end to a port, so the faces stay put however
+            the nodes are dragged. */}
+        <Flow.Edge from="upload.ok" to="resize.in" variant="smoothstep" arrow />
+        <Flow.Edge from="upload.rejected" to="review.in" variant="smoothstep" dashed arrow color="destructive" />
+        <Flow.Edge from="resize.out" to="gallery.new" variant="smoothstep" arrow />
+        <Flow.Edge from="review.out" to="gallery.approved" variant="smoothstep" dashed arrow />
+        <Flow.Controls position="top-left" lock={false} />
+      </Flow>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Building a graph
+
+The canvas holds no list of nodes or edges. Each is something you render, so adding one is adding to an array in your own state.
+
+<ComponentPreview name="flow/builder" height={448} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Flow } from '@/components/panelui/flow';
+
+interface Step {
+  id: string;
+  x: number;
+  y: number;
+}
+
+const FIRST: Step[] = [{ id: 'step-1', x: 0, y: 0 }];
+
+export default function FlowBuilder() {
+  // The canvas keeps no list of its own. The steps and the links are state
+  // here, and adding either is adding to an array.
+  const [steps, setSteps] = useState(FIRST);
+  const [links, setLinks] = useState<{ from: string; to: string }[]>([]);
+
+  const add = (linked: boolean) => {
+    const index = steps.length;
+    // Short columns rather than one long march, so the first steps stay in view.
+    const step = { id: `step-${index + 1}`, x: Math.floor(index / 3) * 240, y: (index % 3) * 130 };
+    const previous = steps[steps.length - 1];
+    setSteps([...steps, step]);
+    if (linked && previous) setLinks([...links, { from: previous.id, to: step.id }]);
+  };
+
+  return (
+    <div className="relative h-[28rem] w-full">
+      <Flow defaultViewport={{ x: 72, y: 24, zoom: 1 }} label="Steps" className="h-full rounded-none border-0">
+        <Flow.Background variant="dots" />
+        {steps.map((step, index) => (
+          <Flow.Node key={step.id} id={step.id} position={{ x: step.x, y: step.y }} className="w-44">
+            <Flow.NodeContent>
+              <Flow.NodeTitle>Step {index + 1}</Flow.NodeTitle>
+              <Flow.NodeDescription>Drag it anywhere</Flow.NodeDescription>
+            </Flow.NodeContent>
+          </Flow.Node>
+        ))}
+        {links.map((link) => (
+          <Flow.Edge key={link.to} from={link.from} to={link.to} variant="smoothstep" arrow />
+        ))}
+        <Flow.Controls position="top-left" lock={false} />
+      </Flow>
+
+      <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-2">
+        <Button variant="outline" size="sm" onClick={() => add(false)}>
+          Add a step
+        </Button>
+        <Button size="sm" onClick={() => add(true)}>
+          Add and link
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => (setSteps(FIRST), setLinks([]))}>
+          Clear
+        </Button>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {steps.length} {steps.length === 1 ? 'step' : 'steps'}, {links.length} {links.length === 1 ? 'link' : 'links'}
+        </span>
+      </div>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Moving nodes from outside
+
+`position` is where a node starts. Keep the positions in state, update them from `onNodeDragEnd`, and pass new ones to move the nodes yourself.
+
+<ComponentPreview name="flow/positions" height={448} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Flow, type FlowNodePosition } from '@/components/panelui/flow';
+
+const IDS = ['brief', 'sketch', 'review', 'final'] as const;
+type Id = (typeof IDS)[number];
+
+const ROW: Record<Id, FlowNodePosition> = {
+  brief: { x: 0, y: 80 },
+  sketch: { x: 220, y: 80 },
+  review: { x: 440, y: 80 },
+  final: { x: 660, y: 80 },
+};
+
+const STAIRS: Record<Id, FlowNodePosition> = {
+  brief: { x: 0, y: 0 },
+  sketch: { x: 200, y: 70 },
+  review: { x: 400, y: 140 },
+  final: { x: 600, y: 210 },
+};
+
+const TITLES: Record<Id, string> = { brief: 'Brief', sketch: 'Sketches', review: 'Review', final: 'Final art' };
+
+export default function FlowPositions() {
+  // The positions are state here. A drag reports where a node was dropped,
+  // and the buttons move every node by passing new positions back.
+  const [positions, setPositions] = useState(ROW);
+
+  return (
+    <div className="relative h-[28rem] w-full">
+      <Flow
+        fitViewOnMount
+        fitViewPadding={56}
+        label="Poster project"
+        className="h-full rounded-none border-0"
+        onNodeDragEnd={(id, position) => setPositions((current) => ({ ...current, [id]: position }))}
+      >
+        <Flow.Background variant="lines" gap={28} />
+        {IDS.map((id) => (
+          <Flow.Node key={id} id={id} position={positions[id]} className="w-40">
+            <Flow.NodeContent>
+              <Flow.NodeTitle>{TITLES[id]}</Flow.NodeTitle>
+              <Flow.NodeDescription className="font-mono text-xs tabular-nums">
+                {Math.round(positions[id].x)}, {Math.round(positions[id].y)}
+              </Flow.NodeDescription>
+            </Flow.NodeContent>
+          </Flow.Node>
+        ))}
+        {IDS.slice(1).map((id, index) => (
+          <Flow.Edge key={id} from={IDS[index]} to={id} variant="smoothstep" arrow />
+        ))}
+      </Flow>
+
+      <div className="absolute bottom-3 left-3 flex gap-2">
+        <Button variant="outline" size="sm" onClick={() => setPositions(ROW)}>
+          In a row
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setPositions(STAIRS)}>
+          As stairs
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Nodes inside a group
+
+A `Flow.Node` inside a `Flow.Group` is placed relative to the group and moves with it. Give the group a `size`, because the nodes do not lay it out. `confine` stops a node's drag at the group's edge. `pinned` gives the drag to the group, so the node moves only when the group does.
+
+<ComponentPreview name="flow/confine" height={448} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { LampDeskIcon, RouterIcon, SpeakerIcon, ThermometerIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Flow } from '@/components/panelui/flow';
+
+function Device({ icon, name, detail }: { icon: ReactNode; name: string; detail: string }) {
+  return (
+    <Flow.NodeContent className="flex items-center gap-2.5 px-3 py-2.5 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground">
+      {icon}
+      <span className="min-w-0">
+        <Flow.NodeTitle>{name}</Flow.NodeTitle>
+        <Flow.NodeDescription className="text-xs">{detail}</Flow.NodeDescription>
+      </span>
+    </Flow.NodeContent>
+  );
+}
+
+export default function FlowConfine() {
+  return (
+    <div className="h-[28rem] w-full">
+      <Flow fitViewOnMount fitViewPadding={36} label="Smart home" className="h-full rounded-none border-0">
+        <Flow.Background variant="dots" />
+
+        <Flow.Node id="hub" position={{ x: 0, y: 120 }} className="w-40">
+          <Device icon={<RouterIcon />} name="Hub" detail="Hallway" />
+        </Flow.Node>
+
+        {/* Nodes inside a group are placed relative to it, and the group needs a
+            size because they do not lay it out. */}
+        <Flow.Group id="living" label="Living room" position={{ x: 250, y: 0 }} size={{ width: 300, height: 180 }}>
+          {/* Can be moved round the room, but not out of it. */}
+          <Flow.Node id="lamp" confine position={{ x: 16, y: 44 }} className="w-36">
+            <Device icon={<LampDeskIcon />} name="Lamp" detail="Drag me" />
+          </Flow.Node>
+          {/* Fixed to the wall: dragging it moves the room. */}
+          <Flow.Node id="thermostat" pinned position={{ x: 140, y: 112 }} className="w-36">
+            <Device icon={<ThermometerIcon />} name="Thermostat" detail="Pinned" />
+          </Flow.Node>
+        </Flow.Group>
+
+        <Flow.Group id="kitchen" label="Kitchen" position={{ x: 250, y: 230 }} size={{ width: 300, height: 130 }}>
+          <Flow.Node id="speaker" confine position={{ x: 120, y: 50 }} className="w-36">
+            <Device icon={<SpeakerIcon />} name="Speaker" detail="Drag me" />
+          </Flow.Node>
+        </Flow.Group>
+
+        <Flow.Edge from="hub" to="lamp" variant="smoothstep" arrow color="info" />
+        <Flow.Edge from="hub" to="thermostat" variant="smoothstep" arrow color="info" />
+        <Flow.Edge from="hub" to="speaker" variant="smoothstep" arrow color="info" />
+        <Flow.Controls position="bottom-left" lock={false} />
+      </Flow>
     </div>
   );
 }
@@ -531,6 +953,8 @@ export default function FlowGroups() {
 | `id` | `string` | — | What edges and `onNodeDragEnd` call this node. |
 | `position` | `FlowNodePosition` | — | Where its top left corner is, on the graph. |
 | `draggable` | `boolean` | `true` | Whether it can be dragged and moved with the arrow keys. |
+| `confine` | `boolean` | `false` | Inside a `Flow.Group`, stop a drag at the group's edge instead of letting the node leave it. Does nothing outside a group. |
+| `pinned` | `boolean` | `false` | Inside a `Flow.Group`, take no drag of its own: a drag that starts on it moves the group, and the node goes with it. |
 | `selected` | `boolean` | `false` | Draws it as the one that has been picked. |
 | `onPress` | `() => void` | — | Called when it is pressed without being dragged, or with Enter. |
 | `onDelete` | `() => void` | — | Called when Delete or Backspace is pressed on it. |
@@ -541,6 +965,7 @@ export default function FlowGroups() {
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `label` | `ReactNode` | — | Written in the corner of the group. |
+| `size` | `{ width: number; height: number }` | — | A fixed size for the group. Give one when it holds `Flow.Node`s, which are placed inside it rather than laid out by it, so they do not size it. |
 
 ### Flow.NodeBadge
 
@@ -560,7 +985,7 @@ export default function FlowGroups() {
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `from` | `FlowEndpointReference` | — | Where it leaves from: a node's `id`, or `{ node, handle }`. |
+| `from` | `FlowEndpointReference` | — | Where it leaves from: a node's `id`, `"node.handle"` for one of its handles, or `{ node, handle }`. |
 | `to` | `FlowEndpointReference` | — | Where it arrives. |
 | `variant` | `FlowEdgeVariant` | `'bezier'` | A curve, a rounded right-angled route, a square one, or a straight line. |
 | `animated` | `boolean` | `false` | Sets the dashes marching towards the target. |

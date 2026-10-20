@@ -27,10 +27,52 @@
   },
   "examples": [
     {
+      "title": "Edges that pick their own side",
+      "description": "An edge with no `fromSide`, `toSide` or handle leaves from whichever face of its node is turned towards the other one. Drag one node past another and the edges turn to follow. Name the sides when the direction should not change.",
+      "demo": "map",
+      "height": 448,
+      "flush": true
+    },
+    {
+      "title": "A mind map",
+      "description": "`bezier` edges from one centre, each in a theme colour of its own. With no sides named, a branch can be dragged anywhere round the centre.",
+      "demo": "mind-map",
+      "height": 448,
+      "flush": true
+    },
+    {
       "title": "Wiring it up",
       "description": "A `Flow.Handle` is somewhere to start a connection. Drag from one to another node and `onConnect` is told which two; the edges are yours to keep. `isValidConnection` refuses the ones you do not want, here a second wire between the same two steps.",
       "demo": "wiring",
       "height": 416,
+      "flush": true
+    },
+    {
+      "title": "Named ports",
+      "description": "`Flow.Handle` takes an `id`, a face and an `offset` along it, so one face can hold two. Join an edge to it as `\"node.handle\"`, and that end stays on the port however the node is dragged. Use ports where the side means something: here accepted leaves from one and rejected from the other.",
+      "demo": "ports",
+      "height": 448,
+      "flush": true
+    },
+    {
+      "title": "Building a graph",
+      "description": "The canvas holds no list of nodes or edges. Each is something you render, so adding one is adding to an array in your own state.",
+      "demo": "builder",
+      "height": 448,
+      "flush": true
+    },
+    {
+      "title": "Moving nodes from outside",
+      "description": "`position` is where a node starts. Keep the positions in state, update them from `onNodeDragEnd`, and pass new ones to move the nodes yourself.",
+      "demo": "positions",
+      "height": 448,
+      "flush": true
+    },
+    {
+      "title": "Nodes inside a group",
+      "description": "A `Flow.Node` inside a `Flow.Group` is placed relative to the group and moves with it. Give the group a `size`, because the nodes do not lay it out. `confine` stops a node's drag at the group's edge. `pinned` gives the drag to the group, so the node moves only when the group does.",
+      "demo": "confine",
+      "height": 448,
       "flush": true
     },
     {

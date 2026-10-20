@@ -115,6 +115,8 @@ Every part also takes the props of the element it renders, and a `className`.
 | `id` | `string` | **required** | What edges and `onNodeDragEnd` call this node. |
 | `position` | `FlowNodePosition` | **required** | Where its top left corner is, on the graph. |
 | `draggable` | `boolean` | `true` | Whether it can be dragged and moved with the arrow keys. |
+| `confine` | `boolean` | `false` | Inside a `Flow.Group`, stop a drag at the group's edge instead of letting the node leave it. Does nothing outside a group. |
+| `pinned` | `boolean` | `false` | Inside a `Flow.Group`, take no drag of its own: a drag that starts on it moves the group, and the node goes with it. |
 | `selected` | `boolean` | `false` | Draws it as the one that has been picked. |
 | `onPress` | `() => void` | — | Called when it is pressed without being dragged, or with Enter. |
 | `onDelete` | `() => void` | — | Called when Delete or Backspace is pressed on it. |
@@ -125,6 +127,7 @@ Every part also takes the props of the element it renders, and a `className`.
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `label` | `ReactNode` | — | Written in the corner of the group. |
+| `size` | `{ width: number; height: number }` | — | A fixed size for the group. Give one when it holds `Flow.Node`s, which are placed inside it rather than laid out by it, so they do not size it. |
 
 #### `FlowNodeBadgeProps`
 
@@ -144,7 +147,7 @@ Every part also takes the props of the element it renders, and a `className`.
 
 | Prop | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `from` | `FlowEndpointReference` | **required** | Where it leaves from: a node's `id`, or `{ node, handle }`. |
+| `from` | `FlowEndpointReference` | **required** | Where it leaves from: a node's `id`, `"node.handle"` for one of its handles, or `{ node, handle }`. |
 | `to` | `FlowEndpointReference` | **required** | Where it arrives. |
 | `variant` | `FlowEdgeVariant` | `'bezier'` | A curve, a rounded right-angled route, a square one, or a straight line. |
 | `animated` | `boolean` | `false` | Sets the dashes marching towards the target. |
