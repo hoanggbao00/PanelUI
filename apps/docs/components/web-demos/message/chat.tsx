@@ -1,8 +1,6 @@
 'use client';
 
-import { SparklesIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Avatar } from 'panelui-web/avatar';
 import { Message } from 'panelui-web/message';
 import { Prompt, type PromptMessage, type PromptState } from 'panelui-web/prompt';
 
@@ -58,11 +56,6 @@ export default function MessageChat() {
           const writing = last && turn.from === 'assistant' && status !== 'idle';
           return (
             <Message key={turn.id} from={turn.from} streaming={writing && status === 'streaming'}>
-              {turn.from === 'assistant' ? (
-                <Message.Avatar>
-                  <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-                </Message.Avatar>
-              ) : null}
               <Message.Content>
                 {writing && status === 'submitted' ? (
                   <Message.Status>Thinking</Message.Status>

@@ -1,8 +1,7 @@
 'use client';
 
-import { RotateCcwIcon, SparklesIcon } from 'lucide-react';
+import { RotateCcwIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Avatar } from 'panelui-web/avatar';
 import { Button } from 'panelui-web/button';
 import { Message } from 'panelui-web/message';
 
@@ -43,9 +42,6 @@ export default function MessageStreaming() {
         </Message.Content>
       </Message>
       <Message from="assistant" streaming={phase === 'writing'}>
-        <Message.Avatar>
-          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-        </Message.Avatar>
         <Message.Content>
           {phase === 'thinking' ? (
             <Message.Status>Checking today’s tide table</Message.Status>

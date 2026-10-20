@@ -9,21 +9,13 @@ status: new
 ```tsx lineNumbers
 'use client';
 
-import { RotateCcwIcon, SparklesIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { RotateCcwIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Avatar } from '@/components/panelui/avatar';
 import { Message } from '@/components/panelui/message';
 
 const ANSWER =
   'Scale everything by 1.5, then round to what a kitchen measures. 300 g flour, 3 eggs, 375 ml milk and a pinch more salt. Bake in two tins rather than one deep one, at the same 180 °C for 25 minutes.';
 
-function Assistant() {
-  return (
-    <Message.Avatar>
-      <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-    </Message.Avatar>
-  );
-}
 
 export default function MessageConversation() {
   const [rating, setRating] = useState<'up' | 'down' | null>(null);
@@ -39,7 +31,6 @@ export default function MessageConversation() {
       </Message>
 
       <Message from="assistant">
-        <Assistant />
         <Message.Content>
           <Message.Bubble>
             <Message.BubbleContent>
@@ -78,7 +69,6 @@ export default function MessageConversation() {
       </Message>
 
       <Message from="assistant" streaming>
-        <Assistant />
         <Message.Content>
           <Message.Bubble>
             <Message.BubbleContent>
@@ -162,9 +152,6 @@ import { Message } from "@/components/panelui/message"
 </Message>
 
 <Message from="assistant">
-  <Message.Avatar>
-    <Avatar alt="Assistant" shape="square" size="sm" fallback={<SparklesIcon />} />
-  </Message.Avatar>
   <Message.Content>
     <Message.Bubble>
       <Message.BubbleContent>Multiply by 1.5…</Message.BubbleContent>
@@ -202,7 +189,7 @@ import { Message } from "@/components/panelui/message"
 ```
 
 - **`Message.Group`** — Turns in a row from the same side, set closer together. Its `from` applies to every `Message` in it.
-- **`Message.Avatar`** — Who the turn is from, beside its first line. Put an [Avatar](/docs/web/components/avatar) in it. In a group, leave it empty on the later turns so they line up.
+- **`Message.Avatar`** — Optional: who the turn is from, beside its first line. An assistant's answer reads best without one, as plain text; use it where several people share a thread. Put an [Avatar](/docs/web/components/avatar) in it.
 - **`Message.Content`** — The column that holds the rest. On a person's turn it is at most 80% of the width.
 - **`Message.Header`** — A line above the turn: a name in `<strong>`, a time.
 - **`Message.Attachments`** — The files sent with a turn, above its bubble.
@@ -226,9 +213,8 @@ Copy, rate, retry and share, with `Message.Branch` to step between versions. Ret
 ```tsx lineNumbers
 'use client';
 
-import { RotateCcwIcon, Share2Icon, SparklesIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { RotateCcwIcon, Share2Icon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Avatar } from '@/components/panelui/avatar';
 import { Message } from '@/components/panelui/message';
 
 /** Three tries at the same answer. Retrying adds a fourth, and the switcher steps between them. */
@@ -246,9 +232,6 @@ export default function MessageActions() {
 
   return (
     <Message from="assistant" className="w-full max-w-xl">
-      <Message.Avatar>
-        <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-      </Message.Avatar>
       <Message.Content>
         <Message.Bubble>
           {/* Keyed by the version, so the new text replaces the old one. */}
@@ -299,9 +282,8 @@ export default function MessageActions() {
 ```tsx lineNumbers
 'use client';
 
-import { RotateCcwIcon, SparklesIcon } from 'lucide-react';
+import { RotateCcwIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Avatar } from '@/components/panelui/avatar';
 import { Button } from '@/components/panelui/button';
 import { Message } from '@/components/panelui/message';
 
@@ -342,9 +324,6 @@ export default function MessageStreaming() {
         </Message.Content>
       </Message>
       <Message from="assistant" streaming={phase === 'writing'}>
-        <Message.Avatar>
-          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-        </Message.Avatar>
         <Message.Content>
           {phase === 'thinking' ? (
             <Message.Status>Checking today’s tide table</Message.Status>
@@ -377,8 +356,7 @@ export default function MessageStreaming() {
 <ComponentPreview name="message/attachments" height={380}>
 
 ```tsx lineNumbers
-import { FileSpreadsheetIcon, SparklesIcon } from 'lucide-react';
-import { Avatar } from '@/components/panelui/avatar';
+import { FileSpreadsheetIcon } from 'lucide-react';
 import { Message } from '@/components/panelui/message';
 
 export default function MessageAttachmentsDemo() {
@@ -396,9 +374,6 @@ export default function MessageAttachmentsDemo() {
         </Message.Content>
       </Message>
       <Message from="assistant">
-        <Message.Avatar>
-          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-        </Message.Avatar>
         <Message.Content>
           <Message.Bubble>
             <Message.BubbleContent>
@@ -424,8 +399,6 @@ In a thread several people share, `Message.Header` carries the name and `Message
 <ComponentPreview name="message/team" height={400}>
 
 ```tsx lineNumbers
-import { SparklesIcon } from 'lucide-react';
-import { Avatar } from '@/components/panelui/avatar';
 import { Message } from '@/components/panelui/message';
 
 export default function MessageTeam() {
@@ -453,9 +426,6 @@ export default function MessageTeam() {
         </Message>
       </Message.Group>
       <Message from="assistant">
-        <Message.Avatar>
-          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-        </Message.Avatar>
         <Message.Content>
           <Message.Header>
             <strong>Assistant</strong> read 46 messages
@@ -488,9 +458,7 @@ A conversation that works: write in the [Prompt](/docs/web/components/prompt), a
 ```tsx lineNumbers
 'use client';
 
-import { SparklesIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Avatar } from '@/components/panelui/avatar';
 import { Message } from '@/components/panelui/message';
 import { Prompt, type PromptMessage, type PromptState } from '@/components/panelui/prompt';
 
@@ -546,11 +514,6 @@ export default function MessageChat() {
           const writing = last && turn.from === 'assistant' && status !== 'idle';
           return (
             <Message key={turn.id} from={turn.from} streaming={writing && status === 'streaming'}>
-              {turn.from === 'assistant' ? (
-                <Message.Avatar>
-                  <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-                </Message.Avatar>
-              ) : null}
               <Message.Content>
                 {writing && status === 'submitted' ? (
                   <Message.Status>Thinking</Message.Status>

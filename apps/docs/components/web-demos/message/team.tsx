@@ -1,5 +1,3 @@
-import { SparklesIcon } from 'lucide-react';
-import { Avatar } from 'panelui-web/avatar';
 import { Message } from 'panelui-web/message';
 
 export default function MessageTeam() {
@@ -27,9 +25,6 @@ export default function MessageTeam() {
         </Message>
       </Message.Group>
       <Message from="assistant">
-        <Message.Avatar>
-          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-        </Message.Avatar>
         <Message.Content>
           <Message.Header>
             <strong>Assistant</strong> read 46 messages

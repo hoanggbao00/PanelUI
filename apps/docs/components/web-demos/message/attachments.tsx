@@ -1,5 +1,4 @@
-import { FileSpreadsheetIcon, SparklesIcon } from 'lucide-react';
-import { Avatar } from 'panelui-web/avatar';
+import { FileSpreadsheetIcon } from 'lucide-react';
 import { Message } from 'panelui-web/message';
 
 export default function MessageAttachmentsDemo() {
@@ -17,9 +16,6 @@ export default function MessageAttachmentsDemo() {
         </Message.Content>
       </Message>
       <Message from="assistant">
-        <Message.Avatar>
-          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-        </Message.Avatar>
         <Message.Content>
           <Message.Bubble>
             <Message.BubbleContent>

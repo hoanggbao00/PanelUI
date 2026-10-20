@@ -1,8 +1,7 @@
 'use client';
 
-import { RotateCcwIcon, Share2Icon, SparklesIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { RotateCcwIcon, Share2Icon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Avatar } from 'panelui-web/avatar';
 import { Message } from 'panelui-web/message';
 
 /** Three tries at the same answer. Retrying adds a fourth, and the switcher steps between them. */
@@ -20,9 +19,6 @@ export default function MessageActions() {
 
   return (
     <Message from="assistant" className="w-full max-w-xl">
-      <Message.Avatar>
-        <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
-      </Message.Avatar>
       <Message.Content>
         <Message.Bubble>
           {/* Keyed by the version, so the new text replaces the old one. */}
