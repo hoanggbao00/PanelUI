@@ -252,5 +252,14 @@
       "addedIn": "0.6.0",
       "category": "ai"
     }
+  ],
+  "sources": [
+    "Sources",
+    "The pages an answer was written from, and the numbered marks in the answer that point back at them.",
+    "react ai sources citations search results component",
+    {
+      "addedIn": "0.6.0",
+      "category": "ai"
+    }
   ]
 }

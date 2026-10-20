@@ -1,0 +1,397 @@
+---
+title: Sources
+description: The pages an answer was written from, and the numbered marks in the answer that point back at them.
+status: new
+---
+
+<ComponentPreview name="sources/answer" height={720}>
+
+```tsx lineNumbers
+'use client';
+
+import { RotateCcwIcon, SparklesIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Avatar } from '@/components/panelui/avatar';
+import { Button } from '@/components/panelui/button';
+import { Message } from '@/components/panelui/message';
+import { Sources } from '@/components/panelui/sources';
+
+const QUERY = 'sourdough dense crumb causes';
+
+const PAGES = [
+  {
+    href: 'https://breadlab.org/guides/underproofed-dough',
+    title: 'Reading an under-proofed loaf',
+    snippet: 'A tight, gummy crumb with a few large holes near the top is the usual sign the dough went into the oven too early.',
+  },
+  {
+    href: 'https://flourandwater.co/notes/starter-strength',
+    title: 'How strong does a starter need to be?',
+    snippet: 'A starter should double within six hours of feeding at room temperature before it can raise a loaf.',
+  },
+  {
+    href: 'https://proofing.guide/temperature',
+    title: 'Dough temperature and timing',
+    snippet: 'Every 2 °C cooler adds roughly an hour to bulk fermentation.',
+  },
+  {
+    href: 'https://crumbshot.forum/t/dense-loaf-help/8812',
+    title: 'Dense loaf every time, what am I missing?',
+    snippet: 'Turned out my kitchen was 18 °C. Bulk took nine hours, not five.',
+  },
+  {
+    href: 'https://millersalmanac.com/flour/protein',
+    title: 'Protein content in bread flour',
+    snippet: 'Below about 11% protein, the dough struggles to hold the gas a long fermentation makes.',
+  },
+];
+
+type Phase = 'searching' | 'writing' | 'done';
+
+export default function SourcesAnswer() {
+  const [run, setRun] = useState(0);
+  const [found, setFound] = useState(0);
+  const [phase, setPhase] = useState<Phase>('searching');
+
+  // Stands in for a model: the pages arrive one at a time, then the answer.
+  useEffect(() => {
+    setFound(0);
+    setPhase('searching');
+    const timers: number[] = [];
+    PAGES.forEach((_, at) => timers.push(window.setTimeout(() => setFound(at + 1), 700 + at * 550)));
+    timers.push(window.setTimeout(() => setPhase('writing'), 700 + PAGES.length * 550));
+    timers.push(window.setTimeout(() => setPhase('done'), 1600 + PAGES.length * 550));
+    return () => timers.forEach(window.clearTimeout);
+  }, [run]);
+
+  return (
+    <div className="flex w-full max-w-xl flex-col gap-6">
+      <Message from="user">
+        <Message.Content>
+          <Message.Bubble>
+            <Message.BubbleContent>Why is my sourdough always dense in the middle?</Message.BubbleContent>
+          </Message.Bubble>
+        </Message.Content>
+      </Message>
+
+      <Message from="assistant" streaming={phase === 'writing'}>
+        <Message.Avatar>
+          <Avatar alt="Assistant" shape="square" size="sm" color="chart-3" fallback={<SparklesIcon />} />
+        </Message.Avatar>
+        <Message.Content className="gap-3">
+          {/* The answer sits inside Sources, so its citations can find their pages. */}
+          <Sources status={phase === 'searching' ? 'searching' : 'done'} query={QUERY} total={PAGES.length}>
+            <Sources.Trigger />
+            <Sources.Content>
+              {PAGES.slice(0, found).map((page) => (
+                <Sources.Source key={page.href} {...page} />
+              ))}
+            </Sources.Content>
+            {phase !== 'searching' ? (
+              <Message.Bubble className="mt-3">
+                <Message.BubbleContent>
+                  <p>
+                    Most often it is under-proofing: the dough is baked before it has risen enough, which leaves a
+                    tight, gummy middle <Sources.Citation index={1} />. Two things usually cause it.
+                  </p>
+                  <ul>
+                    <li>
+                      A slow starter. It should double within six hours of a feed <Sources.Citation index={2} />.
+                    </li>
+                    <li>
+                      A cool kitchen. Each 2 °C cooler adds about an hour to the rise <Sources.Citation index={3} />
+                      <Sources.Citation index={4} />.
+                    </li>
+                  </ul>
+                  <p>
+                    Let the bulk rise go until the dough is about half again as big, however long that takes. If it still
+                    spreads flat, try a flour with more protein <Sources.Citation index={5} />.
+                  </p>
+                </Message.BubbleContent>
+              </Message.Bubble>
+            ) : null}
+          </Sources>
+        </Message.Content>
+      </Message>
+
+      <Button variant="outline" size="sm" className="self-start" onClick={() => setRun(run + 1)}>
+        <RotateCcwIcon /> Replay
+      </Button>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it under an assistant's answer to show the pages the answer was written from. Each page has a number, and `Sources.Citation` puts that number in the answer where the page is used. Point at a citation and its page lights up in the list, with a card of what the page says. Point at a page and its citations light up.
+
+While the search runs, set `status="searching"` with the `query`. The line says what is being searched for, a ruler fills a tick for each page read, and pages still to come hold their place as empty cards, so the list does not jump. Once the list is final, set `status="done"` and the line reads "Read 5 sources".
+
+The answer has to sit inside `Sources`, because that is how its citations find their pages. When the answer is a [Message](/docs/web/components/message), put `Sources` inside its content.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/sources.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/sources` instead of `@/components/panelui/sources`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="@base-ui/react tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/sources.tsx`:
+
+<RegistrySource name="sources" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Sources } from "@/components/panelui/sources"
+```
+
+```tsx
+<Sources status="done" query="sourdough dense crumb">
+  <Sources.Trigger />
+  <Sources.Content>
+    {pages.map((page) => (
+      <Sources.Source key={page.url} href={page.url} title={page.title} snippet={page.snippet} />
+    ))}
+  </Sources.Content>
+  <p>
+    Most often it is under-proofing <Sources.Citation index={1} />.
+  </p>
+</Sources>
+```
+
+## Composition
+
+```tsx
+<Sources>
+  <Sources.Trigger />
+  <Sources.Content>
+    <Sources.Source />
+  </Sources.Content>
+  <Sources.Citation />
+</Sources>
+```
+
+- **`Sources.Trigger`** — The line over the list: the sites' icons, what is happening, a ruler with a tick for each page, and a chevron. Pressing it folds the list away. `icons` sets how many site icons it stacks, and `0` hides them.
+- **`Sources.Content`** — The pages, numbered by their place. `layout="cards"`, the default, is a row of cards that scrolls sideways and snaps, with arrows and a fade at the end that has more. `layout="list"` is a column of single lines. While searching, it adds an empty card for each page still to come, up to `total`.
+- **`Sources.Source`** — One page: its number, the site's icon and name, its `title` and a `snippet` of what it says. It opens `href` in a new tab. With no `icon`, the site's first letter is drawn on a tint picked from its name. `unreachable` keeps a page that could not be read in the list, marked, with its tick in the ruler turned red.
+- **`Sources.Citation`** — A numbered mark in the answer that points at the source with that `index`. Pointing at it or focusing it lights the source and opens a card with its title and snippet. Pressing it opens the page.
+
+## Examples
+
+### Folded until asked
+
+`defaultOpen={false}` keeps the list to one line until it is pressed. The citations still work while it is folded: point at one to read what its page says.
+
+<ComponentPreview name="sources/folded" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { Sources } from '@/components/panelui/sources';
+
+const PAGES = [
+  { href: 'https://railwatch.eu/night-trains/vienna', title: 'Night trains from Vienna, winter timetable', snippet: 'The Venice service runs nightly from 13 December, leaving at 21:27.' },
+  { href: 'https://slowtrain.travel/couchettes', title: 'Couchette or sleeper: what you get', snippet: 'A six-berth couchette has no washbasin; a sleeper compartment has its own.' },
+  { href: 'https://alpinepass.info/brenner', title: 'Crossing the Brenner by rail', snippet: 'Works on the line close it on some Saturday nights until March.' },
+];
+
+export default function SourcesFolded() {
+  return (
+    <Sources defaultOpen={false} className="w-full max-w-xl">
+      <Sources.Trigger />
+      <Sources.Content>
+        {PAGES.map((page) => (
+          <Sources.Source key={page.href} {...page} />
+        ))}
+      </Sources.Content>
+      <p className="mt-3 text-[0.9375rem] leading-7">
+        Yes, there is a night train from Vienna to Venice every night from 13 December <Sources.Citation index={1} />.
+        Book a sleeper rather than a couchette if you want a washbasin <Sources.Citation index={2} />, and check the date
+        against the Brenner works first <Sources.Citation index={3} />.
+      </p>
+    </Sources>
+  );
+}
+```
+
+</ComponentPreview>
+
+### As a list
+
+`layout="list"` gives each page one line: its number, its site, its title and its host. Use it where the pages are references rather than reading, such as documentation and issues. `icons={0}` leaves the site icons off the line.
+
+<ComponentPreview name="sources/list" height={320}>
+
+```tsx lineNumbers
+'use client';
+
+import { Sources } from '@/components/panelui/sources';
+
+const PAGES = [
+  { href: 'https://docs.mapkit.dev/tiles/caching', title: 'Caching map tiles offline' },
+  { href: 'https://docs.mapkit.dev/tiles/limits', title: 'Tile request limits and quotas' },
+  { href: 'https://github.com/mapkit-community/offline-packs/issues/214', title: 'Offline packs larger than 2 GB fail on iOS' },
+  { href: 'https://cartography.stackexchange.com/q/40921', title: 'Pre-fetching tiles along a route' },
+];
+
+export default function SourcesList() {
+  return (
+    <Sources className="w-full max-w-xl">
+      <Sources.Trigger icons={0} />
+      <Sources.Content layout="list">
+        {PAGES.map((page) => (
+          <Sources.Source key={page.href} {...page} />
+        ))}
+      </Sources.Content>
+      <p className="mt-3 text-[0.9375rem] leading-7">
+        Download tiles for the route before setting off <Sources.Citation index={4} />, and keep each pack under 2 GB, which
+        is where iOS starts to fail <Sources.Citation index={3} />.
+      </p>
+    </Sources>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A page that could not be read
+
+`unreachable` keeps the page in the list, marked, and turns its tick in the ruler red, so a reader can tell a short answer from a search that partly failed.
+
+<ComponentPreview name="sources/unreachable" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { Sources } from '@/components/panelui/sources';
+
+export default function SourcesUnreachable() {
+  return (
+    <Sources query="council tax band appeal deadline" className="w-full max-w-xl">
+      <Sources.Trigger />
+      <Sources.Content>
+        <Sources.Source
+          href="https://localgov.example/council-tax/appeals"
+          title="Challenging your council tax band"
+          snippet="You can appeal within six months of moving into a property."
+        />
+        <Sources.Source href="https://valuation.example/bands/lookup" title="Band lookup service" unreachable />
+        <Sources.Source
+          href="https://citizensguide.example/housing/council-tax"
+          title="Council tax: when you can challenge your band"
+          snippet="After six months, an appeal needs evidence that the band was wrong from the start."
+        />
+      </Sources.Content>
+    </Sources>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Sources
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `status` | `SourcesStatus` | `'done'` | `searching` while pages are still being read; `done` once the list is final. Default `done`. |
+| `query` | `string` | — | What was searched for. Shown while searching. |
+| `total` | `number` | — | How many pages the search will read. While searching, the ones not in yet hold their place as empty cards. Defaults to the number of sources given. |
+| `open` | `boolean` | — | Whether the list is shown, when you hold that. |
+| `defaultOpen` | `boolean` | `true` | Whether it starts shown. Default true. |
+| `onOpenChange` | `(open: boolean) => void` | — |  |
+
+### Sources.Trigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `icons` | `number` | — | How many site icons to stack before the words. Default 4; 0 for none. |
+
+### Sources.Content
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `layout` | `SourcesLayout` | — | `cards`, a row that scrolls sideways, or `list`, a column of lines. Default `cards`. |
+
+### Sources.Source
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `href` | `string` | — | The page. Opened in a new tab. |
+| `title` | `string` | — | What the page is called. Falls back to its host, which is a better label than a long URL. |
+| `snippet` | `string` | — | A line or two from the page: what it says, as the answer used it. |
+| `icon` | `string \| ReactNode` | — | The site's icon: an image URL or an element. Its first letter on a tint when left out. |
+| `index` | `number` | — | Its number, which its citations use. Set for you by its place in `Sources.Content`. |
+| `unreachable` | `boolean` | `false` | The page could not be read. It stays in the list, marked, and its tick turns red. |
+
+### Sources.Citation
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `index` | `number` | — | The number of the source it points at. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Where the pages come from
+
+With the AI SDK, the pages are the `source-url` parts of an assistant message: `part.url` is the `href` and `part.title` the `title`. Remove duplicates by URL first, because a model may cite the same page twice. A part with no title falls back to the page's host.
+
+### Numbers
+
+A source is numbered by its place in `Sources.Content`, from 1. Pass `index` to number it yourself, for example when the model's citations already carry numbers.
+
+### Accessibility
+
+The trigger is a button with `aria-expanded`. Each source is a link that says it opens in a new tab, and each citation is named "Source 2: its title". The citation's card opens on focus as well as on hover.
+
+### Reduced motion
+
+With reduced motion turned on, the searching line does not shimmer, the ruler does not pulse, and the list folds without sliding.
+
+### Server Components
+
+`Sources` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Sources.Trigger` off the import, so each part is also exported by name: `SourcesTrigger` is `Sources.Trigger`, and so on for the others.
+
+```tsx
+import { Sources, SourcesTrigger, SourcesContent, SourcesSource, SourcesCitation } from "@/components/panelui/sources"
+```

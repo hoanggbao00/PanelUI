@@ -1,0 +1,37 @@
+{
+  "slug": "sources",
+  "demo": "answer",
+  "demoOptions": {
+    "height": 720
+  },
+  "intro": "Use it under an assistant's answer to show the pages the answer was written from. Each page has a number, and `Sources.Citation` puts that number in the answer where the page is used. Point at a citation and its page lights up in the list, with a card of what the page says. Point at a page and its citations light up.\n\nWhile the search runs, set `status=\"searching\"` with the `query`. The line says what is being searched for, a ruler fills a tick for each page read, and pages still to come hold their place as empty cards, so the list does not jump. Once the list is final, set `status=\"done\"` and the line reads \"Read 5 sources\".\n\nThe answer has to sit inside `Sources`, because that is how its citations find their pages. When the answer is a [Message](/docs/web/components/message), put `Sources` inside its content.",
+  "usage": "<Sources status=\"done\" query=\"sourdough dense crumb\">\n  <Sources.Trigger />\n  <Sources.Content>\n    {pages.map((page) => (\n      <Sources.Source key={page.url} href={page.url} title={page.title} snippet={page.snippet} />\n    ))}\n  </Sources.Content>\n  <p>\n    Most often it is under-proofing <Sources.Citation index={1} />.\n  </p>\n</Sources>",
+  "anatomy": "<Sources>\n  <Sources.Trigger />\n  <Sources.Content>\n    <Sources.Source />\n  </Sources.Content>\n  <Sources.Citation />\n</Sources>",
+  "parts": {
+    "Trigger": "The line over the list: the sites' icons, what is happening, a ruler with a tick for each page, and a chevron. Pressing it folds the list away. `icons` sets how many site icons it stacks, and `0` hides them.",
+    "Content": "The pages, numbered by their place. `layout=\"cards\"`, the default, is a row of cards that scrolls sideways and snaps, with arrows and a fade at the end that has more. `layout=\"list\"` is a column of single lines. While searching, it adds an empty card for each page still to come, up to `total`.",
+    "Source": "One page: its number, the site's icon and name, its `title` and a `snippet` of what it says. It opens `href` in a new tab. With no `icon`, the site's first letter is drawn on a tint picked from its name. `unreachable` keeps a page that could not be read in the list, marked, with its tick in the ruler turned red.",
+    "Citation": "A numbered mark in the answer that points at the source with that `index`. Pointing at it or focusing it lights the source and opens a card with its title and snippet. Pressing it opens the page."
+  },
+  "examples": [
+    {
+      "title": "Folded until asked",
+      "description": "`defaultOpen={false}` keeps the list to one line until it is pressed. The citations still work while it is folded: point at one to read what its page says.",
+      "demo": "folded",
+      "height": 240
+    },
+    {
+      "title": "As a list",
+      "description": "`layout=\"list\"` gives each page one line: its number, its site, its title and its host. Use it where the pages are references rather than reading, such as documentation and issues. `icons={0}` leaves the site icons off the line.",
+      "demo": "list",
+      "height": 320
+    },
+    {
+      "title": "A page that could not be read",
+      "description": "`unreachable` keeps the page in the list, marked, and turns its tick in the ruler red, so a reader can tell a short answer from a search that partly failed.",
+      "demo": "unreachable",
+      "height": 240
+    }
+  ],
+  "notes": "### Where the pages come from\n\nWith the AI SDK, the pages are the `source-url` parts of an assistant message: `part.url` is the `href` and `part.title` the `title`. Remove duplicates by URL first, because a model may cite the same page twice. A part with no title falls back to the page's host.\n\n### Numbers\n\nA source is numbered by its place in `Sources.Content`, from 1. Pass `index` to number it yourself, for example when the model's citations already carry numbers.\n\n### Accessibility\n\nThe trigger is a button with `aria-expanded`. Each source is a link that says it opens in a new tab, and each citation is named \"Source 2: its title\". The citation's card opens on focus as well as on hover.\n\n### Reduced motion\n\nWith reduced motion turned on, the searching line does not shimmer, the ruler does not pulse, and the list folds without sliding."
+}

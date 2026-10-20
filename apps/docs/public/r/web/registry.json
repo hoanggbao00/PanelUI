@@ -519,6 +519,24 @@
       ]
     },
     {
+      "name": "sources",
+      "type": "registry:component",
+      "title": "Sources",
+      "description": "The pages an answer was written from, and the numbered marks in the answer that point back at them.",
+      "dependencies": [
+        "@base-ui/react",
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/sources.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/sources.tsx"
+        }
+      ]
+    },
+    {
       "name": "stat",
       "type": "registry:component",
       "title": "Stat",

@@ -473,3 +473,17 @@ export {
   type MessageAttachmentsProps,
   type MessageAttachmentProps,
 } from './components/message';
+export {
+  Sources,
+  SourcesTrigger,
+  SourcesContent,
+  SourcesSource,
+  SourcesCitation,
+  type SourcesProps,
+  type SourcesStatus,
+  type SourcesLayout,
+  type SourcesTriggerProps,
+  type SourcesContentProps,
+  type SourcesSourceProps,
+  type SourcesCitationProps,
+} from './components/sources';

@@ -74,7 +74,8 @@ const messageVariants = tv({
       // Prose: what an answer is usually made of.
       '[&_p]:my-3 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0',
       '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:ps-5 [&_li]:my-1 [&_li]:ps-1 [&_li::marker]:text-muted-foreground',
-      '[&_strong]:font-semibold [&_a]:underline [&_a]:underline-offset-4',
+      // Links in the text; a component's own link, such as a citation, keeps its look.
+      '[&_strong]:font-semibold [&_a:not([data-slot])]:underline [&_a:not([data-slot])]:underline-offset-4',
       '[&_:not(pre)>code]:rounded-md [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-[0.8125rem]',
       '[&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:border [&_pre]:bg-muted/50 [&_pre]:p-3.5 [&_pre]:font-mono [&_pre]:text-[0.8125rem] [&_pre]:leading-6',
       '[&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold',
