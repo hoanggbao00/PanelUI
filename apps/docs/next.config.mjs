@@ -40,6 +40,22 @@ const AGENT_LINKS = [
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  /*
+   * Memory, because Vercel's build machine has 8 GB and a cold build of this
+   * site came to 7.6 GB there and was killed. Measured locally from cold:
+   *
+   * - Production builds compile with webpack (`next build --webpack` in
+   *   package.json). Turbopack held 6.7 GB in one process while compiling the
+   *   MDX of every page; webpack holds 3.2 GB for the same work.
+   * - Static pages render in three workers. Each holds about 650 MB, and the
+   *   default is one per CPU less one, which on a large machine is the peak.
+   * - The dev server stays on Turbopack, with its loaders in worker threads
+   *   rather than a child process each.
+   */
+  experimental: {
+    cpus: 3,
+    turbopackPluginRuntimeStrategy: 'workerThreads',
+  },
   async headers() {
     return [
       {
