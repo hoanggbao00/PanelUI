@@ -531,9 +531,18 @@ function BottomSheetContent({
    */
   const [presented, setPresented] = useState(open);
 
+  /*
+   * Set the moment a swipe commits to dismissing, which is before `open` goes
+   * false — the close is reported when the fling lands. Until then the sheet
+   * is still open as far as anyone knows, and without this it would go on
+   * taking touches for the whole of the fling.
+   */
+  const [flung, setFlung] = useState(false);
+
   useEffect(() => {
     if (open) {
       cancelAnimation(translateY);
+      setFlung(false);
       if (!presented) {
         /*
          * A fresh mount starts off screen and this effect's own re-run — it
@@ -741,6 +750,7 @@ function BottomSheetContent({
             dismissible &&
             (projected > DISMISS_DISTANCE || event.velocityY > DISMISS_VELOCITY)
           ) {
+            runOnJS(setFlung)(true);
             translateY.value = withSpring(
               screenHeight,
               { ...EXIT_SPRING, velocity: event.velocityY },
@@ -903,7 +913,18 @@ function BottomSheetContent({
       {/* Portal content mounts under PortalHost, outside this provider's
           subtree — re-provide the context so nested consumers keep working. */}
       <BottomSheetContext.Provider value={context}>
-        <View className="absolute inset-0 justify-end">
+        {/*
+          * Takes no touches once it is leaving. The sheet stays mounted until
+          * its exit spring settles, and for all that time this layer and the
+          * backdrop's Pressable cover the screen: a tap on the button that
+          * opened the sheet landed on a backdrop whose close had already
+          * happened, and did nothing. Reopening sets `open` again first, so a
+          * sheet caught on its way down takes touches straight away.
+          */}
+        <View
+          className="absolute inset-0 justify-end"
+          pointerEvents={open && !flung ? 'auto' : 'none'}
+        >
         {/* Derived from the same value the sheet moves on, so the backdrop
             cannot disagree with it: dragging the sheet halfway down lightens
             the screen behind it by half. Left to its own fade the scrim stayed

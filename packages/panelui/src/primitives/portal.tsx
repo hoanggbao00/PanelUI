@@ -7,38 +7,10 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { ModalIsolationStore } from './modal-isolation-store';
+import { PortalStore } from './portal-store';
 import { captureFocusRestore, FocusRestorationStore } from './focus-restoration-store';
-
-type PortalMap = ReadonlyMap<string, ReactNode>;
-
-class PortalStore {
-  private portals = new Map<string, ReactNode>();
-  private snapshot: PortalMap = this.portals;
-  private listeners = new Set<() => void>();
-
-  mount = (key: string, node: ReactNode) => {
-    this.portals.set(key, node);
-    this.emit();
-  };
-
-  unmount = (key: string) => {
-    this.portals.delete(key);
-    this.emit();
-  };
-
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  };
-
-  getSnapshot = (): PortalMap => this.snapshot;
-
-  private emit() {
-    this.snapshot = new Map(this.portals);
-    this.listeners.forEach((listener) => listener());
-  }
-}
 
 const PortalContext = createContext<PortalStore | null>(null);
 const ModalIsolationContext = createContext<ModalIsolationStore | null>(null);
@@ -154,13 +126,26 @@ export function PortalHost() {
 
   return (
     <>
-      {Array.from(portals.entries(), ([key, node]) => (
-        <PortalFragment key={key}>{node}</PortalFragment>
+      {Array.from(portals.entries(), ([key, { node, leaving }]) => (
+        /*
+         * Every entry sits in a full-screen layer from its first render, so the
+         * frame it is marked `leaving` changes one prop rather than remounting
+         * the content. `box-none` passes through wherever the content has
+         * nothing, which is how an open overlay already behaved. `none` is the
+         * frame before removal: views Reanimated keeps on screen to finish an
+         * exit animation then sit under a layer that takes no touches, so a tap
+         * on the screen behind reaches it. `collapsable` keeps the layer from
+         * being flattened away, since the prop has to live on a real view.
+         */
+        <View
+          key={key}
+          collapsable={false}
+          pointerEvents={leaving ? 'none' : 'box-none'}
+          style={StyleSheet.absoluteFill}
+        >
+          {node}
+        </View>
       ))}
     </>
   );
-}
-
-function PortalFragment({ children }: { children: ReactNode }) {
-  return <>{children}</>;
 }

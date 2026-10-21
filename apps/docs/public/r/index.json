@@ -1437,8 +1437,18 @@
     "description": "Renders content above everything else. Required by every overlay.",
     "registryDependencies": [
       "focus-restoration-store",
-      "modal-isolation-store"
+      "modal-isolation-store",
+      "portal-store"
     ]
+  },
+  {
+    "name": "portal-store",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "stable",
+    "description": "What every portal has on screen, removed a frame after it stops taking touches.",
+    "registryDependencies": []
   },
   {
     "name": "post",

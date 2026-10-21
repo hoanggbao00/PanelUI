@@ -1084,6 +1084,10 @@ function ViewerOverlay({
   return (
     <View
       style={StyleSheet.absoluteFill}
+      // Mounted until the picture is back in the page, which is after `open`
+      // has gone false. Taking touches for that flight swallowed the first tap
+      // on the screen behind it.
+      pointerEvents={open ? 'auto' : 'none'}
       accessibilityViewIsModal
       onAccessibilityEscape={onRequestClose}
     >
