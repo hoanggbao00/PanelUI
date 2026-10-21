@@ -262,5 +262,14 @@
       "addedIn": "0.6.0",
       "category": "forms"
     }
+  ],
+  "soundwave": [
+    "Soundwave",
+    "A voice drawn while an app listens: capsules, bars, a line, a field of dots, spokes round a person, or rings of dots.",
+    "react soundwave audio visualizer voice waveform component",
+    {
+      "addedIn": "0.7.0",
+      "category": "ai"
+    }
   ]
 }

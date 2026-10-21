@@ -1,0 +1,639 @@
+---
+title: Soundwave
+description: "A voice drawn while an app listens: capsules, bars, a line, a field of dots, spokes round a person, or rings of dots."
+status: new
+---
+
+<ComponentPreview name="soundwave/overview" height={200}>
+
+```tsx lineNumbers
+'use client';
+
+import { Soundwave } from '@/components/panelui/soundwave';
+
+export default function SoundwaveOverview() {
+  return <Soundwave variant="dots" color="info" height={72} className="max-w-md" />;
+}
+```
+
+</ComponentPreview>
+
+Use it to show that an app is hearing someone, or that someone is speaking: over a microphone button, in a recording row, beside each person on a call, or behind a whole voice screen.
+
+It draws a level and does not record one. Your app owns the microphone and passes a number from 0 to 1, so there is no audio dependency here, and the same wave works with a live meter, a remote speaker's level or a stored recording.
+
+With no level it runs its own motion for the current `state`, which is enough to build and review a voice screen before any audio exists.
+
+For a spinner while an answer is being written, use a loader. For a recording's length and position alone, a progress bar is clearer.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/soundwave.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/soundwave` instead of `@/components/panelui/soundwave`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/soundwave.tsx`:
+
+<RegistrySource name="soundwave" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Soundwave } from "@/components/panelui/soundwave"
+```
+
+```tsx
+<Soundwave variant="dots" state="listening" level={level} />
+
+<Soundwave variant="radial" state="speaking">
+  <Soundwave.Center>
+    <Avatar name="Khalid Abdi" size="xl" />
+  </Soundwave.Center>
+</Soundwave>
+```
+
+## Composition
+
+```tsx
+<Soundwave>
+  <Soundwave.Center />
+</Soundwave>
+```
+
+- **`Soundwave.Center`** — What sits in the middle of a `radial` or `ring` wave, such as an avatar or a figure. It is sized to the hole and centred in it. The other looks have no middle and do not use it.
+
+## Examples
+
+### Capsules
+
+A few large capsules, for the space above a microphone button. Each capsule moves at its own pace and the middle ones lead, so the group follows one level without moving as a block.
+
+<ComponentPreview name="soundwave/pills" height={220}>
+
+```tsx lineNumbers
+'use client';
+
+import { Soundwave } from '@/components/panelui/soundwave';
+
+export default function SoundwavePills() {
+  return <Soundwave variant="pills" state="listening" height={112} barWidth={30} barGap={12} />;
+}
+```
+
+</ComponentPreview>
+
+### Metering bars
+
+`static` gives every bar a share of the current level, for a live meter. `scrolling` keeps a history that slides left with the newest sample at the right edge, for a recording in progress. `centered={false}` grows the bars up from the bottom.
+
+<ComponentPreview name="soundwave/bars" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { Soundwave } from '@/components/panelui/soundwave';
+
+export default function SoundwaveBars() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-8">
+      {/* Every bar takes a share of the level now. */}
+      <Soundwave variant="bars" mode="static" height={56} />
+      {/* A history that slides left, newest at the right edge. */}
+      <Soundwave variant="bars" mode="scrolling" centered={false} bars={48} barWidth={3} height={40} fadeEdges />
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Travelling wave
+
+One line, tapered to nothing at both ends so it meets the edges flat. Use it while an assistant is speaking.
+
+<ComponentPreview name="soundwave/line" height={200}>
+
+```tsx lineNumbers
+'use client';
+
+import { Soundwave } from '@/components/panelui/soundwave';
+
+export default function SoundwaveLine() {
+  return <Soundwave variant="line" state="speaking" height={96} color="primary" className="max-w-md" />;
+}
+```
+
+</ComponentPreview>
+
+### A field of dots
+
+`dots` lights a grid of dots into a wave, column by column. Unlit dots stay faintly visible, so the field keeps its shape when the voice is quiet. It takes `static`, `scrolling` and `levels`, as `bars` does.
+
+<ComponentPreview name="soundwave/dots" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { Soundwave } from '@/components/panelui/soundwave';
+
+export default function SoundwaveDots() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-8">
+      {/* Lit out from the middle, each column its own share of the level. */}
+      <Soundwave variant="dots" color="success" height={64} />
+      {/* A history, newest on the right, growing up from the bottom row. */}
+      <Soundwave variant="dots" mode="scrolling" centered={false} color="chart-4" barWidth={3} barGap={2} height={40} />
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Spokes round a person
+
+`radial` draws spokes round a ring, with `Soundwave.Center` in the middle for an avatar. `height` is the diameter. Each spoke is solid near the ring and fainter at its tip, and a glow behind it grows with the level.
+
+<ComponentPreview name="soundwave/radial" height={260}>
+
+```tsx lineNumbers
+'use client';
+
+import { Avatar } from '@/components/panelui/avatar';
+import { Soundwave } from '@/components/panelui/soundwave';
+
+export default function SoundwaveRadial() {
+  return (
+    <Soundwave variant="radial" state="speaking" color="chart-2" label="Khalid Abdi, speaking">
+      <Soundwave.Center>
+        <Avatar name="Khalid Abdi" src="https://avatars.githubusercontent.com/u/127331761?v=4" size="xl" />
+      </Soundwave.Center>
+    </Soundwave>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A conversation
+
+One `radial` wave per person, in the same colour as their avatar. The person speaking gets `state="speaking"` and the others `idle`, which leaves them short spokes rather than nothing, so everyone on the call stays visible. In an app, drive each wave with that person's own `level`.
+
+<ComponentPreview name="soundwave/conversation" height={300}>
+
+```tsx lineNumbers
+'use client';
+
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { Avatar } from '@/components/panelui/avatar';
+import { Soundwave } from '@/components/panelui/soundwave';
+
+const PEOPLE = [
+  { name: 'Khalid Abdi', src: 'https://avatars.githubusercontent.com/u/127331761?v=4', color: 'chart-2' },
+  { name: 'Rhea Lindqvist', color: 'chart-4' },
+] as const;
+
+/** How long each turn lasts, in seconds: people do not take turns on a beat. */
+const TURNS = [4.2, 3.1, 5.4, 2.6, 3.8, 4.6];
+
+const WIDE = '(min-width: 480px)';
+const subscribe = (onChange: () => void) => {
+  const query = window.matchMedia(WIDE);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+};
+
+export default function SoundwaveConversation() {
+  const [turn, setTurn] = useState(0);
+  // Two side by side still fit on a phone, at a smaller diameter.
+  const wide = useSyncExternalStore(subscribe, () => window.matchMedia(WIDE).matches, () => true);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setTurn((value) => value + 1), TURNS[turn % TURNS.length]! * 1000);
+    return () => window.clearTimeout(timer);
+  }, [turn]);
+
+  return (
+    <div className="flex items-start justify-center gap-4 sm:gap-10">
+      {PEOPLE.map((person, index) => {
+        const speaking = turn % 2 === index;
+        return (
+          <div key={person.name} className="flex flex-col items-center gap-3">
+            <Soundwave
+              variant="radial"
+              state={speaking ? 'speaking' : 'idle'}
+              color={person.color}
+              height={wide ? 168 : 128}
+              label={`${person.name}, ${speaking ? 'speaking' : 'listening'}`}
+            >
+              <Soundwave.Center>
+                <Avatar name={person.name} src={'src' in person ? person.src : undefined} color={person.color} size={wide ? 'xl' : 'lg'} />
+              </Soundwave.Center>
+            </Soundwave>
+            <p className="flex flex-col items-center text-sm font-medium">
+              {person.name}
+              <span className="font-normal text-muted-foreground">{speaking ? 'Speaking' : 'Listening'}</span>
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Rings of dots
+
+`ring` lights rings of dots outward from the middle, one reach for each angle. Given `levels` it draws them still: here one value for each hour of a day, read clockwise from midnight at the top. With a `level` instead it moves like the other looks.
+
+<ComponentPreview name="soundwave/ring" height={280}>
+
+```tsx lineNumbers
+'use client';
+
+import { Soundwave } from '@/components/panelui/soundwave';
+import { Stat } from '@/components/panelui/stat';
+
+/** Minutes of voice input in each hour of one day, from midnight, scaled 0–1 against the busiest hour. */
+const DAY = [
+  0.04, 0.02, 0.02, 0.03, 0.05, 0.12, 0.3, 0.55, 0.82, 0.9, 0.74, 0.62, 0.48, 0.58, 0.7, 0.66, 0.6, 1, 0.86,
+  0.64, 0.42, 0.3, 0.16, 0.08,
+];
+
+export default function SoundwaveRing() {
+  return (
+    <Soundwave variant="ring" levels={DAY} color="chart-1" label="Voice input by hour, busiest at 5 pm">
+      <Soundwave.Center>
+        <Stat>
+          <Stat.Content className="items-center">
+            <Stat.Value size="sm">
+              3<Stat.Unit>h</Stat.Unit> 40<Stat.Unit>m</Stat.Unit>
+            </Stat.Value>
+            <Stat.Label>spoken today</Stat.Label>
+          </Stat.Content>
+        </Stat>
+      </Soundwave.Center>
+    </Soundwave>
+  );
+}
+```
+
+</ComponentPreview>
+
+### States
+
+With no `level`, `state` picks the motion: `idle` barely moves, `listening` and `speaking` run several waves at unrelated speeds, and `thinking` is slower and shallower. `state` also sets what a screen reader announces, whether or not a level is passed.
+
+<ComponentPreview name="soundwave/states" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { useState } from 'react';
+import { Soundwave, type SoundwaveState } from '@/components/panelui/soundwave';
+import { Tabs } from '@/components/panelui/tabs';
+
+const STATES: SoundwaveState[] = ['idle', 'listening', 'thinking', 'speaking'];
+
+export default function SoundwaveStates() {
+  const [state, setState] = useState<SoundwaveState>('listening');
+  return (
+    <div className="flex w-full max-w-md flex-col items-center gap-8">
+      <Soundwave variant="pills" state={state} height={96} />
+      <Tabs value={state} onValueChange={(value) => setState(value as SoundwaveState)}>
+        <Tabs.List aria-label="State">
+          {STATES.map((value) => (
+            <Tabs.Trigger key={value} value={value} className="capitalize">
+              {value}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+      </Tabs>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### From the microphone
+
+Pass a ref as `level` and write each reading into `ref.current`. The wave reads it on its next frame and nothing re-renders. Here the browser's audio analyser measures loudness, which is converted from decibels to a value from 0 to 1. Nothing is recorded.
+
+<ComponentPreview name="soundwave/microphone" height={280}>
+
+```tsx lineNumbers
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/panelui/button';
+import { Soundwave } from '@/components/panelui/soundwave';
+
+type Status = 'off' | 'asking' | 'on' | 'refused';
+
+export default function SoundwaveMicrophone() {
+  const level = useRef(0);
+  const [status, setStatus] = useState<Status>('off');
+  const stopRef = useRef<() => void>(() => {});
+
+  useEffect(() => () => stopRef.current(), []);
+
+  async function start() {
+    setStatus('asking');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const context = new AudioContext();
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 512;
+      context.createMediaStreamSource(stream).connect(analyser);
+      const samples = new Float32Array(analyser.fftSize);
+      let frame = 0;
+      const read = () => {
+        analyser.getFloatTimeDomainData(samples);
+        let sum = 0;
+        for (const sample of samples) sum += sample * sample;
+        // Loudness in dBFS is negative and logarithmic; the wave wants 0 to 1.
+        const db = 20 * Math.log10(Math.sqrt(sum / samples.length) || 1e-8);
+        level.current = Math.max(0, Math.min(1, (db + 60) / 50));
+        frame = requestAnimationFrame(read);
+      };
+      read();
+      stopRef.current = () => {
+        cancelAnimationFrame(frame);
+        stream.getTracks().forEach((track) => track.stop());
+        void context.close();
+        level.current = 0;
+      };
+      setStatus('on');
+    } catch {
+      setStatus('refused');
+    }
+  }
+
+  function stop() {
+    stopRef.current();
+    stopRef.current = () => {};
+    setStatus('off');
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      {/* With no level the wave runs its own motion, so it is never blank. */}
+      <Soundwave
+        variant="pills"
+        level={status === 'on' ? level : undefined}
+        state={status === 'on' ? 'listening' : 'idle'}
+        sensitivity={1.4}
+        height={96}
+      />
+      <Button variant={status === 'on' ? 'outline' : 'default'} onClick={status === 'on' ? stop : start} disabled={status === 'asking'}>
+        {status === 'on' ? 'Stop' : 'Use my microphone'}
+      </Button>
+      <p aria-live="polite" className="text-xs text-muted-foreground">
+        {status === 'refused'
+          ? 'No microphone, or permission was refused.'
+          : status === 'on'
+            ? 'Nothing is recorded or sent anywhere.'
+            : 'The level is read in this page and goes nowhere.'}
+      </p>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A voice note
+
+`levels` is the shape of a finished recording: keep a few dozen numbers beside the file while recording, rather than decoding the audio to draw it. With `levels` the wave is still. `progress` is the playhead: bars behind it keep full ink and the rest are dimmed.
+
+<ComponentPreview name="soundwave/voice-note" height={160}>
+
+```tsx lineNumbers
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/panelui/button';
+import { Soundwave } from '@/components/panelui/soundwave';
+
+/** The stored shape of a 14-second note: forty numbers kept beside the file. */
+const NOTE = [
+  0.12, 0.3, 0.52, 0.7, 0.46, 0.28, 0.62, 0.86, 0.94, 0.72, 0.4, 0.22, 0.34, 0.58, 0.8, 0.66, 0.38, 0.18,
+  0.1, 0.26, 0.48, 0.74, 0.9, 1, 0.82, 0.56, 0.32, 0.44, 0.68, 0.6, 0.36, 0.2, 0.42, 0.64, 0.5, 0.3, 0.16,
+  0.24, 0.14, 0.08,
+];
+const LENGTH = 14;
+
+function PlayIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="6" y="5" width="4" height="14" rx="1.25" />
+      <rect x="14" y="5" width="4" height="14" rx="1.25" />
+    </svg>
+  );
+}
+
+export default function SoundwaveVoiceNote() {
+  const [playing, setPlaying] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const started = useRef(0);
+
+  // Stands in for an audio element's `currentTime`.
+  useEffect(() => {
+    if (!playing) return;
+    started.current = performance.now() - seconds * 1000;
+    const timer = window.setInterval(() => {
+      const elapsed = (performance.now() - started.current) / 1000;
+      if (elapsed >= LENGTH) {
+        setPlaying(false);
+        setSeconds(0);
+      } else setSeconds(elapsed);
+    }, 50);
+    return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing]);
+
+  const shown = Math.floor(playing || seconds ? seconds : LENGTH);
+  return (
+    <div className="flex w-full max-w-xs items-center gap-3">
+      <Button
+        size="icon"
+        shape="pill"
+        aria-label={playing ? 'Pause' : 'Play voice note'}
+        onClick={() => setPlaying((value) => !value)}
+      >
+        {playing ? <PauseIcon /> : <PlayIcon />}
+      </Button>
+      <Soundwave
+        variant="bars"
+        levels={NOTE}
+        progress={seconds / LENGTH}
+        bars={40}
+        barWidth={2.5}
+        height={32}
+        label="Voice note, 14 seconds"
+        className="flex-1"
+      />
+      <span className="w-8 text-xs text-muted-foreground tabular-nums">0:{String(shown).padStart(2, '0')}</span>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Colours
+
+`color` takes a role from the theme. Left unset, the wave is drawn in the text colour of whatever contains it. `trackColor` sets the unlit dots of `dots` and `ring`, and the unplayed part of a recording. `gradient` spreads several roles across a strip.
+
+<ComponentPreview name="soundwave/colours" height={360}>
+
+```tsx lineNumbers
+'use client';
+
+import { Soundwave } from '@/components/panelui/soundwave';
+
+const NOTE = [0.2, 0.45, 0.7, 0.5, 0.3, 0.65, 0.9, 0.75, 0.4, 0.25, 0.55, 0.8, 1, 0.7, 0.45, 0.3, 0.5, 0.35, 0.2, 0.15];
+
+export default function SoundwaveColours() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-6">
+      {/* Unset: the text colour of whatever it sits in. */}
+      <Soundwave variant="bars" height={40} />
+      <Soundwave variant="bars" height={40} color="info" />
+      <Soundwave variant="dots" height={40} color="warning" />
+      {/* A recording two-thirds played, with its own colour for the rest. */}
+      <Soundwave variant="bars" height={32} bars={48} levels={NOTE} progress={0.66} color="success" trackColor="chart-3" />
+      {/* Across the wave, left to right. */}
+      <Soundwave variant="line" height={56} gradient={['chart-2', 'info', 'chart-4']} />
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Ambient glow
+
+`ambient` fills its nearest positioned parent with a glow rising from the bottom edge and a rim of light round the rest, both growing with the level. It takes no pointer events, so put it behind the content. It defaults to `info`, since a glow in the text colour reads as a shadow.
+
+<ComponentPreview name="soundwave/ambient" height={320}>
+
+```tsx lineNumbers
+'use client';
+
+import { Card } from '@/components/panelui/card';
+import { Soundwave } from '@/components/panelui/soundwave';
+
+export default function SoundwaveAmbient() {
+  return (
+    <Card className="relative h-64 w-full max-w-sm justify-center overflow-hidden">
+      <Soundwave variant="ambient" state="listening" />
+      <Card.Header className="relative text-center">
+        <Card.Title>Go ahead, I'm listening</Card.Title>
+        <Card.Description>Ask about your week's schedule</Card.Description>
+      </Card.Header>
+    </Card>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Soundwave
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `SoundwaveVariant` | `'pills'` | Which look to draw: `pills` for a few capsules over a microphone button, `bars` for a metering strip, `line` for a travelling wave, `ambient` for a glow that fills its parent, `dots` for a field of dots lit into a wave, `radial` for spokes around a centre, and `ring` for rings of dots lit outward by angle. |
+| `state` | `SoundwaveState` | `'listening'` | What the app is doing. With no `level` it picks the motion the wave runs on its own, and it always sets what a screen reader announces. |
+| `level` | `number \| RefObject<number \| null>` | — | How loud the input is now, from 0 to 1. Pass a ref and write each reading into `ref.current` to keep updates out of React entirely. Leave it out and the wave runs its own motion for `state`. |
+| `levels` | `readonly number[]` | — | Fixed values, 0 to 1 each: the stored shape of a recording, a frequency analysis, or one value per angle for `ring` (24 for the hours of a day). Resampled to the bar count, and drawn still rather than animated. |
+| `progress` | `number` | — | How far a recording has played, from 0 to 1. Bars and dots behind it keep full ink and the rest are dimmed. `bars` and `dots`, with `levels`. |
+| `bars` | `number` | — | How many capsules, bars or spokes, or how many angles for `ring`. `dots` fits as many columns as the width allows. |
+| `barWidth` | `number` | — | Capsule or bar width, the stroke of `line` and `radial`, or the size of a dot. |
+| `barGap` | `number` | — | Space between capsules, or between dots. `bars` spaces itself across the width. |
+| `height` | `number` | — | Drawing height. For `radial` and `ring` it is the diameter. `ambient` fills its parent instead. |
+| `mode` | `'static' \| 'scrolling'` | `'static'` | `static` gives every bar a share of the current level; `scrolling` keeps a history that slides across, newest at the trailing edge. `bars` and `dots`. |
+| `centered` | `boolean` | `true` | Grow bars and dots from the middle out rather than up from the bottom. Default `true`. |
+| `fadeEdges` | `boolean` | `false` | Fade a strip out at both ends, so it does not stop at a hard edge. |
+| `sensitivity` | `number` | `1` | Multiplier on the incoming level, applied before it is capped at 1. Default `1`. |
+| `speed` | `number` | `1` | Multiplier on the wave's own tempo, including how fast a history scrolls. Default `1`. |
+| `color` | `SoundwaveColor` | — | The ink, as a role from the theme. Left unset the wave is drawn in the text colour of whatever it sits in, which is right on most surfaces; `ambient` defaults to `info`, since a glow in the text colour reads as a shadow. |
+| `gradient` | `readonly SoundwaveColor[]` | — | Colours across the wave instead of one ink, as theme roles: left to right for the strips, up from the bottom for `ambient`. |
+| `trackColor` | `SoundwaveColor` | — | The colour of the unlit dots in `dots` and `ring`, and of the part of a recording not yet played in `bars`. Defaults to the ink, faint. |
+| `paused` | `boolean` | `false` | Hold the current frame. |
+| `label` | `string` | — | What a screen reader calls it. Defaults to the state: "Listening". |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Driving it
+
+`level` is a number from 0 to 1, or a ref holding one. A meter reports dozens of times a second, so for a live microphone use a ref: putting each reading in React state re-renders everything above the wave on every reading. A number is right for something slow, such as a speaking flag from a server.
+
+The level is smoothed with a fast rise and a slow fall, so the wave jumps on a syllable and settles gently instead of flickering on every sample. `sensitivity` multiplies the level before it is capped at 1, for a quiet source.
+
+### Drawing
+
+Each look is one or two SVG paths, and every dot is a round end on a line of no length, so a field of several hundred dots is a single path. Each frame rewrites those paths and changes no React state.
+
+The strips (`bars`, `line` and `dots`) take the width of their container, so give the container a width. `pills`, `radial` and `ring` size themselves from their props.
+
+### When it stops
+
+The wave stops drawing when it is scrolled out of view or its tab is hidden, and starts again when it comes back. `paused` holds the current frame. With reduced motion turned on, the wave holds a still frame instead of moving.
+
+A wave with `levels` and no `scrolling` never animates, so a list of twenty voice notes costs nothing until one plays.
+
+### Screen readers
+
+The wave is one image, announced by its state ("Listening"). Pass `label` to say more, such as who is speaking. What is inside `Soundwave.Center` is part of that image and is not read separately.

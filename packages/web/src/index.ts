@@ -474,3 +474,12 @@ export {
   type MessageAttachmentsProps,
   type MessageAttachmentProps,
 } from './components/message';
+export {
+  Soundwave,
+  SoundwaveCenter,
+  type SoundwaveProps,
+  type SoundwaveCenterProps,
+  type SoundwaveVariant,
+  type SoundwaveState,
+  type SoundwaveColor,
+} from './components/soundwave';
