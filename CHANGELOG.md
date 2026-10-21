@@ -9,6 +9,17 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.113.1] — 2026-10-21
+
+### Fixed
+
+- **Taps right after an overlay closes.** After a BottomSheet, Dialog, Popover, DatePicker or
+  Select closed, the first tap on the screen behind it did nothing, so reopening one straight
+  away took two or three taps. Each overlay stays on screen for a moment after it closes, to
+  animate out, and in that moment it still took touches. It now lets them through as soon as it
+  starts to leave, including a sheet swiped away, which used to count as open until the swipe
+  landed. ImageViewer had the same problem while the picture flew back, and is fixed too.
+
 ## [0.113.0] — 2026-10-18
 
 ### Added
