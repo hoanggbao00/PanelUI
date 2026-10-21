@@ -26,7 +26,10 @@ for (const dir of fs.readdirSync(root).sort()) {
 
   // Exported prop interfaces, with each field's JSDoc.
   const interfaces = [];
-  const re = /export interface (\w+Props)([^{]*)\{([\s\S]*?)\n\}/g;
+  // The web collection also documents a hook's options and what it returns.
+  const re = process.env.PANELUI_EXTRACT_ROOT
+    ? /export interface (\w+(?:Props|Options|Controls))([^{]*)\{([\s\S]*?)\n\}/g
+    : /export interface (\w+Props)([^{]*)\{([\s\S]*?)\n\}/g;
   let m;
   while ((m = re.exec(src))) {
     const [, name, ext, body] = m;

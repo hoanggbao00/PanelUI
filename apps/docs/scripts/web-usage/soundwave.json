@@ -2,10 +2,10 @@
   "slug": "soundwave",
   "demo": "overview",
   "demoOptions": {
-    "height": 200
+    "height": 240
   },
-  "intro": "Use it to show that an app is hearing someone, or that someone is speaking: over a microphone button, in a recording row, beside each person on a call, or behind a whole voice screen.\n\nIt draws a level and does not record one. Your app owns the microphone and passes a number from 0 to 1, so there is no audio dependency here, and the same wave works with a live meter, a remote speaker's level or a stored recording.\n\nWith no level it runs its own motion for the current `state`, which is enough to build and review a voice screen before any audio exists.\n\nFor a spinner while an answer is being written, use a loader. For a recording's length and position alone, a progress bar is clearer.",
-  "usage": "<Soundwave variant=\"dots\" state=\"listening\" level={level} />\n\n<Soundwave variant=\"radial\" state=\"speaking\">\n  <Soundwave.Center>\n    <Avatar name=\"Khalid Abdi\" size=\"xl\" />\n  </Soundwave.Center>\n</Soundwave>",
+  "intro": "Use it to show that an app is hearing someone, or that someone is speaking: over a microphone button, in a recording row, beside each person on a call, or behind a whole voice screen.\n\nIt draws a level and does not record one. Pass it a microphone, a call or an audio element as `source` and it measures the sound itself, or pass a `level` from 0 to 1 that you measure. `useMicrophone` asks for the microphone and gives you the stream.\n\nWith no level it runs its own motion for the current `state`, which is enough to build and review a voice screen before any audio exists.\n\nFor a spinner while an answer is being written, use a loader. For a recording's length and position alone, a progress bar is clearer.",
+  "usage": "const mic = useMicrophone()\n\n<Soundwave variant=\"dots\" source={mic.stream} />\n<Button onClick={mic.toggle}>{mic.active ? 'Stop' : 'Speak'}</Button>\n\n<Soundwave variant=\"radial\" state=\"speaking\">\n  <Soundwave.Center>\n    <Avatar name=\"Khalid Abdi\" size=\"xl\" />\n  </Soundwave.Center>\n</Soundwave>",
   "anatomy": "<Soundwave>\n  <Soundwave.Center />\n</Soundwave>",
   "parts": {
     "Center": "What sits in the middle of a `radial` or `ring` wave, such as an avatar or a figure. It is sized to the hole and centred in it. The other looks have no middle and do not use it."
@@ -15,74 +15,82 @@
       "title": "Capsules",
       "description": "A few large capsules, for the space above a microphone button. Each capsule moves at its own pace and the middle ones lead, so the group follows one level without moving as a block.",
       "demo": "pills",
-      "height": 220
+      "height": 284
     },
     {
       "title": "Metering bars",
       "description": "`static` gives every bar a share of the current level, for a live meter. `scrolling` keeps a history that slides left with the newest sample at the right edge, for a recording in progress. `centered={false}` grows the bars up from the bottom.",
       "demo": "bars",
-      "height": 240
+      "height": 296
     },
     {
       "title": "Travelling wave",
       "description": "One line, tapered to nothing at both ends so it meets the edges flat. Use it while an assistant is speaking.",
       "demo": "line",
-      "height": 200
+      "height": 264
     },
     {
       "title": "A field of dots",
       "description": "`dots` lights a grid of dots into a wave, column by column. Unlit dots stay faintly visible, so the field keeps its shape when the voice is quiet. It takes `static`, `scrolling` and `levels`, as `bars` does.",
       "demo": "dots",
-      "height": 240
+      "height": 296
     },
     {
       "title": "Spokes round a person",
       "description": "`radial` draws spokes round a ring, with `Soundwave.Center` in the middle for an avatar. `height` is the diameter. Each spoke is solid near the ring and fainter at its tip, and a glow behind it grows with the level.",
       "demo": "radial",
-      "height": 260
+      "height": 324
     },
     {
       "title": "A conversation",
-      "description": "One `radial` wave per person, in the same colour as their avatar. The person speaking gets `state=\"speaking\"` and the others `idle`, which leaves them short spokes rather than nothing, so everyone on the call stays visible. In an app, drive each wave with that person's own `level`.",
+      "description": "One `radial` wave per person, in the same colour as their avatar. The person speaking gets `state=\"speaking\"` and the others `idle`, which leaves them short spokes rather than nothing, so everyone on the call stays visible. In an app, pass each person's own stream as `source`; here the microphone speaks for Khalid.",
       "demo": "conversation",
-      "height": 300
+      "height": 360
     },
     {
       "title": "Rings of dots",
-      "description": "`ring` lights rings of dots outward from the middle, one reach for each angle. Given `levels` it draws them still: here one value for each hour of a day, read clockwise from midnight at the top. With a `level` instead it moves like the other looks.",
+      "description": "`ring` lights rings of dots outward from the middle, one reach for each angle. Given `levels` it draws them still: here one value for each hour of a day, read clockwise from midnight at the top. With a `source` or a `level` it moves like the other looks, which the microphone button shows.",
       "demo": "ring",
-      "height": 280
+      "height": 344
     },
     {
       "title": "States",
       "description": "With no `level`, `state` picks the motion: `idle` barely moves, `listening` and `speaking` run several waves at unrelated speeds, and `thinking` is slower and shallower. `state` also sets what a screen reader announces, whether or not a level is passed.",
       "demo": "states",
+      "height": 304
+    },
+    {
+      "title": "Your own audio",
+      "description": "`source` takes the sound itself: the `stream` from `useMicrophone`, a `MediaStream` from a call, or an `<audio>` or `<video>` element. The wave measures it on every frame and nothing re-renders. Keep the element in state rather than a ref, so the wave hears about it once it has mounted.",
+      "demo": "audio",
       "height": 240
     },
     {
-      "title": "From the microphone",
-      "description": "Pass a ref as `level` and write each reading into `ref.current`. The wave reads it on its next frame and nothing re-renders. Here the browser's audio analyser measures loudness, which is converted from decibels to a value from 0 to 1. Nothing is recorded.",
-      "demo": "microphone",
-      "height": 280
-    },
-    {
       "title": "A voice note",
-      "description": "`levels` is the shape of a finished recording: keep a few dozen numbers beside the file while recording, rather than decoding the audio to draw it. With `levels` the wave is still. `progress` is the playhead: bars behind it keep full ink and the rest are dimmed.",
+      "description": "`levels` is the shape of a finished recording: sample `mic.level.current` while recording and keep the numbers beside the file, rather than decoding the audio to draw it. With `levels` the wave is still, and `progress` is the playhead: bars behind it keep full ink and the rest are dimmed. Press the microphone to record a note of your own, then play it back.",
       "demo": "voice-note",
-      "height": 160
+      "height": 180
     },
     {
       "title": "Colours",
       "description": "`color` takes a role from the theme. Left unset, the wave is drawn in the text colour of whatever contains it. `trackColor` sets the unlit dots of `dots` and `ring`, and the unplayed part of a recording. `gradient` spreads several roles across a strip.",
       "demo": "colours",
-      "height": 360
+      "height": 420
     },
     {
       "title": "Ambient glow",
       "description": "`ambient` fills its nearest positioned parent with a glow rising from the bottom edge and a rim of light round the rest, both growing with the level. It takes no pointer events, so put it behind the content. It defaults to `info`, since a glow in the text colour reads as a shadow.",
       "demo": "ambient",
-      "height": 320
+      "height": 360
     }
   ],
-  "notes": "### Driving it\n\n`level` is a number from 0 to 1, or a ref holding one. A meter reports dozens of times a second, so for a live microphone use a ref: putting each reading in React state re-renders everything above the wave on every reading. A number is right for something slow, such as a speaking flag from a server.\n\nThe level is smoothed with a fast rise and a slow fall, so the wave jumps on a syllable and settles gently instead of flickering on every sample. `sensitivity` multiplies the level before it is capped at 1, for a quiet source.\n\n### Drawing\n\nEach look is one or two SVG paths, and every dot is a round end on a line of no length, so a field of several hundred dots is a single path. Each frame rewrites those paths and changes no React state.\n\nThe strips (`bars`, `line` and `dots`) take the width of their container, so give the container a width. `pills`, `radial` and `ring` size themselves from their props.\n\n### When it stops\n\nThe wave stops drawing when it is scrolled out of view or its tab is hidden, and starts again when it comes back. `paused` holds the current frame. With reduced motion turned on, the wave holds a still frame instead of moving.\n\nA wave with `levels` and no `scrolling` never animates, so a list of twenty voice notes costs nothing until one plays.\n\n### Screen readers\n\nThe wave is one image, announced by its state (\"Listening\"). Pass `label` to say more, such as who is speaking. What is inside `Soundwave.Center` is part of that image and is not read separately."
+  "notes": "### Sound in\n\nThere are three ways to give the wave something to draw, from least work to most control.\n\n- **`source`**: a `MediaStream` or an `<audio>` or `<video>` element. The wave measures it with the browser's audio analyser on every frame. A media file has to be on the same site or sent with CORS headers (`crossOrigin=\"anonymous\"` on the element); otherwise the browser hides its sound from the page and the wave stays still.\n- **`useMicrophone()`**: asks for the microphone on `start`, which has to be called from a click, and gives back `stream` for `source`, a `level` ref, a `status` and `stop`. The microphone is released on `stop` and when the component unmounts. A refused permission or a missing microphone sets `status` to `denied`.\n- **`level`**: a number from 0 to 1, or a ref holding one. `useAudioLevel(source)` returns such a ref, for when the reading is needed elsewhere too, such as to keep a recording's shape. Use a plain number for something slow, such as a speaking flag from a server.\n\nWith none of them the wave runs its own motion for `state`, so a screen can be built before any audio exists.\n\nThe level is smoothed with a fast rise and a slow fall, so the wave jumps on a syllable and settles gently instead of flickering on every sample. `sensitivity` multiplies it before it is capped at 1, for a quiet source; `useMicrophone({ floor: -45 })` ignores more of a noisy room.\n\n### Drawing\n\nEach look is one or two SVG paths, and every dot is a round end on a line of no length, so a field of several hundred dots is a single path. Each frame rewrites those paths and changes no React state.\n\nThe strips (`bars`, `line` and `dots`) take the width of their container, so give the container a width. `pills`, `radial` and `ring` size themselves from their props.\n\n### When it stops\n\nThe wave stops drawing when it is scrolled out of view or its tab is hidden, and starts again when it comes back. `paused` holds the current frame. With reduced motion turned on, the wave holds a still frame instead of moving.\n\nA wave with `levels` and no `scrolling` never animates, so a list of twenty voice notes costs nothing until one plays.\n\n### Screen readers\n\nThe wave is one image, announced by its state (\"Listening\"). Pass `label` to say more, such as who is speaking. What is inside `Soundwave.Center` is part of that image and is not read separately.",
+  "extraImports": [
+    "useMicrophone"
+  ],
+  "interfaceNames": {
+    "UseMicrophoneOptions": "useMicrophone(options)",
+    "MicrophoneControls": "useMicrophone() returns",
+    "AudioLevelOptions": "useAudioLevel(source, options)"
+  }
 }

@@ -428,6 +428,7 @@ const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : us
 const isRef = (value: unknown): value is RefObject<number | null> =>
   typeof value === 'object' && value !== null && 'current' in value;
 
+
 /* -------------------------------------------------------------------------- */
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -514,6 +515,13 @@ export interface SoundwaveProps extends Omit<ComponentProps<'div'>, 'color' | 'c
    */
   level?: number | RefObject<number | null>;
   /**
+   * Sound to draw, in place of `level`: a `MediaStream` from a microphone or
+   * a call, or an `<audio>` or `<video>` element. A media file has to be on
+   * the same site or sent with CORS headers, or the browser hides its sound
+   * from the page and the wave stays still.
+   */
+  source?: SoundwaveSource | null;
+  /**
    * Fixed values, 0 to 1 each: the stored shape of a recording, a frequency
    * analysis, or one value per angle for `ring` (24 for the hours of a day).
    * Resampled to the bar count, and drawn still rather than animated.
@@ -537,13 +545,13 @@ export interface SoundwaveProps extends Omit<ComponentProps<'div'>, 'color' | 'c
    * history that slides across, newest at the trailing edge. `bars` and `dots`.
    */
   mode?: 'static' | 'scrolling';
-  /** Grow bars and dots from the middle out rather than up from the bottom. Default `true`. */
+  /** Grow bars and dots from the middle out rather than up from the bottom. */
   centered?: boolean;
   /** Fade a strip out at both ends, so it does not stop at a hard edge. */
   fadeEdges?: boolean;
-  /** Multiplier on the incoming level, applied before it is capped at 1. Default `1`. */
+  /** Multiplier on the incoming level, applied before it is capped at 1. */
   sensitivity?: number;
-  /** Multiplier on the wave's own tempo, including how fast a history scrolls. Default `1`. */
+  /** Multiplier on the wave's own tempo, including how fast a history scrolls. */
   speed?: number;
   /**
    * The ink, as a role from the theme. Left unset the wave is drawn in the
@@ -574,7 +582,8 @@ export interface SoundwaveProps extends Omit<ComponentProps<'div'>, 'color' | 'c
 function SoundwaveRoot({
   variant = 'pills',
   state = 'listening',
-  level,
+  level: levelProp,
+  source,
   levels,
   progress,
   bars,
@@ -596,6 +605,8 @@ function SoundwaveRoot({
   children,
   ...props
 }: SoundwaveProps) {
+  const sourceLevel = useAudioLevel(source);
+  const level = source ? sourceLevel : levelProp;
   const defaults = DEFAULTS[variant];
   const count = bars ?? defaults.bars;
   const w = barWidth ?? defaults.barWidth;
@@ -860,3 +871,190 @@ SoundwaveCenter.displayName = 'Soundwave.Center';
 export const Soundwave = Object.assign(SoundwaveRoot, { Center: SoundwaveCenter });
 
 export { SoundwaveCenter };
+
+/* -------------------------------------------------------------------------- */
+/* Audio                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** Something with sound in it: a microphone or call stream, or an `<audio>` or `<video>` element. */
+export type SoundwaveSource = MediaStream | HTMLMediaElement;
+
+export interface AudioLevelOptions {
+  /**
+   * The quietest sound that still moves the wave, in decibels below full
+   * scale. Default `-60`. Raise it towards `-45` in a noisy room.
+   */
+  floor?: number;
+  /** The loudness that fills the wave, in decibels below full scale. Default `-12`. */
+  ceiling?: number;
+}
+
+let sharedContext: AudioContext | null = null;
+
+/** One audio context for every wave on the page. Browsers limit how many may run. */
+function audioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  if (!sharedContext) {
+    const Context =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Context) return null;
+    sharedContext = new Context();
+  }
+  // Created or resumed outside a click, it starts suspended. Asking again is harmless.
+  if (sharedContext.state === 'suspended') void sharedContext.resume().catch(() => {});
+  return sharedContext;
+}
+
+/*
+ * An element can be routed into an audio graph only once, so its node is
+ * kept. The node is wired to the speakers as well as to the analyser, since
+ * routing an element through the graph otherwise takes its sound away.
+ */
+const elementNodes = new WeakMap<HTMLMediaElement, MediaElementAudioSourceNode>();
+
+function sourceNode(context: AudioContext, source: SoundwaveSource): AudioNode {
+  if (typeof MediaStream !== 'undefined' && source instanceof MediaStream) {
+    // Not wired to the speakers: a microphone played back is feedback.
+    return context.createMediaStreamSource(source);
+  }
+  const element = source as HTMLMediaElement;
+  let node = elementNodes.get(element);
+  if (!node) {
+    node = context.createMediaElementSource(element);
+    node.connect(context.destination);
+    elementNodes.set(element, node);
+  }
+  return node;
+}
+
+/**
+ * How loud `source` is, from 0 to 1, kept in a ref that is updated every
+ * frame. Pass the ref to `Soundwave` as `level`, or read `ref.current`
+ * yourself. With no source the ref holds 0.
+ */
+export function useAudioLevel(
+  source: SoundwaveSource | null | undefined,
+  { floor = -60, ceiling = -12 }: AudioLevelOptions = {}
+): RefObject<number> {
+  const level = useRef(0);
+  useEffect(() => {
+    level.current = 0;
+    if (!source) return;
+    const context = audioContext();
+    if (!context) return;
+    let input: AudioNode;
+    try {
+      input = sourceNode(context, source);
+    } catch {
+      return;
+    }
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    input.connect(analyser);
+    const samples = new Float32Array(analyser.fftSize);
+    const resume = () => void context.resume().catch(() => {});
+    const element = typeof MediaStream !== 'undefined' && source instanceof MediaStream ? null : (source as HTMLMediaElement);
+    element?.addEventListener('play', resume);
+    let frame = 0;
+    const read = () => {
+      analyser.getFloatTimeDomainData(samples);
+      let sum = 0;
+      for (let i = 0; i < samples.length; i++) sum += samples[i]! * samples[i]!;
+      // Loudness in decibels is negative and logarithmic; the wave wants 0 to 1.
+      const db = 20 * Math.log10(Math.sqrt(sum / samples.length) || 1e-9);
+      level.current = clamp01((db - floor) / (ceiling - floor));
+      frame = requestAnimationFrame(read);
+    };
+    read();
+    return () => {
+      cancelAnimationFrame(frame);
+      element?.removeEventListener('play', resume);
+      try {
+        input.disconnect(analyser);
+      } catch {
+        // Already gone with its context.
+      }
+      if (!element) input.disconnect();
+      level.current = 0;
+    };
+  }, [source, floor, ceiling]);
+  return level;
+}
+
+export type MicrophoneStatus = 'idle' | 'requesting' | 'listening' | 'denied' | 'unsupported';
+
+export interface UseMicrophoneOptions extends AudioLevelOptions {
+  /** Passed to `getUserMedia` as `audio`, to pick a device or change its processing. */
+  constraints?: MediaTrackConstraints;
+}
+
+export interface MicrophoneControls {
+  /** How loud the microphone is, from 0 to 1. Pass it to `Soundwave` as `level`. */
+  level: RefObject<number>;
+  /** The live stream while listening, for a recorder or a call. `null` otherwise. */
+  stream: MediaStream | null;
+  /** `requesting` while the browser asks for permission, `denied` if it was refused or there is no microphone. */
+  status: MicrophoneStatus;
+  /** Whether it is listening now. */
+  active: boolean;
+  /** Ask for the microphone and start listening. Call it from a click: browsers only allow sound to start from one. */
+  start: () => Promise<void>;
+  /** Stop listening and release the microphone, which turns the browser's recording light off. */
+  stop: () => void;
+  /** `start` when stopped, `stop` when listening. */
+  toggle: () => void;
+}
+
+/**
+ * The microphone, ready to draw. Nothing is asked for until `start`, and the
+ * microphone is released on `stop` and when the component unmounts.
+ *
+ * ```tsx
+ * const mic = useMicrophone();
+ * <Soundwave level={mic.active ? mic.level : undefined} />
+ * <Button onClick={mic.toggle}>{mic.active ? 'Stop' : 'Speak'}</Button>
+ * ```
+ */
+export function useMicrophone({ constraints, ...options }: UseMicrophoneOptions = {}): MicrophoneControls {
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [status, setStatus] = useState<MicrophoneStatus>('idle');
+  const level = useAudioLevel(stream, options);
+  const current = useRef<MediaStream | null>(null);
+  const asking = useRef(false);
+
+  const stop = () => {
+    current.current?.getTracks().forEach((track) => track.stop());
+    current.current = null;
+    setStream(null);
+    setStatus((value) => (value === 'listening' || value === 'requesting' ? 'idle' : value));
+  };
+
+  const start = async () => {
+    if (current.current || asking.current) return;
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setStatus('unsupported');
+      return;
+    }
+    asking.current = true;
+    setStatus('requesting');
+    // Made here, inside the click, so the browser lets it run.
+    audioContext();
+    try {
+      const next = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, ...constraints },
+      });
+      current.current = next;
+      setStream(next);
+      setStatus('listening');
+    } catch {
+      setStatus('denied');
+    } finally {
+      asking.current = false;
+    }
+  };
+
+  useEffect(() => () => current.current?.getTracks().forEach((track) => track.stop()), []);
+
+  const active = status === 'listening' && stream !== null;
+  return { level, stream, status, active, start, stop, toggle: () => (active ? stop() : void start()) };
+}

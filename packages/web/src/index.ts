@@ -477,9 +477,16 @@ export {
 export {
   Soundwave,
   SoundwaveCenter,
+  useAudioLevel,
+  useMicrophone,
   type SoundwaveProps,
   type SoundwaveCenterProps,
   type SoundwaveVariant,
   type SoundwaveState,
   type SoundwaveColor,
+  type SoundwaveSource,
+  type AudioLevelOptions,
+  type UseMicrophoneOptions,
+  type MicrophoneControls,
+  type MicrophoneStatus,
 } from './components/soundwave';
