@@ -929,6 +929,44 @@ function ViewerOverlay({
       if (haptics) runOnJS(selectionTick)();
     };
 
+    /**
+     * Decides a pan that activated without moving, from the first event that
+     * has. Only while the viewer is still open and no pinch has started since:
+     * a close or a second finger arriving first leaves the drag doing nothing.
+     */
+    const resolve = (translationX: number, translationY: number) => {
+      'worklet';
+      if (gestureMode.value !== MODE_UNDECIDED) return;
+      if (phase.value !== PHASE_OPEN || pinching.value) {
+        gestureMode.value = MODE_NONE;
+        return;
+      }
+      decide(translationX, translationY);
+    };
+
+    /** Moves whatever the drag was decided to move. */
+    const follow = (translationX: number, translationY: number) => {
+      'worklet';
+      if (gestureMode.value === MODE_PAN) {
+        const boundX = panBound(fit.width, scale.value, W);
+        const boundY = panBound(fit.height, scale.value, H);
+        tx.value = rubberBandClamp(startX.value + translationX, -boundX, boundX, W);
+        ty.value = rubberBandClamp(startY.value + translationY, -boundY, boundY, H);
+      } else if (gestureMode.value === MODE_PAGE) {
+        pagerX.value = rubberBandClamp(
+          pagerStart.value + sign * translationX,
+          -(count - 1) * pageWidth,
+          0,
+          W
+        );
+      } else if (gestureMode.value === MODE_DISMISS) {
+        dragX.value = translationX;
+        dragY.value = translationY;
+        shrink.value = dragScale(translationY, H);
+        fade.value = dragFade(translationY, H);
+      }
+    };
+
     const pan = Gesture.Pan()
       .maxPointers(1)
       .minDistance(8)
@@ -951,28 +989,17 @@ function ViewerOverlay({
       .onUpdate((event) => {
         'worklet';
         // Activated without a translation: the first update that has moved decides.
-        if (gestureMode.value === MODE_UNDECIDED) decide(event.translationX, event.translationY);
-        if (gestureMode.value === MODE_PAN) {
-          const boundX = panBound(fit.width, scale.value, W);
-          const boundY = panBound(fit.height, scale.value, H);
-          tx.value = rubberBandClamp(startX.value + event.translationX, -boundX, boundX, W);
-          ty.value = rubberBandClamp(startY.value + event.translationY, -boundY, boundY, H);
-        } else if (gestureMode.value === MODE_PAGE) {
-          pagerX.value = rubberBandClamp(
-            pagerStart.value + sign * event.translationX,
-            -(count - 1) * pageWidth,
-            0,
-            W
-          );
-        } else if (gestureMode.value === MODE_DISMISS) {
-          dragX.value = event.translationX;
-          dragY.value = event.translationY;
-          shrink.value = dragScale(event.translationY, H);
-          fade.value = dragFade(event.translationY, H);
-        }
+        resolve(event.translationX, event.translationY);
+        follow(event.translationX, event.translationY);
       })
       .onEnd((event, success) => {
         'worklet';
+        // A quick flick can end before any update has moved, so the end event
+        // may be the first to: decide on it and apply it before acting.
+        if (gestureMode.value === MODE_UNDECIDED) {
+          resolve(event.translationX, event.translationY);
+          follow(event.translationX, event.translationY);
+        }
         const current = gestureMode.value;
         gestureMode.value = MODE_NONE;
         if (current === MODE_PAN) {
