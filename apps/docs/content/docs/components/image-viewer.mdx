@@ -114,6 +114,26 @@ Several triggers under one root. Opening any of them opens at its page, and swip
 </ImageViewer>
 ```
 
+### Right to left
+
+`dir` sets which way the pages run. In `rtl` the next picture sits to the left and a swipe to the right turns to it, so lay the triggers out the same way round. The counter, `index` and the screen reader's next and previous still count in page order. `dir` defaults to `ltr`; to follow the reading direction, pass `useDirection()`.
+
+```tsx
+<ImageViewer dir="rtl">
+  <View className="flex-row-reverse gap-1.5">
+    {photos.map((photo) => (
+      <ImageViewer.Trigger
+        key={photo.id}
+        source={{ uri: photo.uri }}
+        alt={photo.alt}
+        radius={10}
+        className="aspect-square flex-1 rounded-[10px]"
+      />
+    ))}
+  </View>
+</ImageViewer>
+```
+
 ### Captions and a larger copy
 
 `caption` is shown under the picture while it is open; a single tap on the picture hides it along with the close button. `fullSource` loads when the viewer opens and replaces `source` once it arrives, so the page can carry small thumbnails.
@@ -239,6 +259,7 @@ A portrait, a landscape and a panorama, each fitted whole to the screen from a t
 | `closeLabel` | `string` | `'Close'` | Read out for the close button. |
 | `inset` | `number` | `16` | Space kept between the open picture and the edges of the screen, in points. Measured from the safe area at the top and bottom, and the larger of the two is used for both, so the picture stays centred. `0` fills the screen. |
 | `cornerRadius` | `number` | `16` | Corner radius of the open picture, in points. The corners stay this size on screen while the picture is zoomed or dragged. `0` squares them. |
+| `dir` | `'ltr' \| 'rtl'` | `'ltr'` | Which way the gallery runs. In `rtl` the next page sits to the left and a swipe to the right turns to it. Page numbers, `index` and the screen reader's next and previous stay in page order either way. To follow the reading direction, pass `useDirection()`. |
 
 ### ImageViewer.Trigger
 

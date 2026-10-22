@@ -156,6 +156,9 @@ const PHASE_OPENING = 0;
 const PHASE_OPEN = 1;
 const PHASE_CLOSING = 2;
 
+/** Pins a subtree's `left` to the screen's left under a right-to-left layout. */
+const PHYSICAL = { direction: 'ltr' } as const;
+
 const MODE_NONE = 0;
 const MODE_PAN = 1;
 const MODE_PAGE = 2;
@@ -283,6 +286,13 @@ export interface ImageViewerProps {
    * screen while the picture is zoomed or dragged. `0` squares them.
    */
   cornerRadius?: number;
+  /**
+   * Which way the gallery runs. In `rtl` the next page sits to the left and a
+   * swipe to the right turns to it. Page numbers, `index` and the screen
+   * reader's next and previous stay in page order either way. To follow the
+   * reading direction, pass `useDirection()`.
+   */
+  dir?: 'ltr' | 'rtl';
 }
 
 function ImageViewerRoot({
@@ -301,6 +311,7 @@ function ImageViewerRoot({
   closeLabel = 'Close',
   inset = DEFAULT_INSET,
   cornerRadius = DEFAULT_CORNER_RADIUS,
+  dir = 'ltr',
 }: ImageViewerProps) {
   const storeRef = useRef<ViewerStore | null>(null);
   storeRef.current ??= new ViewerStore();
@@ -367,6 +378,7 @@ function ImageViewerRoot({
             closeLabel={closeLabel}
             inset={inset}
             cornerRadius={cornerRadius}
+            sign={dir === 'rtl' ? -1 : 1}
           />
         </ModalPortal>
       ) : null}
@@ -587,6 +599,8 @@ interface ViewerOverlayProps {
   closeLabel: string;
   inset: number;
   cornerRadius: number;
+  /** `-1` when the pages run right to left. */
+  sign: 1 | -1;
 }
 
 function ViewerOverlay({
@@ -605,6 +619,7 @@ function ViewerOverlay({
   closeLabel,
   inset,
   cornerRadius,
+  sign,
 }: ViewerOverlayProps) {
   const version = useSyncExternalStore(store.subscribe, store.getSnapshot);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -665,7 +680,7 @@ function ViewerOverlay({
   const shrink = useSharedValue(1);
   const fade = useSharedValue(1);
 
-  // The gallery.
+  // The gallery, in page order: `sign` mirrors it on the way to the screen.
   const pagerX = useSharedValue(-page * pageWidth);
   const pagerStart = useSharedValue(0);
   const activePage = useSharedValue(page);
@@ -944,7 +959,7 @@ function ViewerOverlay({
           ty.value = rubberBandClamp(startY.value + event.translationY, -boundY, boundY, H);
         } else if (gestureMode.value === MODE_PAGE) {
           pagerX.value = rubberBandClamp(
-            pagerStart.value + event.translationX,
+            pagerStart.value + sign * event.translationX,
             -(count - 1) * pageWidth,
             0,
             W
@@ -974,11 +989,9 @@ function ViewerOverlay({
             ty.value = withDecay({ velocity: event.velocityY, clamp: [-boundY, boundY] });
           }
         } else if (current === MODE_PAGE) {
-          const target = snapPage(pagerX.value, event.velocityX, activePage.value, count, pageWidth);
-          pagerX.value = withSpring(-target * pageWidth, {
-            ...SETTLE_SPRING,
-            velocity: event.velocityX,
-          });
+          const velocity = sign * event.velocityX;
+          const target = snapPage(pagerX.value, velocity, activePage.value, count, pageWidth);
+          pagerX.value = withSpring(-target * pageWidth, { ...SETTLE_SPRING, velocity });
           if (target !== activePage.value) {
             activePage.value = target;
             runOnJS(onIndexChange)(target);
@@ -1079,6 +1092,7 @@ function ViewerOverlay({
     settleZoom,
     shrink,
     closeFromGesture,
+    sign,
     startScale,
     startX,
     startY,
@@ -1086,7 +1100,9 @@ function ViewerOverlay({
     ty,
   ]);
 
-  const pagerStyle = useAnimatedStyle(() => ({ transform: [{ translateX: pagerX.value }] }));
+  const pagerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: sign * pagerX.value }],
+  }));
 
   const chromeStyle = useAnimatedStyle(() => ({
     opacity: chrome.value * clamp(t.value, 0, 1) * fade.value,
@@ -1145,13 +1161,19 @@ function ViewerOverlay({
           ]}
           onAccessibilityAction={onAccessibilityAction}
         >
-          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, pagerStyle]}>
+          {/* Laid out left to right whatever the app's direction: the pages and
+              the flight are placed in measured screen pixels, which a right-to-left
+              layout would mirror. `sign` does the mirroring the gallery wants. */}
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, PHYSICAL, pagerStyle]}
+          >
             {visiblePages.map(({ entry, at }) => (
               <ViewerPage
                 key={entry.id}
                 item={entry}
                 at={at}
-                left={at * pageWidth}
+                left={sign * at * pageWidth}
                 viewport={{ width: W, height: H }}
                 box={box}
                 cornerRadius={cornerRadius}

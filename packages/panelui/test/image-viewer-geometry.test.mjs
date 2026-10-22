@@ -138,6 +138,16 @@ test('ImageViewer waits for the first move when the activating event has none (g
   assert.equal(intentOf([[0, 0], [0, 0]]), 'undecided');
 });
 
+test('ImageViewer turns a right-to-left gallery with the swipe mirrored into page order', () => {
+  const width = 416;
+  const rtl = -1;
+  // A swipe to the right, mirrored, is a step towards the next page.
+  assert.equal(snapPage(rtl * 300, rtl * 0, 0, 5, width), 1);
+  assert.equal(snapPage(rtl * 100, rtl * 1200, 0, 5, width), 1);
+  // And a swipe to the left goes back.
+  assert.equal(snapPage(-width + rtl * -300, rtl * -1200, 1, 5, width), 0);
+});
+
 test('ImageViewer closes on a long drag or a flick, and not on a throw back', () => {
   assert.equal(shouldDismiss(40, 0), false);
   assert.equal(shouldDismiss(140, 0), true);

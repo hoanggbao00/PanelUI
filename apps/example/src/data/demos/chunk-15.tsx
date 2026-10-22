@@ -1650,6 +1650,25 @@ function ImageViewerRowDemo() {
   );
 }
 
+function ImageViewerRightToLeftDemo() {
+  return (
+    <ImageViewer dir="rtl">
+      <View className="w-full flex-row-reverse gap-1.5">
+        {ROW_OF_THREE.map((entry) => (
+          <ImageViewer.Trigger
+            key={entry.id}
+            {...photo(entry.id)}
+            alt={entry.alt}
+            caption={entry.caption}
+            radius={10}
+            className="aspect-square flex-1 rounded-[10px]"
+          />
+        ))}
+      </View>
+    </ImageViewer>
+  );
+}
+
 interface JournalPhoto {
   id: string;
   alt: string;
@@ -1999,6 +2018,7 @@ export const ENTRIES: ComponentEntry[] = [
     demos: [
       { label: 'One photo', render: () => <ImageViewerSingleDemo /> },
       { label: 'Three under one root', render: () => <ImageViewerRowDemo /> },
+      { label: 'Right to left', render: () => <ImageViewerRightToLeftDemo /> },
       {
         label: 'Photo journal',
         id: 'journal',
