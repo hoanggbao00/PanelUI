@@ -339,6 +339,7 @@ Thank you to everyone who has shipped something here. If you would like to join 
 <p align="center">
   <a href="https://github.com/Khalidabdi1" title="@Khalidabdi1"><img src="https://github.com/Khalidabdi1.png?size=112" width="56" height="56" alt="@Khalidabdi1" /></a>
   <a href="https://github.com/danestves" title="@danestves"><img src="https://github.com/danestves.png?size=112" width="56" height="56" alt="@danestves" /></a>
+  <a href="https://github.com/hoanggbao00" title="@hoanggbao00"><img src="https://github.com/hoanggbao00.png?size=112" width="56" height="56" alt="@hoanggbao00" /></a>
 </p>
 
 ### Issue reporters
