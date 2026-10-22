@@ -733,6 +733,19 @@ function ViewerOverlay({
     [chrome, dragX, dragY, gestureMode, onExited, phase, reduced, scale, shrink, t, tx, ty]
   );
 
+  /**
+   * A drag or a tap outside closing the viewer. Measured again first, like a
+   * close from `open`: the measure taken when the page turned can predate the
+   * owner scrolling the new page's thumbnail into place.
+   */
+  const closeFromGesture = useCallback(
+    (velocityX: number, velocityY: number) => {
+      measureCurrent(() => runOnUI(startClose)(velocityX, velocityY));
+      onRequestClose();
+    },
+    [measureCurrent, onRequestClose, startClose]
+  );
+
   const settleOpen = useCallback(() => {
     phase.value = PHASE_OPENING;
     const done = (finished?: boolean) => {
@@ -972,8 +985,10 @@ function ViewerOverlay({
           }
         } else if (current === MODE_DISMISS) {
           if (success && shouldDismiss(event.translationY, event.velocityY)) {
-            startClose(event.velocityX, event.velocityY);
-            runOnJS(onRequestClose)();
+            // Closing now, before the measure: no other gesture starts, and the
+            // `open` effect leaves the flight home to `closeFromGesture`.
+            phase.value = PHASE_CLOSING;
+            runOnJS(closeFromGesture)(event.velocityX, event.velocityY);
             return;
           }
           dragX.value = withSpring(0, SETTLE_SPRING);
@@ -1022,8 +1037,8 @@ function ViewerOverlay({
         if (!success || phase.value !== PHASE_OPEN) return;
         const onImage = hitsRect(event.x, event.y, fit, scale.value, tx.value, ty.value);
         if (!onImage) {
-          startClose(0, 0);
-          runOnJS(onRequestClose)();
+          phase.value = PHASE_CLOSING;
+          runOnJS(closeFromGesture)(0, 0);
           return;
         }
         chromeOn.value = !chromeOn.value;
@@ -1063,7 +1078,7 @@ function ViewerOverlay({
     scale,
     settleZoom,
     shrink,
-    startClose,
+    closeFromGesture,
     startScale,
     startX,
     startY,
