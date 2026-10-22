@@ -205,7 +205,7 @@ const chromeButton = tv({
   base: 'h-10 min-w-10 flex-row items-center justify-center gap-1 rounded-full px-2.5',
   variants: {
     active: { true: 'bg-white', false: 'bg-black/40' },
-    // Both values are written: a removed opacity class can leave the last one on the view.
+    // Both values are written, so the enabled state never depends on a class being removed.
     disabled: { true: 'opacity-40', false: 'opacity-100' },
   },
   defaultVariants: { active: false, disabled: false },
@@ -1827,8 +1827,7 @@ function CameraShutter({
         video && holdToRecord && !recording ? 'Hold to record for as long as you hold it' : undefined
       }
       accessibilityState={{ disabled, busy: camera.capturing }}
-      // Opacity as a style, written every render: a class that comes and goes can leave
-      // the last value on the native view.
+      // Dimmed only without a camera to use or while a photo is being taken.
       style={{ width: SHUTTER, height: SHUTTER, opacity: disabled ? 0.6 : 1 }}
       className={cn('items-center justify-center', className)}
     >
