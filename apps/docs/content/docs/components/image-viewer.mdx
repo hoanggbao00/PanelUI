@@ -116,7 +116,7 @@ Several triggers under one root. Opening any of them opens at its page, and swip
 
 ### Right to left
 
-`dir` sets which way the pages run. In `rtl` the next picture sits to the left and a swipe to the right turns to it, so lay the triggers out the same way round. The counter, `index` and the screen reader's next and previous still count in page order. `dir` defaults to `ltr`; to follow the reading direction, pass `useDirection()`.
+`dir` sets which way the pages run. In `rtl` the next picture sits to the left and a swipe to the right turns to it. The counter, `index` and the screen reader's next and previous still count in page order, and `dir` defaults to `ltr`. Lay the triggers out the same way round: in an app laid out left to right, `flex-row-reverse` puts the first picture on the right, as here. Under a right-to-left layout rows already run that way, so keep `flex-row` and pass `dir={useDirection()}`.
 
 ```tsx
 <ImageViewer dir="rtl">
