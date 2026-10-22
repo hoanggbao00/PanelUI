@@ -800,7 +800,8 @@
     "An image that opens out of the page over a blur, to zoom into and swipe through.",
     "react native image viewer lightbox",
     {
-      "addedIn": "0.99.0"
+      "addedIn": "0.99.0",
+      "updatedIn": "0.114.0"
     }
   ],
   "shimmer": [

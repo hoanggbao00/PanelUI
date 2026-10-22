@@ -9,6 +9,46 @@ the API alone.
 
 Releases before 0.40.0 predate this file and are recorded only in the commit history.
 
+## [0.114.0] — 2026-10-22
+
+### Added
+
+- **Camera.** A full-screen camera you assemble from parts, built on `expo-camera` so it runs
+  in Expo Go. It has a live preview you pinch to zoom, a shutter that takes photos and records
+  video (tap to start and stop, or hold to record), flash with the torch lit while recording, a
+  3 and 10 second self-timer, the recording clock, video and photo modes, front and back, and a
+  library button. Leave a part out and the screen does without it. Each photo and clip is
+  handed to `onCapture` and nothing is saved for you, so keeping, saving or uploading it is your
+  call, and `useCamera()` gives a control of your own the same state and actions. Zoom stops
+  are labelled by your app, because the same zoom value is a different magnification on every
+  phone. There is no tap to focus, since expo-camera cannot focus on a point. `expo-camera` is a
+  new optional peer dependency, and the component is marked Alpha while its API settles.
+- **Right-to-left paging in ImageViewer.** `dir="rtl"` puts the next picture on the left and
+  turns to it on a swipe to the right, for right-to-left languages and for people who prefer
+  swiping that way. Page order, `index`, `onIndexChange`, the counter and screen readers still
+  count forward. It defaults to `ltr`, so nothing changes unless you pass it.
+- **Icons:** `CameraSwitchIcon`, `FlashIcon`, `FlashOffIcon` and `TimerIcon`.
+
+### Fixed
+
+- **ImageViewer swipes with react-native-gesture-handler 3.** A sideways swipe in a gallery
+  dragged the picture away instead of turning the page: the first event of the drag carried no
+  movement, and comparing no movement with no movement read every drag as a dismiss. The viewer
+  now decides once the drag has moved, including a quick flick that ends on its first movement.
+- **ImageViewer closing into a thumbnail that had moved.** Closing by dragging the picture away
+  or tapping outside it flew the picture back to where its thumbnail was when the page last
+  turned. An app that scrolls its own row of thumbnails in `onIndexChange` had moved it since,
+  so the picture landed in the wrong place. Both now measure the thumbnail again first, as
+  closing through `open` already did.
+
+### Docs
+
+- A Camera page, with three full-screen versions in the example app: the whole camera, a
+  profile photo with a review step, and a 15-second clip.
+- ImageViewer has a Right to left example, which says which row direction goes with which
+  layout.
+- The Sponsors page lists individual sponsors, starting with Yash Dahiwale.
+
 ## [0.113.1] — 2026-10-21
 
 ### Fixed
