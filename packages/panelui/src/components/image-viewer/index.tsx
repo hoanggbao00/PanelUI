@@ -44,8 +44,8 @@
  * ## One gesture surface, decided at the start
  *
  * Pinching, panning a zoomed image, turning the page and dragging to dismiss all
- * begin as a one- or two-finger drag, and which one it is gets decided the
- * moment it starts: two fingers zoom, one finger on a zoomed image pans it, one
+ * begin as a one- or two-finger drag, and which one it is gets decided as
+ * soon as it moves: two fingers zoom, one finger on a zoomed image pans it, one
  * finger moving sideways across a gallery turns the page, and anything else
  * drags the image away. Deciding once keeps a drag from changing its mind
  * halfway, which is what makes a viewer feel loose.
@@ -105,6 +105,7 @@ import {
   clamp,
   coverSize,
   dragFade,
+  dragIntent,
   dragScale,
   fitWithin,
   focalTranslation,
@@ -159,6 +160,8 @@ const MODE_NONE = 0;
 const MODE_PAN = 1;
 const MODE_PAGE = 2;
 const MODE_DISMISS = 3;
+/** The pan has started but not yet moved, so there is no direction to decide on. */
+const MODE_UNDECIDED = 4;
 
 /* -------------------------------------------------------------------------- */
 /* Registry                                                                   */
@@ -880,6 +883,24 @@ function ViewerOverlay({
         settleZoom();
       });
 
+    const decide = (translationX: number, translationY: number) => {
+      'worklet';
+      const intent = dragIntent(translationX, translationY, count);
+      if (intent === 'undecided') {
+        gestureMode.value = MODE_UNDECIDED;
+        return;
+      }
+      if (intent === 'page') {
+        gestureMode.value = MODE_PAGE;
+        cancelAnimation(pagerX);
+        pagerStart.value = pagerX.value;
+        return;
+      }
+      gestureMode.value = MODE_DISMISS;
+      chrome.value = withTiming(0, { duration: 120 });
+      if (haptics) runOnJS(selectionTick)();
+    };
+
     const pan = Gesture.Pan()
       .maxPointers(1)
       .minDistance(8)
@@ -897,18 +918,12 @@ function ViewerOverlay({
           startY.value = ty.value;
           return;
         }
-        if (count > 1 && Math.abs(event.translationX) > Math.abs(event.translationY)) {
-          gestureMode.value = MODE_PAGE;
-          cancelAnimation(pagerX);
-          pagerStart.value = pagerX.value;
-          return;
-        }
-        gestureMode.value = MODE_DISMISS;
-        chrome.value = withTiming(0, { duration: 120 });
-        if (haptics) runOnJS(selectionTick)();
+        decide(event.translationX, event.translationY);
       })
       .onUpdate((event) => {
         'worklet';
+        // Activated without a translation: the first update that has moved decides.
+        if (gestureMode.value === MODE_UNDECIDED) decide(event.translationX, event.translationY);
         if (gestureMode.value === MODE_PAN) {
           const boundX = panBound(fit.width, scale.value, W);
           const boundY = panBound(fit.height, scale.value, H);

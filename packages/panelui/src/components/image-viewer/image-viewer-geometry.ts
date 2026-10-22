@@ -151,6 +151,21 @@ export function snapPage(
   return clamp(clamp(target, current - 1, current + 1), 0, count - 1);
 }
 
+/** What a one-finger drag on a picture at its fitted size is for. */
+export type DragIntent = 'undecided' | 'page' | 'dismiss';
+
+/**
+ * Sideways across a gallery turns the page; anything else drags the picture
+ * away. A drag that has not moved yet is `undecided`: some gesture-handler
+ * versions report the activating event with no translation at all, and
+ * comparing zero with zero would take every swipe as a dismiss.
+ */
+export function dragIntent(translationX: number, translationY: number, count: number): DragIntent {
+  'worklet';
+  if (translationX === 0 && translationY === 0) return 'undecided';
+  return count > 1 && Math.abs(translationX) > Math.abs(translationY) ? 'page' : 'dismiss';
+}
+
 /** How far a drag has to travel, counting where it was flung, to close the viewer. */
 export const DISMISS_DISTANCE = 110;
 
