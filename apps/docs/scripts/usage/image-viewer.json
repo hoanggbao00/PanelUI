@@ -45,6 +45,11 @@
       }
     },
     {
+      "title": "Right to left",
+      "description": "`dir` sets which way the pages run. In `rtl` the next picture sits to the left and a swipe to the right turns to it. The counter, `index` and the screen reader's next and previous still count in page order, and `dir` defaults to `ltr`. Lay the triggers out the same way round: in an app laid out left to right, `flex-row-reverse` puts the first picture on the right, as here. Under a right-to-left layout rows already run that way, so keep `flex-row` and pass `dir={useDirection()}`.",
+      "code": "<ImageViewer dir=\"rtl\">\n  <View className=\"flex-row-reverse gap-1.5\">\n    {photos.map((photo) => (\n      <ImageViewer.Trigger\n        key={photo.id}\n        source={{ uri: photo.uri }}\n        alt={photo.alt}\n        radius={10}\n        className=\"aspect-square flex-1 rounded-[10px]\"\n      />\n    ))}\n  </View>\n</ImageViewer>"
+    },
+    {
       "title": "Captions and a larger copy",
       "description": "`caption` is shown under the picture while it is open; a single tap on the picture hides it along with the close button. `fullSource` loads when the viewer opens and replaces `source` once it arrives, so the page can carry small thumbnails.",
       "code": "<ImageViewer>\n  <ImageViewer.Trigger\n    source={{ uri: photo.thumb }}\n    fullSource={{ uri: photo.full }}\n    width={3024}\n    height={4032}\n    alt=\"Cliffs above the bay\"\n    caption=\"Porthcurno, early on a Sunday\"\n    radius={12}\n    className=\"h-72 w-full rounded-xl\"\n  />\n</ImageViewer>"

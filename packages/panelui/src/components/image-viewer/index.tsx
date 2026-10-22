@@ -44,8 +44,8 @@
  * ## One gesture surface, decided at the start
  *
  * Pinching, panning a zoomed image, turning the page and dragging to dismiss all
- * begin as a one- or two-finger drag, and which one it is gets decided the
- * moment it starts: two fingers zoom, one finger on a zoomed image pans it, one
+ * begin as a one- or two-finger drag, and which one it is gets decided as
+ * soon as it moves: two fingers zoom, one finger on a zoomed image pans it, one
  * finger moving sideways across a gallery turns the page, and anything else
  * drags the image away. Deciding once keeps a drag from changing its mind
  * halfway, which is what makes a viewer feel loose.
@@ -105,6 +105,7 @@ import {
   clamp,
   coverSize,
   dragFade,
+  dragIntent,
   dragScale,
   fitWithin,
   focalTranslation,
@@ -155,10 +156,15 @@ const PHASE_OPENING = 0;
 const PHASE_OPEN = 1;
 const PHASE_CLOSING = 2;
 
+/** Pins a subtree's `left` to the screen's left under a right-to-left layout. */
+const PHYSICAL = { direction: 'ltr' } as const;
+
 const MODE_NONE = 0;
 const MODE_PAN = 1;
 const MODE_PAGE = 2;
 const MODE_DISMISS = 3;
+/** The pan has started but not yet moved, so there is no direction to decide on. */
+const MODE_UNDECIDED = 4;
 
 /* -------------------------------------------------------------------------- */
 /* Registry                                                                   */
@@ -280,6 +286,13 @@ export interface ImageViewerProps {
    * screen while the picture is zoomed or dragged. `0` squares them.
    */
   cornerRadius?: number;
+  /**
+   * Which way the gallery runs. In `rtl` the next page sits to the left and a
+   * swipe to the right turns to it. Page numbers, `index` and the screen
+   * reader's next and previous stay in page order either way. To follow the
+   * reading direction, pass `useDirection()`.
+   */
+  dir?: 'ltr' | 'rtl';
 }
 
 function ImageViewerRoot({
@@ -298,6 +311,7 @@ function ImageViewerRoot({
   closeLabel = 'Close',
   inset = DEFAULT_INSET,
   cornerRadius = DEFAULT_CORNER_RADIUS,
+  dir = 'ltr',
 }: ImageViewerProps) {
   const storeRef = useRef<ViewerStore | null>(null);
   storeRef.current ??= new ViewerStore();
@@ -364,6 +378,7 @@ function ImageViewerRoot({
             closeLabel={closeLabel}
             inset={inset}
             cornerRadius={cornerRadius}
+            sign={dir === 'rtl' ? -1 : 1}
           />
         </ModalPortal>
       ) : null}
@@ -584,6 +599,8 @@ interface ViewerOverlayProps {
   closeLabel: string;
   inset: number;
   cornerRadius: number;
+  /** `-1` when the pages run right to left. */
+  sign: 1 | -1;
 }
 
 function ViewerOverlay({
@@ -602,6 +619,7 @@ function ViewerOverlay({
   closeLabel,
   inset,
   cornerRadius,
+  sign,
 }: ViewerOverlayProps) {
   const version = useSyncExternalStore(store.subscribe, store.getSnapshot);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -662,7 +680,7 @@ function ViewerOverlay({
   const shrink = useSharedValue(1);
   const fade = useSharedValue(1);
 
-  // The gallery.
+  // The gallery, in page order: `sign` mirrors it on the way to the screen.
   const pagerX = useSharedValue(-page * pageWidth);
   const pagerStart = useSharedValue(0);
   const activePage = useSharedValue(page);
@@ -728,6 +746,19 @@ function ViewerOverlay({
       ty.value = withSpring(0, CLOSE_SPRING);
     },
     [chrome, dragX, dragY, gestureMode, onExited, phase, reduced, scale, shrink, t, tx, ty]
+  );
+
+  /**
+   * A drag or a tap outside closing the viewer. Measured again first, like a
+   * close from `open`: the measure taken when the page turned can predate the
+   * owner scrolling the new page's thumbnail into place.
+   */
+  const closeFromGesture = useCallback(
+    (velocityX: number, velocityY: number) => {
+      measureCurrent(() => runOnUI(startClose)(velocityX, velocityY));
+      onRequestClose();
+    },
+    [measureCurrent, onRequestClose, startClose]
   );
 
   const settleOpen = useCallback(() => {
@@ -880,6 +911,62 @@ function ViewerOverlay({
         settleZoom();
       });
 
+    const decide = (translationX: number, translationY: number) => {
+      'worklet';
+      const intent = dragIntent(translationX, translationY, count);
+      if (intent === 'undecided') {
+        gestureMode.value = MODE_UNDECIDED;
+        return;
+      }
+      if (intent === 'page') {
+        gestureMode.value = MODE_PAGE;
+        cancelAnimation(pagerX);
+        pagerStart.value = pagerX.value;
+        return;
+      }
+      gestureMode.value = MODE_DISMISS;
+      chrome.value = withTiming(0, { duration: 120 });
+      if (haptics) runOnJS(selectionTick)();
+    };
+
+    /**
+     * Decides a pan that activated without moving, from the first event that
+     * has. Only while the viewer is still open and no pinch has started since:
+     * a close or a second finger arriving first leaves the drag doing nothing.
+     */
+    const resolve = (translationX: number, translationY: number) => {
+      'worklet';
+      if (gestureMode.value !== MODE_UNDECIDED) return;
+      if (phase.value !== PHASE_OPEN || pinching.value) {
+        gestureMode.value = MODE_NONE;
+        return;
+      }
+      decide(translationX, translationY);
+    };
+
+    /** Moves whatever the drag was decided to move. */
+    const follow = (translationX: number, translationY: number) => {
+      'worklet';
+      if (gestureMode.value === MODE_PAN) {
+        const boundX = panBound(fit.width, scale.value, W);
+        const boundY = panBound(fit.height, scale.value, H);
+        tx.value = rubberBandClamp(startX.value + translationX, -boundX, boundX, W);
+        ty.value = rubberBandClamp(startY.value + translationY, -boundY, boundY, H);
+      } else if (gestureMode.value === MODE_PAGE) {
+        pagerX.value = rubberBandClamp(
+          pagerStart.value + sign * translationX,
+          -(count - 1) * pageWidth,
+          0,
+          W
+        );
+      } else if (gestureMode.value === MODE_DISMISS) {
+        dragX.value = translationX;
+        dragY.value = translationY;
+        shrink.value = dragScale(translationY, H);
+        fade.value = dragFade(translationY, H);
+      }
+    };
+
     const pan = Gesture.Pan()
       .maxPointers(1)
       .minDistance(8)
@@ -897,39 +984,22 @@ function ViewerOverlay({
           startY.value = ty.value;
           return;
         }
-        if (count > 1 && Math.abs(event.translationX) > Math.abs(event.translationY)) {
-          gestureMode.value = MODE_PAGE;
-          cancelAnimation(pagerX);
-          pagerStart.value = pagerX.value;
-          return;
-        }
-        gestureMode.value = MODE_DISMISS;
-        chrome.value = withTiming(0, { duration: 120 });
-        if (haptics) runOnJS(selectionTick)();
+        decide(event.translationX, event.translationY);
       })
       .onUpdate((event) => {
         'worklet';
-        if (gestureMode.value === MODE_PAN) {
-          const boundX = panBound(fit.width, scale.value, W);
-          const boundY = panBound(fit.height, scale.value, H);
-          tx.value = rubberBandClamp(startX.value + event.translationX, -boundX, boundX, W);
-          ty.value = rubberBandClamp(startY.value + event.translationY, -boundY, boundY, H);
-        } else if (gestureMode.value === MODE_PAGE) {
-          pagerX.value = rubberBandClamp(
-            pagerStart.value + event.translationX,
-            -(count - 1) * pageWidth,
-            0,
-            W
-          );
-        } else if (gestureMode.value === MODE_DISMISS) {
-          dragX.value = event.translationX;
-          dragY.value = event.translationY;
-          shrink.value = dragScale(event.translationY, H);
-          fade.value = dragFade(event.translationY, H);
-        }
+        // Activated without a translation: the first update that has moved decides.
+        resolve(event.translationX, event.translationY);
+        follow(event.translationX, event.translationY);
       })
       .onEnd((event, success) => {
         'worklet';
+        // A quick flick can end before any update has moved, so the end event
+        // may be the first to: decide on it and apply it before acting.
+        if (gestureMode.value === MODE_UNDECIDED) {
+          resolve(event.translationX, event.translationY);
+          follow(event.translationX, event.translationY);
+        }
         const current = gestureMode.value;
         gestureMode.value = MODE_NONE;
         if (current === MODE_PAN) {
@@ -946,19 +1016,19 @@ function ViewerOverlay({
             ty.value = withDecay({ velocity: event.velocityY, clamp: [-boundY, boundY] });
           }
         } else if (current === MODE_PAGE) {
-          const target = snapPage(pagerX.value, event.velocityX, activePage.value, count, pageWidth);
-          pagerX.value = withSpring(-target * pageWidth, {
-            ...SETTLE_SPRING,
-            velocity: event.velocityX,
-          });
+          const velocity = sign * event.velocityX;
+          const target = snapPage(pagerX.value, velocity, activePage.value, count, pageWidth);
+          pagerX.value = withSpring(-target * pageWidth, { ...SETTLE_SPRING, velocity });
           if (target !== activePage.value) {
             activePage.value = target;
             runOnJS(onIndexChange)(target);
           }
         } else if (current === MODE_DISMISS) {
           if (success && shouldDismiss(event.translationY, event.velocityY)) {
-            startClose(event.velocityX, event.velocityY);
-            runOnJS(onRequestClose)();
+            // Closing now, before the measure: no other gesture starts, and the
+            // `open` effect leaves the flight home to `closeFromGesture`.
+            phase.value = PHASE_CLOSING;
+            runOnJS(closeFromGesture)(event.velocityX, event.velocityY);
             return;
           }
           dragX.value = withSpring(0, SETTLE_SPRING);
@@ -1007,8 +1077,8 @@ function ViewerOverlay({
         if (!success || phase.value !== PHASE_OPEN) return;
         const onImage = hitsRect(event.x, event.y, fit, scale.value, tx.value, ty.value);
         if (!onImage) {
-          startClose(0, 0);
-          runOnJS(onRequestClose)();
+          phase.value = PHASE_CLOSING;
+          runOnJS(closeFromGesture)(0, 0);
           return;
         }
         chromeOn.value = !chromeOn.value;
@@ -1048,7 +1118,8 @@ function ViewerOverlay({
     scale,
     settleZoom,
     shrink,
-    startClose,
+    closeFromGesture,
+    sign,
     startScale,
     startX,
     startY,
@@ -1056,7 +1127,9 @@ function ViewerOverlay({
     ty,
   ]);
 
-  const pagerStyle = useAnimatedStyle(() => ({ transform: [{ translateX: pagerX.value }] }));
+  const pagerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: sign * pagerX.value }],
+  }));
 
   const chromeStyle = useAnimatedStyle(() => ({
     opacity: chrome.value * clamp(t.value, 0, 1) * fade.value,
@@ -1115,13 +1188,19 @@ function ViewerOverlay({
           ]}
           onAccessibilityAction={onAccessibilityAction}
         >
-          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, pagerStyle]}>
+          {/* Laid out left to right whatever the app's direction: the pages and
+              the flight are placed in measured screen pixels, which a right-to-left
+              layout would mirror. `sign` does the mirroring the gallery wants. */}
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, PHYSICAL, pagerStyle]}
+          >
             {visiblePages.map(({ entry, at }) => (
               <ViewerPage
                 key={entry.id}
                 item={entry}
                 at={at}
-                left={at * pageWidth}
+                left={sign * at * pageWidth}
                 viewport={{ width: W, height: H }}
                 box={box}
                 cornerRadius={cornerRadius}

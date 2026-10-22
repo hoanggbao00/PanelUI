@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import {
   coverSize,
   dragFade,
+  dragIntent,
   dragScale,
   fitContain,
   fitWithin,
@@ -100,6 +101,51 @@ test('ImageViewer turns at most one page, from where a flick was heading', () =>
   assert.equal(snapPage(50, 900, 0, 5, width), 0);
   assert.equal(snapPage(-width * 4 - 50, -900, 4, 5, width), 4);
   assert.equal(snapPage(0, 0, 0, 1, width), 0);
+});
+
+/**
+ * Runs a pan the way the viewer does: the activating event, then updates until
+ * one of them decides.
+ */
+function intentOf(events, count = 3) {
+  for (const [x, y] of events) {
+    const intent = dragIntent(x, y, count);
+    if (intent !== 'undecided') return intent;
+  }
+  return 'undecided';
+}
+
+test('ImageViewer decides page or dismiss on the activating event when it has moved (gesture-handler 2)', () => {
+  assert.equal(intentOf([[-12, 2], [-30, 4]]), 'page');
+  assert.equal(intentOf([[12, 2], [30, 4]]), 'page');
+  assert.equal(intentOf([[2, 12], [3, 40]]), 'dismiss');
+  assert.equal(intentOf([[-2, -12]]), 'dismiss');
+  // A single picture has no page to turn to.
+  assert.equal(intentOf([[-12, 2]], 1), 'dismiss');
+});
+
+test('ImageViewer waits for the first move when the activating event has none (gesture-handler 3)', () => {
+  assert.equal(dragIntent(0, 0, 3), 'undecided');
+  // Next page left to right, and right to left: either way it is sideways.
+  assert.equal(intentOf([[0, 0], [-12, 2], [-30, 4]]), 'page');
+  assert.equal(intentOf([[0, 0], [12, 2], [30, 4]]), 'page');
+  assert.equal(intentOf([[0, 0], [0, 0], [9, -1]]), 'page');
+  // Up or down drags the picture away.
+  assert.equal(intentOf([[0, 0], [1, 14]]), 'dismiss');
+  assert.equal(intentOf([[0, 0], [-1, -14]]), 'dismiss');
+  assert.equal(intentOf([[0, 0], [12, 2]], 1), 'dismiss');
+  // A pan that never moves decides nothing, and so neither pages nor dismisses.
+  assert.equal(intentOf([[0, 0], [0, 0]]), 'undecided');
+});
+
+test('ImageViewer turns a right-to-left gallery with the swipe mirrored into page order', () => {
+  const width = 416;
+  const rtl = -1;
+  // A swipe to the right, mirrored, is a step towards the next page.
+  assert.equal(snapPage(rtl * 300, rtl * 0, 0, 5, width), 1);
+  assert.equal(snapPage(rtl * 100, rtl * 1200, 0, 5, width), 1);
+  // And a swipe to the left goes back.
+  assert.equal(snapPage(-width + rtl * -300, rtl * -1200, 1, 5, width), 0);
 });
 
 test('ImageViewer closes on a long drag or a flick, and not on a throw back', () => {

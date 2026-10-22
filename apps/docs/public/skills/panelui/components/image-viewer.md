@@ -42,6 +42,7 @@ import { ImageViewer } from 'panelui-native';
 | `closeLabel` | `string` | `Close` | Read out for the close button. |
 | `inset` | `number` | `16` | Space kept between the open picture and the edges of the screen, in points. Measured from the safe area at the top and bottom, and the larger of the two is used for both, so the picture stays centred. `0` fills the screen. |
 | `cornerRadius` | `number` | `16` | Corner radius of the open picture, in points. The corners stay this size on screen while the picture is zoomed or dragged. `0` squares them. |
+| `dir` | `'ltr' \| 'rtl'` | `ltr` | Which way the gallery runs. In `rtl` the next page sits to the left and a swipe to the right turns to it. Page numbers, `index` and the screen reader's next and previous stay in page order either way. To follow the reading direction, pass `useDirection()`. |
 
 #### `ImageViewerTriggerProps`
 
