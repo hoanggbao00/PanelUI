@@ -43,8 +43,15 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "PanelUI uses the microphone so the Soundwave demos can react to your voice.",
+          "microphonePermission": "PanelUI uses the microphone so the Soundwave demos can react to your voice and the Camera demos can record sound.",
           "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "PanelUI uses the camera so the Camera demos can show a live preview, take photos and record video.",
+          "microphonePermission": "PanelUI uses the microphone so the Soundwave demos can react to your voice and the Camera demos can record sound."
         }
       ],
       "@maplibre/maplibre-react-native",
