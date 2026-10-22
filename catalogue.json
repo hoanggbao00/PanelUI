@@ -18,6 +18,7 @@
     "button",
     "button-group",
     "calendar",
+    "camera",
     "candlestick-chart",
     "card",
     "carousel",
@@ -229,17 +230,17 @@
     }
   ],
   "counts": {
-    "componentModules": 140,
-    "packageComponentExports": 140,
-    "documentedComponents": 140,
-    "exampleEntries": 140,
+    "componentModules": 141,
+    "packageComponentExports": 141,
+    "documentedComponents": 141,
+    "exampleEntries": 141,
     "registry": {
-      "componentItems": 140,
+      "componentItems": 141,
       "blockItems": 4,
       "supportItems": 37,
-      "totalItems": 181,
+      "totalItems": 182,
       "byType": {
-        "registry:ui": 156,
+        "registry:ui": 157,
         "registry:hook": 13,
         "registry:lib": 7,
         "registry:theme": 1,

@@ -21,6 +21,7 @@ const load16 = () => import('./demos/chunk-16');
 const LOADERS: Record<string, () => Promise<ComponentEntry | undefined>> = {
   'file-upload': () =>
     load16().then((module) => module.ENTRIES_BY_SLUG['file-upload']),
+  camera: () => load10().then((module) => module.ENTRIES_BY_SLUG['camera']),
   'sankey-chart': () =>
     load16().then((module) => module.ENTRIES_BY_SLUG['sankey-chart']),
   compare: () => load16().then((module) => module.ENTRIES_BY_SLUG['compare']),

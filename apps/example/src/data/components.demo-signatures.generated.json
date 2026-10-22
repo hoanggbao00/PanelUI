@@ -70,6 +70,10 @@
       "signature": "961255c0c281e131f0be7ab5fb0754180b4c3ce41802a0351deb20f059f11c03"
     },
     {
+      "slug": "camera",
+      "signature": "ea85ea0ed1816d14af0a98ad3408b4538ad8cc8c6375796d2645c819cb4a2bb5"
+    },
+    {
       "slug": "candlestick-chart",
       "signature": "017552de65a54bb3daeca56f517b84943f0fda5400acafff7198bdaddbb9174c"
     },

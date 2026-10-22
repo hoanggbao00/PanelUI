@@ -21,6 +21,7 @@ import {
   UploadIcon,
   UserRoundIcon,
   XIcon,
+  ZapIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import {
@@ -2019,6 +2020,28 @@ const messageScroller = (
   </div>
 );
 
+const camera = (
+  <Screen>
+    <Row className="absolute inset-x-2 top-2 justify-between">
+      <Glyph icon={XIcon} className="size-2" />
+      <Glyph icon={ZapIcon} className="size-2" />
+    </Row>
+    <Stack className="absolute inset-x-0 bottom-2 items-center gap-1.5">
+      <Row className="gap-1.5">
+        <Bar className="w-4" faint />
+        <Fill className="grid h-2.5 w-6 place-items-center rounded-full">
+          <Bar className="w-3.5" />
+        </Fill>
+      </Row>
+      <Row className="w-full justify-between px-2">
+        <Fill className="size-3.5 rounded-full" />
+        <Accent className="size-7 rounded-full" />
+        <Fill className="size-3 rounded-full" />
+      </Row>
+    </Stack>
+  </Screen>
+);
+
 const imageViewer = (
   <Screen>
     <div className="grid grid-cols-3 gap-1 p-2 blur-[1.5px]">
@@ -2462,6 +2485,7 @@ const THUMBNAILS: Record<string, ReactNode> = {
   attachment,
   avatar,
   'avatar-cropper': avatarCropper,
+  camera,
   'circular-text': circularText,
   'file-upload': fileUpload,
   'flip-card': flipCard,

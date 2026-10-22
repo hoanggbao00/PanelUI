@@ -1,0 +1,101 @@
+{
+  "slug": "camera",
+  "preview": {
+    "src": "/previews/camera.jpg",
+    "alt": "Camera in photo mode over a black viewfinder. Along the top, a close button, the timer, and the flash set to Auto. Along the bottom, a 1× zoom chip, the Video and Photo modes, and the library button, a white shutter and the switch-camera button.",
+    "width": 1206,
+    "height": 2622,
+    "caption": "Taken on the iOS Simulator, which has no camera, so the viewfinder is black."
+  },
+  "intro": "Use it for a screen whose job is taking a photo or recording a clip: a story composer, a document capture, a profile photo taken inside the app. The live picture fills the screen and the controls sit over it. Each control is a part, so a screen carries only the ones it needs.\n\nNothing you capture is kept by the component. Each photo and clip is passed to `onCapture` as the file the camera wrote, and keeping it, saving it to the photo library with `expo-media-library` or uploading it is up to you. `Camera.Library` works the same way: it shows the thumbnail you pass and calls `onPress`.\n\nIt needs the optional `expo-camera`, which runs in Expo Go. A development build also needs expo-camera's config plugin for the permission strings. The iOS Simulator has no camera: the preview stays black, a photo comes back as a placeholder image, and recording fails.\n\nTo let somebody pick a photo they already have, or take one with the system camera screen, use [FileUpload](/docs/components/file-upload). To frame a photo as a profile picture, use [AvatarCropper](/docs/components/avatar-cropper).",
+  "usage": "const [last, setLast] = useState<CameraCapture | null>(null);\n\n<Camera onCapture={setLast}>\n  <Camera.Preview />\n  <Camera.Header>\n    <Camera.Flash />\n    <Camera.Duration />\n    <Camera.Timer />\n  </Camera.Header>\n  <Camera.Footer>\n    <Camera.Zoom />\n    <Camera.Modes />\n    <Camera.Controls>\n      <Camera.Library\n        source={last?.type === 'photo' ? { uri: last.uri } : undefined}\n        onPress={openPhotos}\n      />\n      <Camera.Shutter />\n      <Camera.Flip />\n    </Camera.Controls>\n  </Camera.Footer>\n</Camera>",
+  "extraImports": [
+    "Button",
+    "XIcon",
+    "useCamera",
+    "type CameraCapture",
+    "type CameraPhoto"
+  ],
+  "anatomy": "<Camera>\n  <Camera.Preview />\n  <Camera.Header>\n    <Camera.Button />\n    <Camera.Flash />\n    <Camera.Duration />\n    <Camera.Timer />\n  </Camera.Header>\n  <Camera.Footer>\n    <Camera.Zoom />\n    <Camera.Modes />\n    <Camera.Controls>\n      <Camera.Library />\n      <Camera.Shutter />\n      <Camera.Flip />\n    </Camera.Controls>\n  </Camera.Footer>\n</Camera>",
+  "parts": {
+    "Preview": "The live picture, filling the camera. Two fingers zoom and a double tap switches cameras. Until camera access is given it asks for it in place. Its children are drawn over the picture and under the header and footer.",
+    "Header": "The band along the top, inside the safe area. A row, with its first child at the start and its last at the end.",
+    "Footer": "The band along the bottom, inside the safe area. A centred column.",
+    "Controls": "The row the shutter sits in. Put a Library, or a spacer of the same size, on one side and Flip on the other, so the shutter stays in the middle.",
+    "Button": "A round control for an action of your own, such as closing the camera. It is drawn like Flash and Timer, and its icon is coloured to match.",
+    "Flash": "Off, auto and on for a photo. Off and on for a video, where on lights the torch while recording.",
+    "Timer": "Off, 3 seconds and 10 seconds before a photo. Dimmed in video.",
+    "Duration": "The recording clock. It shows in video mode, and turns red while a clip is recording.",
+    "Zoom": "Zoom stops you label, and a bar that shows how far in the zoom is.",
+    "Modes": "Video or photo. Locked while recording.",
+    "Library": "The thumbnail you pass. A press calls `onPress`.",
+    "Flip": "Switches between the front and back cameras. Disabled while recording.",
+    "Shutter": "Takes a photo, after the timer if one is set, or starts and stops a recording. In video, holding it records until it is let go."
+  },
+  "examples": [
+    {
+      "title": "Photo only",
+      "description": "Leave out the parts a screen does not need. Without `Camera.Modes` the camera stays in photo mode.",
+      "code": "<Camera\n  onCapture={(capture) => {\n    if (capture.type === 'photo') setScan(capture.uri);\n  }}\n>\n  <Camera.Preview />\n  <Camera.Footer>\n    <Camera.Controls className=\"justify-center\">\n      <Camera.Shutter />\n    </Camera.Controls>\n  </Camera.Footer>\n</Camera>"
+    },
+    {
+      "title": "Video with a limit",
+      "description": "`maxDuration` stops a recording after that many seconds, and a ring around the shutter fills as it runs. In video, a tap on the shutter starts and stops, and holding it records for as long as it is held.",
+      "code": "<Camera defaultMode=\"video\" maxDuration={15} onCapture={keepClip}>\n  <Camera.Preview />\n  <Camera.Header>\n    <Camera.Duration />\n    <Camera.Flash />\n  </Camera.Header>\n  <Camera.Footer>\n    <Camera.Controls>\n      <View className=\"h-12 w-12\" />\n      <Camera.Shutter />\n      <Camera.Flip />\n    </Camera.Controls>\n  </Camera.Footer>\n</Camera>"
+    },
+    {
+      "title": "Zoom stops you label",
+      "description": "A zoom value is a fraction of the device's maximum zoom, and the maximum differs between phones, so the same value is a different magnification on each. Measure the values on the phones you target, and label them yourself. Left without `stops`, Zoom shows one `1×` chip that undoes any zoom.",
+      "code": "<Camera.Zoom\n  stops={[\n    { value: 0, label: '1×' },\n    { value: 0.12, label: '2' },\n    { value: 0.3, label: '5' },\n  ]}\n/>"
+    },
+    {
+      "title": "A way out",
+      "description": "`Camera.Button` is for actions of your own. On a screen that covers everything, it is the way back.",
+      "code": "<Camera.Header>\n  <Camera.Button onPress={() => router.back()} accessibilityLabel=\"Close\">\n    <XIcon size={20} />\n  </Camera.Button>\n  <Camera.Flash />\n</Camera.Header>"
+    },
+    {
+      "title": "A control of your own",
+      "description": "`useCamera()` gives a control inside `<Camera>` the state and actions the parts use. Here a Button stands in for the shutter.",
+      "code": "function TakeButton() {\n  const camera = useCamera();\n  return (\n    <Button onPress={camera.press} disabled={!camera.ready} loading={camera.capturing}>\n      {camera.countdown ? `${camera.countdown}` : 'Take photo'}\n    </Button>\n  );\n}\n\n<Camera onCapture={keep}>\n  <Camera.Preview />\n  <Camera.Footer>\n    <TakeButton />\n  </Camera.Footer>\n</Camera>"
+    }
+  ],
+  "versions": [
+    {
+      "title": "Photo and video",
+      "preview": {
+        "src": "/previews/camera-photo-and-video.jpg",
+        "alt": "The same camera in video mode: a 00:00 recording clock along the top, Video selected, and a red shutter.",
+        "width": 1206,
+        "height": 2622,
+        "caption": "Taken on the iOS Simulator, which has no camera, so the viewfinder is black."
+      },
+      "description": "The whole camera. What you take stays in memory, and the library button opens it in a sheet.",
+      "code": "<Camera maxDuration={60} onCapture={(capture) => setShots((current) => [capture, ...current])}>\n  <Camera.Preview />\n  <Camera.Header>\n    <Camera.Button onPress={() => router.back()} accessibilityLabel=\"Close\">\n      <XIcon size={20} />\n    </Camera.Button>\n    <Camera.Duration />\n    <View className=\"flex-row gap-2\">\n      <Camera.Timer />\n      <Camera.Flash />\n    </View>\n  </Camera.Header>\n  <Camera.Footer>\n    <Camera.Zoom />\n    <Camera.Modes />\n    <Camera.Controls>\n      <Camera.Library\n        source={latest ? { uri: latest.uri } : undefined}\n        onPress={() => setOpen(true)}\n        accessibilityLabel=\"This session\"\n      />\n      <Camera.Shutter />\n      <Camera.Flip />\n    </Camera.Controls>\n  </Camera.Footer>\n</Camera>"
+    },
+    {
+      "title": "Profile photo",
+      "preview": {
+        "src": "/previews/camera-profile-photo.jpg",
+        "alt": "The front camera with a white circle to frame a face in, the hint Fit your face inside the circle, a white shutter and the switch-camera button.",
+        "width": 1206,
+        "height": 2622,
+        "caption": "Taken on the iOS Simulator, which has no camera, so the viewfinder is black."
+      },
+      "description": "The front camera with a circle to frame a face in. `mirror` saves the photo the way the preview showed it, and the app shows it for a yes or a retake.",
+      "code": "const [photo, setPhoto] = useState<CameraPhoto | null>(null);\n\n<Camera\n  defaultFacing=\"front\"\n  mirror\n  onCapture={(capture) => {\n    if (capture.type === 'photo') setPhoto(capture);\n  }}\n>\n  <Camera.Preview>\n    <View className=\"flex-1 items-center justify-center\">\n      <View className=\"h-72 w-72 rounded-full border-2 border-white/80\" />\n    </View>\n  </Camera.Preview>\n  <Camera.Header>\n    <Camera.Button onPress={() => router.back()} accessibilityLabel=\"Close\">\n      <XIcon size={20} />\n    </Camera.Button>\n    <Camera.Timer />\n  </Camera.Header>\n  <Camera.Footer>\n    <Camera.Controls>\n      <View className=\"h-12 w-12\" />\n      <Camera.Shutter />\n      <Camera.Flip />\n    </Camera.Controls>\n  </Camera.Footer>\n</Camera>"
+    },
+    {
+      "title": "Short clip",
+      "preview": {
+        "src": "/previews/camera-short-clip.jpg",
+        "alt": "Video only: a close button, a 00:00 clock and the flash along the top, the hint Hold to record, up to 15 seconds, and a red shutter.",
+        "width": 1206,
+        "height": 2622,
+        "caption": "Taken on the iOS Simulator, which has no camera, so the viewfinder is black."
+      },
+      "description": "Video only, held to record and stopped at 15 seconds, with the ring around the shutter filling as it runs.",
+      "code": "<Camera defaultMode=\"video\" maxDuration={15} onCapture={keepClip}>\n  <Camera.Preview />\n  <Camera.Header>\n    <Camera.Button onPress={() => router.back()} accessibilityLabel=\"Close\">\n      <XIcon size={20} />\n    </Camera.Button>\n    <Camera.Duration />\n    <Camera.Flash />\n  </Camera.Header>\n  <Camera.Footer>\n    <Camera.Controls>\n      <View className=\"h-12 w-12\" />\n      <Camera.Shutter />\n      <Camera.Flip />\n    </Camera.Controls>\n  </Camera.Footer>\n</Camera>"
+    }
+  ],
+  "notes": "### Permissions\n\nThe preview asks for camera access in place the first time, with text you can change through `permissionTitle`, `permissionDescription` and `permissionAction`. Once access has been refused for good, its button opens Settings instead, since asking again would do nothing.\n\nThe microphone is asked for once video is used: expo-camera asks as soon as the camera first goes into video mode. If access is refused, a recording does not start and `onError` says why. Pass `mute` to record without sound and without asking.\n\nA development build needs the permission strings from expo-camera's config plugin. Expo Go has them already.\n\n```json\n[\n  \"expo-camera\",\n  {\n    \"cameraPermission\": \"Allow $(PRODUCT_NAME) to use the camera.\",\n    \"microphonePermission\": \"Allow $(PRODUCT_NAME) to record sound with video.\"\n  }\n]\n```\n\n### Zoom\n\n`zoom` runs from 0 to 1, as a fraction of the device's maximum zoom. On iOS the maximum is raised to that fraction and on Android it is multiplied by it, and neither maximum is available to the app, so the same value is a different magnification on every phone.\n\n`Camera.Zoom` never labels a value as a magnification itself. Give it `stops` you have measured; between them, its bar shows where the zoom sits in the range.\n\nZoom goes back to 0 when the camera flips.\n\n### Focus\n\nThere is no tap to focus. expo-camera has no way to focus on a point, and the camera keeps focus on its own.\n\n### Flash in video\n\nexpo-camera's flash lights photos only. In video, `Camera.Flash` switches between off and on, and on lights the torch while a clip records. A photo's `auto` counts as off in video.\n\n### Front camera\n\nThe front camera's preview is mirrored, like a mirror. Its photos and clips are saved the way other people see you, unless `mirror` is set, which saves them the way the preview showed them.\n\n### On the iOS Simulator\n\nThe Simulator has no camera. The preview stays black, a photo comes back as a placeholder image that expo-camera draws, and starting a recording fails with an error passed to `onError`. Try video and zoom on a device.\n\n### Accessibility\n\nA screen reader adjusts the zoom on the viewfinder itself, a step at a time. The shutter's label says what a press will do: take a photo, cancel the timer, start recording or stop. The start and end of a recording are announced, and the modes are tabs."
+}

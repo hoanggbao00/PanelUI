@@ -1,11 +1,11 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1463,
-    "values": 367,
-    "types": 1096,
-    "modules": 167,
-    "components": 140,
+    "exports": 1497,
+    "values": 374,
+    "types": 1123,
+    "modules": 168,
+    "components": 141,
     "hooks": 13
   },
   "groups": {
@@ -749,6 +749,133 @@
           },
           {
             "name": "DateRange",
+            "kind": "type"
+          }
+        ]
+      },
+      {
+        "source": "components/camera/index.tsx",
+        "slug": "camera",
+        "category": "components",
+        "symbols": [
+          {
+            "name": "Camera",
+            "kind": "value"
+          },
+          {
+            "name": "hasCamera",
+            "kind": "value"
+          },
+          {
+            "name": "useCamera",
+            "kind": "value"
+          },
+          {
+            "name": "CameraProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraPreviewProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraHeaderProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraFooterProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraControlsProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraButtonProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraFlashProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraTimerProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraDurationProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraZoomProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraModesProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraLibraryProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraFlipProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraShutterProps",
+            "kind": "type"
+          },
+          {
+            "name": "CameraHandle",
+            "kind": "type"
+          },
+          {
+            "name": "CameraState",
+            "kind": "type"
+          },
+          {
+            "name": "CameraCapture",
+            "kind": "type"
+          },
+          {
+            "name": "CameraPhoto",
+            "kind": "type"
+          },
+          {
+            "name": "CameraVideo",
+            "kind": "type"
+          },
+          {
+            "name": "CameraPictureOptions",
+            "kind": "type"
+          },
+          {
+            "name": "CameraViewOptions",
+            "kind": "type"
+          },
+          {
+            "name": "CameraViewHandle",
+            "kind": "type"
+          },
+          {
+            "name": "CameraZoomStop",
+            "kind": "type"
+          },
+          {
+            "name": "CameraFacing",
+            "kind": "type"
+          },
+          {
+            "name": "CameraFlashMode",
+            "kind": "type"
+          },
+          {
+            "name": "CameraMode",
+            "kind": "type"
+          },
+          {
+            "name": "CameraTimerDelay",
             "kind": "type"
           }
         ]
@@ -6726,7 +6853,19 @@
             "kind": "value"
           },
           {
+            "name": "CameraSwitchIcon",
+            "kind": "value"
+          },
+          {
             "name": "CardIcon",
+            "kind": "value"
+          },
+          {
+            "name": "FlashIcon",
+            "kind": "value"
+          },
+          {
+            "name": "FlashOffIcon",
             "kind": "value"
           },
           {
@@ -7003,6 +7142,10 @@
           },
           {
             "name": "SunIcon",
+            "kind": "value"
+          },
+          {
+            "name": "TimerIcon",
             "kind": "value"
           },
           {

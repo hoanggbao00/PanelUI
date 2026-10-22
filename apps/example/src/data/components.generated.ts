@@ -18,6 +18,7 @@ export const COMPONENTS = [
   {"slug":"button","name":"Button","summary":"Pressable action with variants and loading"},
   {"slug":"button-group","name":"ButtonGroup","summary":"Several buttons drawn as one control"},
   {"slug":"calendar","name":"Calendar","summary":"A month of days, for picking one, several, or a range"},
+  {"slug":"camera","name":"Camera","summary":"A full-screen camera you assemble from parts"},
   {"slug":"candlestick-chart","name":"CandlestickChart","summary":"Open, high, low and close for a period, drawn as one mark"},
   {"slug":"card","name":"Card","summary":"Grouped content surface"},
   {"slug":"carousel","name":"Carousel","summary":"A run of slides, one at a time, dragged with a finger"},

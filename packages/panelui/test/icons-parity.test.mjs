@@ -17,11 +17,11 @@ const source = await readFile(new URL('../src/icons/index.tsx', import.meta.url)
 const PUBLISHED = [
   'AlertTriangleIcon', 'AppleIcon', 'ArrowDownIcon', 'ArrowUpIcon', 'ArrowUpRightIcon',
   'AudioLinesIcon', 'BadgeCheckIcon', 'BellIcon', 'BoldIcon', 'BookIcon',
-  'BookmarkIcon', 'BugIcon', 'CalendarIcon', 'CallIcon', 'CameraIcon',
+  'BookmarkIcon', 'BugIcon', 'CalendarIcon', 'CallIcon', 'CameraIcon', 'CameraSwitchIcon',
   'CardIcon', 'CheckCircleIcon', 'CheckIcon', 'ChevronDownIcon', 'ChevronLeftIcon',
   'ChevronRightIcon', 'ChevronUpIcon', 'ChevronsUpDownIcon', 'CircleIcon', 'ClockIcon',
   'CodeIcon', 'CompassIcon', 'CopyIcon', 'CrosshairIcon', 'DownloadIcon',
-  'EllipsisIcon', 'EyeIcon', 'FacebookIcon', 'FileIcon', 'FolderIcon',
+  'EllipsisIcon', 'EyeIcon', 'FacebookIcon', 'FileIcon', 'FlashIcon', 'FlashOffIcon', 'FolderIcon',
   'FolderOpenIcon', 'GlobeIcon', 'GoogleIcon', 'GripVerticalIcon', 'HeadingIcon',
   'HeadsetIcon', 'HeartIcon', 'HelpCircleIcon', 'ImageIcon', 'InfoIcon',
   'ItalicIcon', 'KeyboardIcon', 'LifebuoyIcon', 'LinkIcon', 'ListChecksIcon',
@@ -31,7 +31,7 @@ const PUBLISHED = [
   'PlusIcon', 'PlusSquareIcon', 'QuoteIcon', 'ReceiptIcon', 'RepeatIcon',
   'RotateCcwIcon', 'RotateCwIcon', 'RotateSquareIcon', 'SearchIcon', 'SendArrowIcon', 'SendIcon',
   'ShareNodesIcon', 'ShieldAlertIcon', 'ShieldCheckIcon', 'SparklesIcon', 'StarIcon',
-  'SunIcon', 'TicketIcon', 'TrashIcon', 'UnlockIcon', 'UploadIcon', 'VideoIcon', 'XIcon',
+  'SunIcon', 'TicketIcon', 'TimerIcon', 'TrashIcon', 'UnlockIcon', 'UploadIcon', 'VideoIcon', 'XIcon',
 ];
 
 /** Every icon the module exports, however it is drawn. */

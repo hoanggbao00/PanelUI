@@ -1360,5 +1360,15 @@
       "addedIn": "0.105.0",
       "category": "data"
     }
+  ],
+  "camera": [
+    "Camera",
+    "A full-screen camera you assemble from parts.",
+    "react native expo camera",
+    {
+      "addedIn": "0.114.0",
+      "alpha": true,
+      "category": "media"
+    }
   ]
 }

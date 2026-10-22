@@ -311,6 +311,23 @@
     "docsPath": "components/calendar"
   },
   {
+    "name": "camera",
+    "type": "registry:ui",
+    "kind": "ui",
+    "group": "components",
+    "stability": "alpha",
+    "description": "A full-screen camera you assemble from parts.",
+    "registryDependencies": [
+      "animated-pressable",
+      "cn",
+      "controllable-state",
+      "haptics",
+      "icons",
+      "text"
+    ],
+    "docsPath": "components/camera"
+  },
+  {
     "name": "candlestick-chart",
     "type": "registry:ui",
     "kind": "chart",

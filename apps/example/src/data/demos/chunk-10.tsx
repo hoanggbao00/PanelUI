@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Image, ScrollView, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AIInput, type AIInputStatus, Avatar, Badge, Button, CameraIcon, ChevronsUpDownIcon, CodeBlock, FileIcon, Frame, GlobeIcon, ImageGeneration, type ImageGenerationStatus, Item, Marker, Message, MessageScroller, MicIcon, Plan, PlusIcon, Reasoning, Response, ScatterChart, ScrollCanvas, ScrollProgress, SearchIcon, Separator, Shimmer, Skeleton, Slider, Sources, Switch, Task, Text, ThinkingOrb, Tooltip } from "panelui-native";
+import { AIInput, type AIInputStatus, BottomSheet, Camera, type CameraCapture, type CameraPhoto, type CameraVideo, EmptyState, ImageViewer, VideoIcon, XIcon, Avatar, Badge, Button, CameraIcon, ChevronsUpDownIcon, CodeBlock, FileIcon, Frame, GlobeIcon, ImageGeneration, type ImageGenerationStatus, Item, Marker, Message, MessageScroller, MicIcon, Plan, PlusIcon, Reasoning, Response, ScatterChart, ScrollCanvas, ScrollProgress, SearchIcon, Separator, Shimmer, Skeleton, Slider, Sources, Switch, Task, Text, ThinkingOrb, Tooltip } from "panelui-native";
 import { router } from "expo-router";
 import { useCSSVariable } from "uniwind";
 import type { ComponentEntry } from '../component-types';
@@ -1233,7 +1233,256 @@ function ImageGenerationChatVersion() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Camera                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/** A clip's length as `0:12`. */
+function clipLength(ms: number) {
+  const seconds = Math.max(0, Math.round(ms / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+/**
+ * The whole camera. What it captures stays in memory for as long as the screen
+ * is open, and the library button opens it in a sheet.
+ */
+function CameraFullVersion() {
+  const [shots, setShots] = useState<CameraCapture[]>([]);
+  const [open, setOpen] = useState(false);
+  const photos = shots.filter((shot): shot is CameraPhoto => shot.type === 'photo');
+  const clips = shots.filter((shot): shot is CameraVideo => shot.type === 'video');
+  const latest = photos[0];
+
+  return (
+    <>
+      <Camera maxDuration={60} onCapture={(capture) => setShots((current) => [capture, ...current])}>
+        <Camera.Preview />
+        <Camera.Header>
+          <Camera.Button onPress={() => router.back()} accessibilityLabel="Close">
+            <XIcon size={20} />
+          </Camera.Button>
+          <Camera.Duration />
+          <View className="flex-row gap-2">
+            <Camera.Timer />
+            <Camera.Flash />
+          </View>
+        </Camera.Header>
+        <Camera.Footer>
+          <Camera.Zoom />
+          <Camera.Modes />
+          <Camera.Controls>
+            <Camera.Library
+              source={latest ? { uri: latest.uri } : undefined}
+              onPress={() => setOpen(true)}
+              accessibilityLabel="This session"
+            />
+            <Camera.Shutter />
+            <Camera.Flip />
+          </Camera.Controls>
+        </Camera.Footer>
+      </Camera>
+
+      <BottomSheet open={open} onOpenChange={setOpen} snapPoints={['half']}>
+        <BottomSheet.Content>
+          <BottomSheet.Header
+            title="This session"
+            description={
+              shots.length === 0
+                ? 'Kept until you leave the camera'
+                : `${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}, ${clips.length} ${clips.length === 1 ? 'clip' : 'clips'}`
+            }
+          />
+          <BottomSheet.Body contentContainerClassName="gap-4 pb-6">
+            {shots.length === 0 ? (
+              <EmptyState>
+                <EmptyState.Header>
+                  <EmptyState.Media variant="icon">
+                    <CameraIcon size={20} />
+                  </EmptyState.Media>
+                  <EmptyState.Title>Nothing yet</EmptyState.Title>
+                  <EmptyState.Description>
+                    What you take stays here, and nothing is saved to your photos.
+                  </EmptyState.Description>
+                </EmptyState.Header>
+              </EmptyState>
+            ) : null}
+            {photos.length > 0 ? (
+              <ImageViewer>
+                <View className="flex-row flex-wrap gap-1.5">
+                  {photos.map((photo, index) => (
+                    <ImageViewer.Trigger
+                      key={photo.uri}
+                      source={{ uri: photo.uri }}
+                      width={photo.width}
+                      height={photo.height}
+                      alt={`Photo ${photos.length - index} from this session`}
+                      radius={8}
+                      className="h-24 w-24 rounded-lg"
+                    />
+                  ))}
+                </View>
+              </ImageViewer>
+            ) : null}
+            {clips.length > 0 ? (
+              <Item.Group>
+                {clips.map((clip, index) => (
+                  <Item key={clip.uri} size="sm">
+                    <Item.Media variant="icon">
+                      <VideoIcon size={18} />
+                    </Item.Media>
+                    <Item.Content>
+                      <Item.Title>{`Clip ${clips.length - index}`}</Item.Title>
+                      <Item.Description>{clipLength(clip.duration)}</Item.Description>
+                    </Item.Content>
+                  </Item>
+                ))}
+              </Item.Group>
+            ) : null}
+          </BottomSheet.Body>
+        </BottomSheet.Content>
+      </BottomSheet>
+    </>
+  );
+}
+
+/**
+ * A profile photo: the front camera with a circle to frame a face in, saved
+ * the way the preview showed it, and a look at the result before it is used.
+ */
+function CameraProfileVersion() {
+  const [photo, setPhoto] = useState<CameraPhoto | null>(null);
+
+  if (photo) {
+    return (
+      <View className="flex-1 items-center justify-center gap-8 bg-background px-6">
+        <Image
+          source={{ uri: photo.uri }}
+          className="h-64 w-64 rounded-full"
+          accessibilityLabel="Your new profile photo"
+        />
+        <Text size="lg" weight="semibold">
+          Use this photo?
+        </Text>
+        <View className="w-full gap-2">
+          <Button fullWidth onPress={() => router.back()}>
+            Use photo
+          </Button>
+          <Button fullWidth variant="secondary" onPress={() => setPhoto(null)}>
+            Retake
+          </Button>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <Camera
+      defaultFacing="front"
+      mirror
+      onCapture={(capture) => {
+        if (capture.type === 'photo') setPhoto(capture);
+      }}
+    >
+      <Camera.Preview>
+        <View className="flex-1 items-center justify-center">
+          <View className="h-72 w-72 rounded-full border-2 border-white/80" />
+        </View>
+      </Camera.Preview>
+      <Camera.Header>
+        <Camera.Button onPress={() => router.back()} accessibilityLabel="Close">
+          <XIcon size={20} />
+        </Camera.Button>
+        <Camera.Timer />
+      </Camera.Header>
+      <Camera.Footer>
+        <Text size="sm" weight="medium" className="text-center text-white">
+          Fit your face inside the circle
+        </Text>
+        <Camera.Controls>
+          <View className="h-12 w-12" />
+          <Camera.Shutter />
+          <Camera.Flip />
+        </Camera.Controls>
+      </Camera.Footer>
+    </Camera>
+  );
+}
+
+/** A story clip: video only, held to record, and stopped at fifteen seconds. */
+function CameraClipVersion() {
+  const [clips, setClips] = useState<CameraVideo[]>([]);
+
+  return (
+    <Camera
+      defaultMode="video"
+      maxDuration={15}
+      onCapture={(capture) => {
+        if (capture.type === 'video') setClips((current) => [capture, ...current]);
+      }}
+    >
+      <Camera.Preview />
+      <Camera.Header>
+        <Camera.Button onPress={() => router.back()} accessibilityLabel="Close">
+          <XIcon size={20} />
+        </Camera.Button>
+        <Camera.Duration />
+        <Camera.Flash />
+      </Camera.Header>
+      <Camera.Footer>
+        <Text size="sm" weight="medium" className="text-center text-white">
+          {clips.length === 0
+            ? 'Hold to record, up to 15 seconds'
+            : `${clips.length} ${clips.length === 1 ? 'clip' : 'clips'}, the last ${clipLength(clips[0]!.duration)}`}
+        </Text>
+        <Camera.Controls>
+          <View className="h-12 w-12" />
+          <Camera.Shutter />
+          <Camera.Flip />
+        </Camera.Controls>
+      </Camera.Footer>
+    </Camera>
+  );
+}
+
 const ENTRIES: ComponentEntry[] = [
+  {
+    slug: 'camera',
+    name: 'Camera',
+    summary: 'A full-screen camera you assemble from parts',
+    // Each of these is the whole screen, drawn edge to edge, with its own way out.
+    demos: [
+      {
+        label: 'Photo and video',
+        id: 'camera',
+        fullPage: true,
+        fullBleed: true,
+        backSwipe: true,
+        description:
+          'The whole camera: flash and timer along the top, zoom, modes and the shutter along the bottom. What you take stays in a sheet until you leave.',
+        render: () => <CameraFullVersion />,
+      },
+      {
+        label: 'Profile photo',
+        id: 'profile-photo',
+        fullPage: true,
+        fullBleed: true,
+        backSwipe: true,
+        description:
+          'The front camera, a circle to frame a face in, and a look at the photo before it is used.',
+        render: () => <CameraProfileVersion />,
+      },
+      {
+        label: 'Short clip',
+        id: 'short-clip',
+        fullPage: true,
+        fullBleed: true,
+        backSwipe: true,
+        description: 'Video only, held to record and stopped at 15 seconds, with a ring that fills as it runs.',
+        render: () => <CameraClipVersion />,
+      },
+    ],
+  },
   {
     slug: 'ai-input',
     name: 'aiInput',
