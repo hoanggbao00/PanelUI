@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRightIcon, HeartIcon } from 'lucide-react';
+import { ArrowRightIcon } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { NeonMark, OpenPanelMark } from '@/components/sponsor-marks';
 import { absoluteUrl, site } from '@/lib/site';
@@ -31,6 +32,22 @@ const OPEN_SOURCE_PROGRAM = [
     mark: <OpenPanelMark className="h-6 w-auto" />,
   },
 ];
+
+/**
+ * People sponsoring through GitHub Sponsors, earliest first. Each links to their
+ * GitHub profile, and the avatar is read from GitHub so it stays current.
+ */
+const SPONSORS = [{ login: 'yashDahiwale', name: 'Yash Dahiwale' }];
+
+/** "Yash Dahiwale" → "YD", shown while the avatar loads or if it fails. */
+function initialsOf(name: string) {
+  return name
+    .split(/\s+/)
+    .map((word) => word[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default function SponsorsPage() {
   return (
@@ -79,14 +96,28 @@ export default function SponsorsPage() {
         <div className="mx-auto flex max-w-5xl flex-col gap-6">
           <h2 className="text-sm text-muted-foreground">Sponsors</h2>
 
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-8 py-14 text-center">
-            <HeartIcon className="size-5 text-muted-foreground" aria-hidden="true" />
-            <p className="font-heading text-lg font-medium">No sponsors yet</p>
-            <p className="max-w-md text-sm text-muted-foreground">
-              This is where individual sponsors are listed. The first one goes at the
-              top.
-            </p>
-          </div>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {SPONSORS.map(({ login, name }) => (
+              <li key={login}>
+                <Link
+                  href={`https://github.com/${login}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${name} on GitHub`}
+                  className="flex flex-col items-center gap-3 rounded-xl border px-4 py-6 text-center transition-colors hover:bg-accent"
+                >
+                  <Avatar className="size-16">
+                    <AvatarImage src={`https://github.com/${login}.png?size=160`} alt="" />
+                    <AvatarFallback className="text-base">{initialsOf(name)}</AvatarFallback>
+                  </Avatar>
+                  <span className="flex flex-col gap-0.5">
+                    <span className="font-medium">{name}</span>
+                    <span className="text-sm text-muted-foreground">@{login}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
