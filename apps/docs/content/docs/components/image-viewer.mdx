@@ -174,6 +174,44 @@ The open picture leaves a gap in the page where its thumbnail was, and a light b
 </ImageViewer>
 ```
 
+### Drawing the pictures with expo-image
+
+The viewer draws its pictures with React Native's `Image`, which keeps a cache of its own. A page drawn with another image component has already loaded the thumbnail into that component's cache, and the viewer fetches it again: a remote thumbnail can take a few hundred milliseconds, and the flight starts empty.
+
+`renderPicture` draws the viewer's pictures with the page's component instead. It is called for the thumbnail copy that flies (`kind: 'thumb'`) and for `fullSource` over it (`kind: 'full'`). Draw `source` cropped to fill `style`, and pass `onLoad` through: the full picture fades in on it.
+
+```tsx
+import { Image } from 'expo-image';
+
+<ImageViewer
+  renderPicture={({ source, style, onLoad }) => (
+    <Image
+      source={source}
+      style={style}
+      contentFit="cover"
+      cachePolicy="memory-disk"
+      accessible={false}
+      onLoad={onLoad}
+    />
+  )}
+>
+  <ImageViewer.Trigger
+    source={{ uri: photo.thumb }}
+    fullSource={{ uri: photo.full }}
+    alt="Cliffs above the bay"
+    radius={12}
+    className="h-72 w-full rounded-xl"
+  >
+    <Image
+      source={{ uri: photo.thumb }}
+      contentFit="cover"
+      cachePolicy="memory-disk"
+      style={StyleSheet.absoluteFill}
+    />
+  </ImageViewer.Trigger>
+</ImageViewer>
+```
+
 ### Your own thumbnail
 
 Pass `children` to draw the picture yourself. They should show the same image cropped to fill, the way the flight begins. Here the media of a post opens the viewer; `Post.Media` has `rounded-xl`, so `radius` is 12.
@@ -282,6 +320,7 @@ A portrait, a landscape and a panorama, each fitted whole to the screen from a t
 | `inset` | `number` | `16` | Space kept between the open picture and the edges of the screen, in points. Measured from the safe area at the top and bottom, and the larger of the two is used for both, so the picture stays centred. `0` fills the screen. |
 | `cornerRadius` | `number` | `16` | Corner radius of the open picture, in points. The corners stay this size on screen while the picture is zoomed or dragged. `0` squares them. |
 | `dir` | `'ltr' \| 'rtl'` | `'ltr'` | Which way the gallery runs. In `rtl` the next page sits to the left and a swipe to the right turns to it. Page numbers, `index` and the screen reader's next and previous stay in page order either way. To follow the reading direction, pass `useDirection()`. |
+| `renderPicture` | `ImageViewerPictureRenderer` | — | Draw the viewer's own pictures: the copy of `source` that flies, and `fullSource` over it once open. Pass the image component the page draws with, so the viewer shares its cache and a thumbnail already on the page is not fetched again for the flight. Draw `source` cropped to fill `style`, call `onLoad` when it is set, and keep it out of the accessibility tree. Left out, the viewer draws React Native's `Image`. |
 
 ### ImageViewer.Trigger
 
@@ -314,4 +353,4 @@ The Android back button and the accessibility escape gesture both close it. With
 
 **Values:** `ImageViewer`
 
-**Types:** `ImageViewerProps`, `ImageViewerTriggerProps`
+**Types:** `ImageViewerPicture`, `ImageViewerPictureRenderer`, `ImageViewerProps`, `ImageViewerTriggerProps`

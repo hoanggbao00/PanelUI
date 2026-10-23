@@ -657,6 +657,8 @@ export {
 } from './components/image-generation';
 export {
   ImageViewer,
+  type ImageViewerPicture,
+  type ImageViewerPictureRenderer,
   type ImageViewerProps,
   type ImageViewerTriggerProps,
 } from './components/image-viewer';

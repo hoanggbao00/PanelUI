@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "exports": 1497,
+    "exports": 1499,
     "values": 374,
-    "types": 1123,
+    "types": 1125,
     "modules": 168,
     "components": 141,
     "hooks": 13
@@ -2244,6 +2244,14 @@
           {
             "name": "ImageViewer",
             "kind": "value"
+          },
+          {
+            "name": "ImageViewerPicture",
+            "kind": "type"
+          },
+          {
+            "name": "ImageViewerPictureRenderer",
+            "kind": "type"
           },
           {
             "name": "ImageViewerProps",

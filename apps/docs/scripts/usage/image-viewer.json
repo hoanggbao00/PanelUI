@@ -60,6 +60,11 @@
       "code": "<ImageViewer>\n  <ImageViewer.Trigger\n    source={{ uri: photo.thumb }}\n    fullSource={{ uri: photo.full }}\n    width={3024}\n    height={4032}\n    alt=\"Cliffs above the bay\"\n    caption=\"Porthcurno, early on a Sunday\"\n    radius={12}\n    className=\"h-72 w-full rounded-xl\"\n  />\n</ImageViewer>"
     },
     {
+      "title": "Drawing the pictures with expo-image",
+      "description": "The viewer draws its pictures with React Native's `Image`, which keeps a cache of its own. A page drawn with another image component has already loaded the thumbnail into that component's cache, and the viewer fetches it again: a remote thumbnail can take a few hundred milliseconds, and the flight starts empty.\n\n`renderPicture` draws the viewer's pictures with the page's component instead. It is called for the thumbnail copy that flies (`kind: 'thumb'`) and for `fullSource` over it (`kind: 'full'`). Draw `source` cropped to fill `style`, and pass `onLoad` through: the full picture fades in on it.",
+      "code": "import { Image } from 'expo-image';\n\n<ImageViewer\n  renderPicture={({ source, style, onLoad }) => (\n    <Image\n      source={source}\n      style={style}\n      contentFit=\"cover\"\n      cachePolicy=\"memory-disk\"\n      accessible={false}\n      onLoad={onLoad}\n    />\n  )}\n>\n  <ImageViewer.Trigger\n    source={{ uri: photo.thumb }}\n    fullSource={{ uri: photo.full }}\n    alt=\"Cliffs above the bay\"\n    radius={12}\n    className=\"h-72 w-full rounded-xl\"\n  >\n    <Image\n      source={{ uri: photo.thumb }}\n      contentFit=\"cover\"\n      cachePolicy=\"memory-disk\"\n      style={StyleSheet.absoluteFill}\n    />\n  </ImageViewer.Trigger>\n</ImageViewer>"
+    },
+    {
       "title": "Your own thumbnail",
       "description": "Pass `children` to draw the picture yourself. They should show the same image cropped to fill, the way the flight begins. Here the media of a post opens the viewer; `Post.Media` has `rounded-xl`, so `radius` is 12.",
       "code": "<ImageViewer>\n  <ImageViewer.Trigger source={{ uri: photo }} alt=\"A coin going into a piggy bank\" radius={12} className=\"mx-4\">\n    <Post.Media source={{ uri: photo }} className=\"mx-0\" />\n  </ImageViewer.Trigger>\n</ImageViewer>"

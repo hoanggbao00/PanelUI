@@ -119,6 +119,13 @@ import {
   type Rect,
   type Size,
 } from './image-viewer-geometry';
+import {
+  useViewerPictures,
+  type ImageViewerPicture,
+  type ImageViewerPictureRenderer,
+} from './image-viewer-pictures';
+
+export type { ImageViewerPicture, ImageViewerPictureRenderer };
 
 /** Space between two pages of a gallery, so a page turn reads as two pictures. */
 const PAGE_GAP = 16;
@@ -300,6 +307,15 @@ export interface ImageViewerProps {
    * reading direction, pass `useDirection()`.
    */
   dir?: 'ltr' | 'rtl';
+  /**
+   * Draw the viewer's own pictures: the copy of `source` that flies, and
+   * `fullSource` over it once open. Pass the image component the page draws
+   * with, so the viewer shares its cache and a thumbnail already on the page
+   * is not fetched again for the flight. Draw `source` cropped to fill `style`,
+   * call `onLoad` when it is set, and keep it out of the accessibility tree.
+   * Left out, the viewer draws React Native's `Image`.
+   */
+  renderPicture?: ImageViewerPictureRenderer;
 }
 
 function ImageViewerRoot({
@@ -320,6 +336,7 @@ function ImageViewerRoot({
   inset = DEFAULT_INSET,
   cornerRadius = DEFAULT_CORNER_RADIUS,
   dir = 'ltr',
+  renderPicture,
 }: ImageViewerProps) {
   const storeRef = useRef<ViewerStore | null>(null);
   storeRef.current ??= new ViewerStore();
@@ -378,6 +395,7 @@ function ImageViewerRoot({
             onRequestClose={requestClose}
             onExited={exited}
             onShow={setHiddenId}
+            renderPicture={renderPicture}
             blur={blur}
             dimClassName={dimClassName}
             maxScale={maxScale}
@@ -600,6 +618,7 @@ interface ViewerOverlayProps {
   onRequestClose: () => void;
   onExited: () => void;
   onShow: (id: string | null) => void;
+  renderPicture?: ImageViewerPictureRenderer;
   blur: boolean;
   dimClassName?: string;
   maxScale: number;
@@ -621,6 +640,7 @@ function ViewerOverlay({
   onRequestClose,
   onExited,
   onShow,
+  renderPicture,
   blur,
   dimClassName,
   maxScale,
@@ -1227,6 +1247,7 @@ function ViewerOverlay({
                 dragX={dragX}
                 dragY={dragY}
                 shrink={shrink}
+                renderPicture={renderPicture}
               />
             ))}
           </Animated.View>
@@ -1308,6 +1329,20 @@ interface ViewerPageProps {
   dragX: SharedValue<number>;
   dragY: SharedValue<number>;
   shrink: SharedValue<number>;
+  renderPicture?: ImageViewerPictureRenderer;
+}
+
+/** The viewer's own picture: React Native's `Image`, cropped to fill. */
+function drawPicture({ source, style, onLoad }: ImageViewerPicture) {
+  return (
+    <Image
+      source={source}
+      resizeMode="cover"
+      accessible={false}
+      onLoad={onLoad}
+      style={style}
+    />
+  );
 }
 
 /**
@@ -1335,10 +1370,11 @@ function ViewerPage({
   dragX,
   dragY,
   shrink,
+  renderPicture = drawPicture,
 }: ViewerPageProps) {
   const size = item.size ?? box;
   const fit = fitWithin(size, box);
-  const [fullLoaded, setFullLoaded] = useState(false);
+  const pictures = useViewerPictures(item.source, item.fullSource, StyleSheet.absoluteFill);
 
   const frameStyle = useAnimatedStyle(() => {
     if (activePage.value !== at) {
@@ -1398,21 +1434,8 @@ function ViewerPage({
     >
       <Animated.View style={[{ position: 'absolute', overflow: 'hidden' }, frameStyle]}>
         <Animated.View style={[{ position: 'absolute' }, pictureStyle]}>
-          <Image
-            source={item.source}
-            resizeMode="cover"
-            accessible={false}
-            style={StyleSheet.absoluteFill}
-          />
-          {item.fullSource ? (
-            <Image
-              source={item.fullSource}
-              resizeMode="cover"
-              accessible={false}
-              onLoad={() => setFullLoaded(true)}
-              style={[StyleSheet.absoluteFill, { opacity: fullLoaded ? 1 : 0 }]}
-            />
-          ) : null}
+          {renderPicture(pictures.thumb)}
+          {pictures.full ? renderPicture(pictures.full) : null}
         </Animated.View>
       </Animated.View>
     </View>

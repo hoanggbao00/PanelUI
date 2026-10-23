@@ -44,6 +44,7 @@ import { ImageViewer } from 'panelui-native';
 | `inset` | `number` | `16` | Space kept between the open picture and the edges of the screen, in points. Measured from the safe area at the top and bottom, and the larger of the two is used for both, so the picture stays centred. `0` fills the screen. |
 | `cornerRadius` | `number` | `16` | Corner radius of the open picture, in points. The corners stay this size on screen while the picture is zoomed or dragged. `0` squares them. |
 | `dir` | `'ltr' \| 'rtl'` | `ltr` | Which way the gallery runs. In `rtl` the next page sits to the left and a swipe to the right turns to it. Page numbers, `index` and the screen reader's next and previous stay in page order either way. To follow the reading direction, pass `useDirection()`. |
+| `renderPicture` | `ImageViewerPictureRenderer` | — | Draw the viewer's own pictures: the copy of `source` that flies, and `fullSource` over it once open. Pass the image component the page draws with, so the viewer shares its cache and a thumbnail already on the page is not fetched again for the flight. Draw `source` cropped to fill `style`, call `onLoad` when it is set, and keep it out of the accessibility tree. Left out, the viewer draws React Native's `Image`. |
 
 #### `ImageViewerTriggerProps`
 
