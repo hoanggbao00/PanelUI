@@ -271,5 +271,14 @@
       "addedIn": "0.7.0",
       "category": "ai"
     }
+  ],
+  "alert": [
+    "Alert",
+    "A message set into the page that stays until it is dealt with, as a card in a tray of its tone.",
+    "react alert callout banner message component",
+    {
+      "addedIn": "0.8.0",
+      "category": "feedback"
+    }
   ]
 }

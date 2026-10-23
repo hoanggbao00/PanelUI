@@ -2,6 +2,7 @@
   "title": "Components",
   "pages": [
     "!index",
+    "alert",
     "avatar",
     "bar-picker",
     "button",

@@ -490,3 +490,23 @@ export {
   type MicrophoneControls,
   type MicrophoneStatus,
 } from './components/soundwave';
+export {
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  AlertActions,
+  AlertClose,
+  AlertDetails,
+  AlertItem,
+  type AlertProps,
+  type AlertTone,
+  type AlertVariant,
+  type AlertIconProps,
+  type AlertTitleProps,
+  type AlertDescriptionProps,
+  type AlertActionsProps,
+  type AlertCloseProps,
+  type AlertDetailsProps,
+  type AlertItemProps,
+} from './components/alert';

@@ -1,0 +1,403 @@
+---
+title: Alert
+description: A message set into the page that stays until it is dealt with, as a card in a tray of its tone.
+status: new
+---
+
+<ComponentPreview name="alert/overview" height={220}>
+
+```tsx lineNumbers
+'use client';
+
+import { Alert } from '@/components/panelui/alert';
+
+export default function AlertOverview() {
+  return (
+    <Alert tone="info" className="w-full max-w-md">
+      <Alert.Icon />
+      <Alert.Title>Two-step sign-in starts on 1 December</Alert.Title>
+      <Alert.Description>After their password, everyone in the workspace will be asked for a code from their phone.</Alert.Description>
+    </Alert>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it for a message that belongs to a page and stays there until it has been dealt with: a payment that failed, a limit that is close, a form that needs another look.
+
+By default the message is a card set into a tray tinted in its `tone`, and `Alert.Actions` sit in the strip of tray under the card, at its end. `variant="plain"` is one tinted box, for inside a form or a dialog that already has an edge. `variant="banner"` is one line across the top of a page or a panel.
+
+An alert does not leave on its own. It stays until `Alert.Close` is pressed or `open` is set to false, and then it folds away.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/alert.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/alert` instead of `@/components/panelui/alert`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/alert.tsx`:
+
+<RegistrySource name="alert" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Alert } from "@/components/panelui/alert"
+```
+
+```tsx
+<Alert tone="warning">
+  <Alert.Icon />
+  <Alert.Title>Storage is 90% full</Alert.Title>
+  <Alert.Description>Uploads stop at 50 GB.</Alert.Description>
+  <Alert.Actions>
+    <Button size="sm">Upgrade</Button>
+  </Alert.Actions>
+  <Alert.Close />
+</Alert>
+```
+
+## Composition
+
+```tsx
+<Alert>
+  <Alert.Icon />
+  <Alert.Title />
+  <Alert.Description />
+  <Alert.Details>
+    <Alert.Item />
+  </Alert.Details>
+  <Alert.Actions />
+  <Alert.Close />
+</Alert>
+```
+
+- **`Alert.Icon`** — The glyph at the start, in the tone's colour. In the default variant it sits in a disc of that colour. Without children it draws the tone's own glyph.
+- **`Alert.Title`** — What happened, in a few words.
+- **`Alert.Description`** — The sentence under the title. A link in it is underlined.
+- **`Alert.Details`** — A line under the description that opens into a list, for an alert that sums up several things. `label` is the line's text.
+- **`Alert.Item`** — One entry in the list, marked with a dot in the tone's colour.
+- **`Alert.Actions`** — The buttons. In the default variant they move out of the card into the tray under it; in `plain` they sit under the words, and in `banner` at the end of the line. Keep it a direct child of `Alert`.
+- **`Alert.Close`** — A round cross at the end that folds the alert away. It calls `onOpenChange(false)`.
+
+## Examples
+
+### Tones
+
+`tone` draws the alert in one of the theme's roles: `neutral`, `info`, `success`, `warning` or `destructive`. The tray takes a little of the colour and the icon's disc a little more; the words stay in the foreground colours, so they read the same in every tone.
+
+<ComponentPreview name="alert/tones" height={560}>
+
+```tsx lineNumbers
+'use client';
+
+import { Alert, type AlertTone } from '@/components/panelui/alert';
+
+const MESSAGES: { tone: AlertTone; title: string; description: string }[] = [
+  { tone: 'neutral', title: 'Drafts are kept for 30 days', description: 'After that they are cleared from the editor.' },
+  { tone: 'info', title: 'A new editor is ready', description: 'It loads the next time you open a document.' },
+  { tone: 'success', title: 'Your export is ready', description: '412 rows were written to orders-october.csv.' },
+  { tone: 'warning', title: 'Storage is 90% full', description: 'Uploads stop at 50 GB. Clear out old files or move to a larger plan.' },
+  { tone: 'destructive', title: 'The import stopped at row 1,204', description: 'A date in column C could not be read.' },
+];
+
+export default function AlertTones() {
+  return (
+    <div className="flex w-full max-w-md flex-col gap-3">
+      {MESSAGES.map((message) => (
+        <Alert key={message.tone} tone={message.tone}>
+          <Alert.Icon />
+          <Alert.Title>{message.title}</Alert.Title>
+          <Alert.Description>{message.description}</Alert.Description>
+        </Alert>
+      ))}
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### With actions
+
+`Alert.Actions` sits in the tray under the card, at its end, so the buttons do not crowd the sentence they answer. `Alert.Icon` takes any glyph as its children.
+
+<ComponentPreview name="alert/actions" height={260}>
+
+```tsx lineNumbers
+'use client';
+
+import { CreditCardIcon } from 'lucide-react';
+import { Alert } from '@/components/panelui/alert';
+import { Button } from '@/components/panelui/button';
+
+export default function AlertWithActions() {
+  return (
+    <Alert tone="destructive" className="w-full max-w-md">
+      <Alert.Icon>
+        <CreditCardIcon />
+      </Alert.Icon>
+      <Alert.Title>Your payment did not go through</Alert.Title>
+      <Alert.Description>The card ending 4242 was declined. Update it by 14 November to keep the Team plan.</Alert.Description>
+      <Alert.Actions>
+        <Button size="sm" variant="ghost">
+          Remind me later
+        </Button>
+        <Button size="sm">Update card</Button>
+      </Alert.Actions>
+    </Alert>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Dismissing
+
+`Alert.Close` folds the alert to no height, and what is under it slides up. Here `open` is held outside, so a button can bring it back.
+
+<ComponentPreview name="alert/dismiss" height={240}>
+
+```tsx lineNumbers
+'use client';
+
+import { KeyboardIcon } from 'lucide-react';
+import { Alert } from '@/components/panelui/alert';
+import { Button } from '@/components/panelui/button';
+import { useState } from 'react';
+
+export default function AlertDismiss() {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <div className="flex w-full max-w-md flex-col items-start gap-3">
+      <Alert tone="success" open={open} onOpenChange={setOpen} className="w-full">
+        <Alert.Icon>
+          <KeyboardIcon />
+        </Alert.Icon>
+        <Alert.Title>Keyboard shortcuts are here</Alert.Title>
+        <Alert.Description>Press ? anywhere in the app to see all of them.</Alert.Description>
+        <Alert.Close />
+      </Alert>
+      <Button variant="outline" size="sm" disabled={open} onClick={() => setOpen(true)}>
+        Show it again
+      </Button>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A list of problems
+
+`Alert.Details` adds a line under the description that opens into a list of `Alert.Item`s. The title gives the count; the list names each one.
+
+<ComponentPreview name="alert/details" height={300}>
+
+```tsx lineNumbers
+'use client';
+
+import { Alert } from '@/components/panelui/alert';
+
+export default function AlertFieldDetails() {
+  return (
+    <Alert tone="destructive" className="w-full max-w-md">
+      <Alert.Icon />
+      <Alert.Title>3 fields need another look</Alert.Title>
+      <Alert.Description>The invoice can be sent once they are fixed.</Alert.Description>
+      <Alert.Details label="Show the fields">
+        <Alert.Item>The billing address has no postcode.</Alert.Item>
+        <Alert.Item>A VAT number has 9 digits; this one has 7.</Alert.Item>
+        <Alert.Item>The due date is before the issue date.</Alert.Item>
+      </Alert.Details>
+    </Alert>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Plain
+
+`variant="plain"` is one tinted box with the glyph alone, for a note under a field or a warning inside a panel. Its actions sit under the words.
+
+<ComponentPreview name="alert/plain" height={360}>
+
+```tsx lineNumbers
+'use client';
+
+import { Alert } from '@/components/panelui/alert';
+import { Button } from '@/components/panelui/button';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+
+export default function AlertPlain() {
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="plain-email">
+          <Label.Text>New email address</Label.Text>
+        </Label>
+        <Input id="plain-email" type="email" defaultValue="sam@larkspur.studio" />
+        <Alert tone="info" variant="plain">
+          <Alert.Icon />
+          <Alert.Description>We will send a link to the new address. Until it is opened, you sign in with the old one.</Alert.Description>
+        </Alert>
+      </div>
+      <Alert tone="warning" variant="plain">
+        <Alert.Icon />
+        <Alert.Title>This key stops working on Friday</Alert.Title>
+        <Alert.Description>Requests signed with it will be refused from 00:00 UTC.</Alert.Description>
+        <Alert.Actions>
+          <Button size="sm" variant="outline">
+            Create a new key
+          </Button>
+        </Alert.Actions>
+      </Alert>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Banner
+
+`variant="banner"` is one line across the top of what it is about, with square ends and a rule under it. Keep it to a title and one action: the line is read at a glance, and a sentence beside the title crowds it. On a narrow screen the action wraps under the title.
+
+<ComponentPreview name="alert/banner" height={300}>
+
+```tsx lineNumbers
+'use client';
+
+import { WrenchIcon } from 'lucide-react';
+import { Alert } from '@/components/panelui/alert';
+import { Button } from '@/components/panelui/button';
+import { Frame } from '@/components/panelui/frame';
+
+const DEPLOYS = [
+  { ref: 'main · 7f3e1d2', where: 'Production · 12 minutes ago' },
+  { ref: 'feature/search-filters', where: 'Preview · 1 hour ago' },
+];
+
+export default function AlertBanner() {
+  return (
+    <div className="w-full max-w-xl overflow-hidden rounded-2xl border bg-background">
+      <Alert tone="warning" variant="banner">
+        <Alert.Icon>
+          <WrenchIcon />
+        </Alert.Icon>
+        <Alert.Title>Deploys pause on Sunday</Alert.Title>
+        <Alert.Actions>
+          <Button size="sm" variant="ghost" className="h-7">
+            Details
+          </Button>
+        </Alert.Actions>
+        <Alert.Close />
+      </Alert>
+      <div className="p-4">
+        <Frame>
+          <Frame.Header>
+            <Frame.Title>Deploys</Frame.Title>
+          </Frame.Header>
+          <Frame.Panel>
+            {DEPLOYS.map((deploy) => (
+              <Frame.Row key={deploy.ref}>
+                <Frame.Content>
+                  <Frame.Title as="p">{deploy.ref}</Frame.Title>
+                  <Frame.Description>{deploy.where}</Frame.Description>
+                </Frame.Content>
+              </Frame.Row>
+            ))}
+          </Frame.Panel>
+        </Frame>
+      </div>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Alert
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tone` | `AlertTone` | `'neutral'` | The theme role it is drawn in, which also says how urgent it is. Default `neutral`. |
+| `variant` | `AlertVariant` | `'default'` | `default` sets the message in a card inside a tray of its tone, with the actions in the tray under it. `plain` is one tinted box, for inside a form or a dialog. `banner` is one line across the top of a page or panel. |
+| `open` | `boolean` | — | Whether it is shown, when the caller holds that. It folds away when it is not. |
+| `defaultOpen` | `boolean` | `true` | Whether it starts shown, when the caller does not hold it. Default `true`. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called when `Alert.Close` asks for it to close. |
+
+### Alert.Details
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `ReactNode` | — | The line that opens the list: "Show the 3 fields". |
+| `open` | `boolean` | — | Whether the list is open, when the caller holds that. |
+| `defaultOpen` | `boolean` | `false` | Whether the list starts open, when the caller does not hold it. Default `false`. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called when the line is pressed to open or close the list. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Tone and screen readers
+
+A `destructive` or `warning` alert has `role="alert"`, so a screen reader announces it as soon as it appears. The other tones have `role="status"` and are read when the reader reaches them. Pass `role` to choose for yourself.
+
+### Closing
+
+A closed alert stays in the page at no height, and nothing inside it can be focused. Use `open` and `onOpenChange` to hold the state outside, for example to remember that it was dismissed. In a column with a `gap`, the gap stays where the alert was.
+
+### Actions in the tray
+
+The default variant finds `Alert.Actions` among its own children and moves it into the tray, so keep it a direct child rather than wrapping it in another component.
+
+### Server Components
+
+`Alert` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Alert.Icon` off the import, so each part is also exported by name: `AlertIcon` is `Alert.Icon`, and so on for the others.
+
+```tsx
+import { Alert, AlertIcon, AlertTitle, AlertDescription, AlertActions, AlertClose, AlertDetails, AlertItem } from "@/components/panelui/alert"
+```

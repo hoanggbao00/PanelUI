@@ -1,0 +1,58 @@
+{
+  "slug": "alert",
+  "demo": "overview",
+  "demoOptions": {
+    "height": 220
+  },
+  "intro": "Use it for a message that belongs to a page and stays there until it has been dealt with: a payment that failed, a limit that is close, a form that needs another look.\n\nBy default the message is a card set into a tray tinted in its `tone`, and `Alert.Actions` sit in the strip of tray under the card, at its end. `variant=\"plain\"` is one tinted box, for inside a form or a dialog that already has an edge. `variant=\"banner\"` is one line across the top of a page or a panel.\n\nAn alert does not leave on its own. It stays until `Alert.Close` is pressed or `open` is set to false, and then it folds away.",
+  "usage": "<Alert tone=\"warning\">\n  <Alert.Icon />\n  <Alert.Title>Storage is 90% full</Alert.Title>\n  <Alert.Description>Uploads stop at 50 GB.</Alert.Description>\n  <Alert.Actions>\n    <Button size=\"sm\">Upgrade</Button>\n  </Alert.Actions>\n  <Alert.Close />\n</Alert>",
+  "anatomy": "<Alert>\n  <Alert.Icon />\n  <Alert.Title />\n  <Alert.Description />\n  <Alert.Details>\n    <Alert.Item />\n  </Alert.Details>\n  <Alert.Actions />\n  <Alert.Close />\n</Alert>",
+  "parts": {
+    "Icon": "The glyph at the start, in the tone's colour. In the default variant it sits in a disc of that colour. Without children it draws the tone's own glyph.",
+    "Title": "What happened, in a few words.",
+    "Description": "The sentence under the title. A link in it is underlined.",
+    "Details": "A line under the description that opens into a list, for an alert that sums up several things. `label` is the line's text.",
+    "Item": "One entry in the list, marked with a dot in the tone's colour.",
+    "Actions": "The buttons. In the default variant they move out of the card into the tray under it; in `plain` they sit under the words, and in `banner` at the end of the line. Keep it a direct child of `Alert`.",
+    "Close": "A round cross at the end that folds the alert away. It calls `onOpenChange(false)`."
+  },
+  "examples": [
+    {
+      "title": "Tones",
+      "description": "`tone` draws the alert in one of the theme's roles: `neutral`, `info`, `success`, `warning` or `destructive`. The tray takes a little of the colour and the icon's disc a little more; the words stay in the foreground colours, so they read the same in every tone.",
+      "demo": "tones",
+      "height": 560
+    },
+    {
+      "title": "With actions",
+      "description": "`Alert.Actions` sits in the tray under the card, at its end, so the buttons do not crowd the sentence they answer. `Alert.Icon` takes any glyph as its children.",
+      "demo": "actions",
+      "height": 260
+    },
+    {
+      "title": "Dismissing",
+      "description": "`Alert.Close` folds the alert to no height, and what is under it slides up. Here `open` is held outside, so a button can bring it back.",
+      "demo": "dismiss",
+      "height": 240
+    },
+    {
+      "title": "A list of problems",
+      "description": "`Alert.Details` adds a line under the description that opens into a list of `Alert.Item`s. The title gives the count; the list names each one.",
+      "demo": "details",
+      "height": 300
+    },
+    {
+      "title": "Plain",
+      "description": "`variant=\"plain\"` is one tinted box with the glyph alone, for a note under a field or a warning inside a panel. Its actions sit under the words.",
+      "demo": "plain",
+      "height": 360
+    },
+    {
+      "title": "Banner",
+      "description": "`variant=\"banner\"` is one line across the top of what it is about, with square ends and a rule under it. Keep it to a title and one action: the line is read at a glance, and a sentence beside the title crowds it. On a narrow screen the action wraps under the title.",
+      "demo": "banner",
+      "height": 300
+    }
+  ],
+  "notes": "### Tone and screen readers\n\nA `destructive` or `warning` alert has `role=\"alert\"`, so a screen reader announces it as soon as it appears. The other tones have `role=\"status\"` and are read when the reader reaches them. Pass `role` to choose for yourself.\n\n### Closing\n\nA closed alert stays in the page at no height, and nothing inside it can be focused. Use `open` and `onOpenChange` to hold the state outside, for example to remember that it was dismissed. In a column with a `gap`, the gap stays where the alert was.\n\n### Actions in the tray\n\nThe default variant finds `Alert.Actions` among its own children and moves it into the tray, so keep it a direct child rather than wrapping it in another component."
+}
