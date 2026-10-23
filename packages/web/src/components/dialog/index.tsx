@@ -106,14 +106,15 @@ const dialogVariants = tv({
       'after:absolute after:-inset-1.5 hover:bg-foreground/10 hover:text-foreground active:scale-95',
       'focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none [&_svg]:size-4',
     ],
-    // Pulled out to the panel's edge by the rows' own padding, so a row's
-    // text lines up with the header's.
-    list: '-mx-3 flex flex-col outline-none',
+    // Pulled out by the rows' own padding, so a row's text lines up with the
+    // header's, and no further: the scrollbar runs in the 12px left at each
+    // side, and a heading or a row reaching into it shows through the thumb.
+    list: '-mx-2 flex flex-col outline-none',
     listGroup: 'flex flex-col [&+&]:mt-2',
     listGroupLabel:
-      'sticky top-0 z-10 bg-popover/90 px-3 pb-1.5 pt-2 text-xs font-medium text-muted-foreground backdrop-blur-sm',
+      'sticky top-0 z-10 bg-popover px-2 pb-1.5 pt-2 text-xs font-medium text-muted-foreground',
     listItem: [
-      'flex h-10 shrink-0 cursor-pointer select-none items-center gap-3 rounded-xl px-3 text-sm outline-none',
+      'flex h-10 shrink-0 cursor-pointer select-none items-center gap-3 rounded-xl px-2 text-sm outline-none',
       // Room for the pinned heading above it when the arrow keys scroll it into view.
       'scroll-mb-2 scroll-mt-10 transition-colors duration-100 hover:bg-foreground/[0.05]',
       'focus-visible:bg-foreground/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/60',
