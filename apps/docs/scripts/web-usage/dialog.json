@@ -6,14 +6,17 @@
   },
   "intro": "Use it for a short task that is done away from the page and then put away: renaming something, inviting people, filling in a few fields.\n\nThe task sits in a panel, and `Dialog.Footer` moves out of the panel into the darker band underneath, where its buttons are equal pills. `variant=\"plain\"` is a single surface with the footer ruled off at its foot, for a dense form. A press outside, Escape or the close button in the corner dismiss it.\n\nThe dialog is never taller than the screen: the header and footer stay put and `Dialog.Body` scrolls between them. On a screen under 640px wide it rests at the bottom, where a thumb reaches its buttons.\n\nFor a yes-or-no question, use [Alert Dialog](/docs/web/components/alert-dialog). For a longer task that keeps the page in view, use [Sheet](/docs/web/components/sheet).",
   "usage": "<Dialog>\n  <Dialog.Trigger render={<Button />}>Rename board</Dialog.Trigger>\n  <Dialog.Content size=\"sm\">\n    <Dialog.Header title=\"Rename board\" description=\"Everyone on the board sees the new name.\" />\n    <Dialog.Body>\n      <Input defaultValue=\"Spring launch\" aria-label=\"Name\" />\n    </Dialog.Body>\n    <Dialog.Footer>\n      <Dialog.Close render={<Button variant=\"secondary\" />}>Cancel</Dialog.Close>\n      <Button>Save</Button>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
-  "anatomy": "<Dialog>\n  <Dialog.Trigger />\n  <Dialog.Content>\n    <Dialog.Header>\n      <Dialog.Title />\n      <Dialog.Description />\n    </Dialog.Header>\n    <Dialog.Body />\n    <Dialog.Footer>\n      <Dialog.Close />\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
+  "anatomy": "<Dialog>\n  <Dialog.Trigger />\n  <Dialog.Content>\n    <Dialog.Header>\n      <Dialog.Title />\n      <Dialog.Description />\n    </Dialog.Header>\n    <Dialog.Body>\n      <Dialog.List>\n        <Dialog.ListGroup>\n          <Dialog.ListItem />\n        </Dialog.ListGroup>\n      </Dialog.List>\n    </Dialog.Body>\n    <Dialog.Footer>\n      <Dialog.Close />\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
   "parts": {
     "Trigger": "What opens the dialog. Pass your own button as `render`.",
     "Content": "The dialog, over a dimmed page. `variant` is `inset` (a panel in a band) or `plain` (one surface), `size` is `sm`, `md` or `lg`, `showClose` draws the round close button, and `blur` frosts the page behind it.",
     "Header": "The title and the line under it, given as `title` and `description` or as parts. It leaves room for the close button. Anything else in it, such as a search field, stays put while the body scrolls.",
     "Title": "The dialog's name. It is announced when the dialog opens.",
     "Description": "A sentence under the title, read out after it.",
-    "Body": "The part that scrolls, with a thin drawn thumb. Its children are laid out in a column with a gap, so the fields of a form need no wrapper.",
+    "Body": "The part that scrolls, with a thin drawn thumb. Its children are laid out in a column with a gap, so the fields of a form need no wrapper. A hairline appears under the header once its content has scrolled.",
+    "List": "A list of one-line choices, such as time zones or the projects to move something to. The arrow keys, Home and End move between its items, and it opens scrolled to the selected one.",
+    "ListGroup": "A run of items under a `label`, which stays pinned at the top while its items scroll under it.",
+    "ListItem": "One choice. `selected` tints and checks it, `onSelect` is called when it is pressed or chosen with Enter, and `meta` puts quieter text at its end in figures that line up.",
     "Footer": "The buttons. In the inset look they sit in the band as equal pills; in `plain` they sit at the end of a ruled strip. Keep it a direct child of `Dialog.Content`.",
     "Close": "Closes the dialog. Pass your own button as `render`, such as Cancel."
   },
@@ -31,8 +34,8 @@
       "height": 180
     },
     {
-      "title": "A long list",
-      "description": "The header holds a search field and stays put while the body scrolls under it. Choosing a city closes the dialog, so it draws no close button: `showClose={false}`.",
+      "title": "Choosing from a long list",
+      "description": "`Dialog.List` holds the cities in `Dialog.ListGroup`s by region, whose headings stay pinned as the list scrolls, and each `Dialog.ListItem` shows the time there now and its offset as `meta`. The search field in the header stays put. Down moves from the field into the list, Enter in the field takes the first city found, and choosing one closes the dialog, so it draws no close button: `showClose={false}`.",
       "demo": "scroll",
       "height": 180
     },

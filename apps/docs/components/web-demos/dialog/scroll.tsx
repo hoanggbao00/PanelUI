@@ -1,85 +1,166 @@
 'use client';
 
-import { CheckIcon } from 'lucide-react';
+import { SearchIcon } from 'lucide-react';
 import { Button } from 'panelui-web/button';
 import { Dialog } from 'panelui-web/dialog';
-import { Frame } from 'panelui-web/frame';
 import { Input } from 'panelui-web/input';
-import { useState } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 
-const ZONES = [
-  ['Pacific/Honolulu', 'UTC−10'], ['America/Anchorage', 'UTC−9'], ['America/Los_Angeles', 'UTC−8'],
-  ['America/Denver', 'UTC−7'], ['America/Mexico_City', 'UTC−6'], ['America/Chicago', 'UTC−6'],
-  ['America/New_York', 'UTC−5'], ['America/Toronto', 'UTC−5'], ['America/Bogota', 'UTC−5'],
-  ['America/Halifax', 'UTC−4'], ['America/Sao_Paulo', 'UTC−3'], ['America/Buenos_Aires', 'UTC−3'],
-  ['Atlantic/Azores', 'UTC−1'], ['Europe/Lisbon', 'UTC+0'], ['Europe/London', 'UTC+0'],
-  ['Africa/Lagos', 'UTC+1'], ['Europe/Madrid', 'UTC+1'], ['Europe/Paris', 'UTC+1'],
-  ['Europe/Berlin', 'UTC+1'], ['Africa/Cairo', 'UTC+2'], ['Europe/Athens', 'UTC+2'],
-  ['Africa/Nairobi', 'UTC+3'], ['Europe/Istanbul', 'UTC+3'], ['Asia/Riyadh', 'UTC+3'],
-  ['Asia/Dubai', 'UTC+4'], ['Asia/Karachi', 'UTC+5'], ['Asia/Kolkata', 'UTC+5:30'],
-  ['Asia/Dhaka', 'UTC+6'], ['Asia/Bangkok', 'UTC+7'], ['Asia/Singapore', 'UTC+8'],
-  ['Asia/Shanghai', 'UTC+8'], ['Asia/Tokyo', 'UTC+9'], ['Asia/Seoul', 'UTC+9'],
-  ['Australia/Sydney', 'UTC+10'], ['Pacific/Auckland', 'UTC+12'],
-] as const;
+const REGIONS: { name: string; zones: [string, string][] }[] = [
+  {
+    name: 'Americas',
+    zones: [
+      ['America/Anchorage', 'Anchorage'],
+      ['America/Los_Angeles', 'Los Angeles'],
+      ['America/Denver', 'Denver'],
+      ['America/Mexico_City', 'Mexico City'],
+      ['America/Chicago', 'Chicago'],
+      ['America/Bogota', 'Bogotá'],
+      ['America/New_York', 'New York'],
+      ['America/Toronto', 'Toronto'],
+      ['America/Halifax', 'Halifax'],
+      ['America/Sao_Paulo', 'São Paulo'],
+      ['America/Argentina/Buenos_Aires', 'Buenos Aires'],
+    ],
+  },
+  {
+    name: 'Europe',
+    zones: [
+      ['Europe/Lisbon', 'Lisbon'],
+      ['Europe/London', 'London'],
+      ['Europe/Madrid', 'Madrid'],
+      ['Europe/Paris', 'Paris'],
+      ['Europe/Berlin', 'Berlin'],
+      ['Europe/Stockholm', 'Stockholm'],
+      ['Europe/Athens', 'Athens'],
+      ['Europe/Istanbul', 'Istanbul'],
+      ['Europe/Moscow', 'Moscow'],
+    ],
+  },
+  {
+    name: 'Africa',
+    zones: [
+      ['Africa/Lagos', 'Lagos'],
+      ['Africa/Cairo', 'Cairo'],
+      ['Africa/Johannesburg', 'Johannesburg'],
+      ['Africa/Nairobi', 'Nairobi'],
+    ],
+  },
+  {
+    name: 'Asia',
+    zones: [
+      ['Asia/Riyadh', 'Riyadh'],
+      ['Asia/Dubai', 'Dubai'],
+      ['Asia/Karachi', 'Karachi'],
+      ['Asia/Kolkata', 'Kolkata'],
+      ['Asia/Dhaka', 'Dhaka'],
+      ['Asia/Bangkok', 'Bangkok'],
+      ['Asia/Singapore', 'Singapore'],
+      ['Asia/Shanghai', 'Shanghai'],
+      ['Asia/Seoul', 'Seoul'],
+      ['Asia/Tokyo', 'Tokyo'],
+    ],
+  },
+  {
+    name: 'Oceania',
+    zones: [
+      ['Pacific/Honolulu', 'Honolulu'],
+      ['Australia/Perth', 'Perth'],
+      ['Australia/Sydney', 'Sydney'],
+      ['Pacific/Auckland', 'Auckland'],
+    ],
+  },
+];
 
-const city = (zone: string) => zone.split('/').pop()!.replace(/_/g, ' ');
+const CITY = Object.fromEntries(REGIONS.flatMap((region) => region.zones));
+
+/** The time there now, and its offset from UTC, as the browser knows them today. */
+function clock(zone: string, now: Date) {
+  const time = new Intl.DateTimeFormat('en-GB', { timeZone: zone, hour: '2-digit', minute: '2-digit' }).format(now);
+  const name = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'shortOffset' })
+    .formatToParts(now)
+    .find((part) => part.type === 'timeZoneName')?.value;
+  const offset = (name ?? 'GMT').replace('GMT', 'UTC').replace('-', '−');
+  return `${time} · ${offset}`;
+}
 
 export default function DialogScroll() {
   const [open, setOpen] = useState(false);
   const [zone, setZone] = useState('Europe/Istanbul');
   const [query, setQuery] = useState('');
-  const shown = ZONES.filter(([name]) => name.toLowerCase().replace(/_/g, ' ').includes(query.trim().toLowerCase()));
+  const [now, setNow] = useState(() => new Date());
+
+  // The times move on while the list is open.
+  useEffect(() => {
+    if (!open) return;
+    setNow(new Date());
+    const timer = window.setInterval(() => setNow(new Date()), 15000);
+    return () => window.clearInterval(timer);
+  }, [open]);
+
+  const needle = query.trim().toLowerCase();
+  const regions = REGIONS.map((region) => ({
+    ...region,
+    zones: region.zones.filter(([, city]) => city.toLowerCase().includes(needle)),
+  })).filter((region) => region.zones.length > 0);
+
+  const choose = (next: string) => {
+    setZone(next);
+    setOpen(false);
+  };
+
+  // Down from the field goes into the list; Enter takes the first city found.
+  const fromSearch = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      document.querySelector<HTMLElement>('[data-slot=dialog-list-item]')?.focus();
+    }
+    if (event.key === 'Enter' && regions[0]) choose(regions[0].zones[0][0]);
+  };
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          setOpen(next);
-          if (!next) setQuery('');
-        }}
-      >
-        <Dialog.Trigger render={<Button variant="outline" />}>Time zone: {city(zone)}</Dialog.Trigger>
-        <Dialog.Content size="sm" showClose={false} className="h-[30rem]">
-          <Dialog.Header title="Time zone" description="Meeting times are shown in it.">
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setQuery('');
+      }}
+    >
+      <Dialog.Trigger render={<Button variant="outline" />}>Time zone: {CITY[zone]}</Dialog.Trigger>
+      <Dialog.Content size="sm" showClose={false} className="h-[32rem]">
+        <Dialog.Header title="Time zone" description="Meetings are shown in it.">
+          <Input.Group className="mt-3">
+            <Input.Addon>
+              <SearchIcon />
+            </Input.Addon>
             <Input
               type="search"
-              placeholder="Search for a city"
-              aria-label="Search for a city"
+              placeholder="Search cities"
+              aria-label="Search cities"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              className="mt-3"
+              onKeyDown={fromSearch}
             />
-          </Dialog.Header>
-          <Dialog.Body>
-            <Frame variant="plain">
-              <Frame.Panel>
-                {shown.map(([name, offset]) => (
-                  <Frame.Row
-                    key={name}
-                    aria-pressed={name === zone}
-                    onClick={() => {
-                      setZone(name);
-                      setOpen(false);
-                    }}
-                  >
-                    <Frame.Content>
-                      <Frame.Title as="p">{city(name)}</Frame.Title>
-                      <Frame.Description>{offset}</Frame.Description>
-                    </Frame.Content>
-                    {name === zone ? (
-                      <Frame.Actions>
-                        <CheckIcon className="size-4 text-primary" />
-                      </Frame.Actions>
-                    ) : null}
-                  </Frame.Row>
-                ))}
-              </Frame.Panel>
-            </Frame>
-            {shown.length === 0 ? <p className="text-center text-sm text-muted-foreground">No city matches “{query}”.</p> : null}
-          </Dialog.Body>
-        </Dialog.Content>
-      </Dialog>
-    </div>
+          </Input.Group>
+        </Dialog.Header>
+        <Dialog.Body>
+          {regions.length > 0 ? (
+            <Dialog.List aria-label="Time zones">
+              {regions.map((region) => (
+                <Dialog.ListGroup key={region.name} label={region.name}>
+                  {region.zones.map(([id, city]) => (
+                    <Dialog.ListItem key={id} selected={id === zone} meta={clock(id, now)} onSelect={() => choose(id)}>
+                      {city}
+                    </Dialog.ListItem>
+                  ))}
+                </Dialog.ListGroup>
+              ))}
+            </Dialog.List>
+          ) : (
+            <p className="py-10 text-center text-sm text-muted-foreground">No city matches “{query.trim()}”.</p>
+          )}
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
   );
 }

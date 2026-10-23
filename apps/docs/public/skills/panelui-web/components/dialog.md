@@ -46,7 +46,13 @@ For a yes-or-no question, use [Alert Dialog](/docs/web/components/alert-dialog).
       <Dialog.Title />
       <Dialog.Description />
     </Dialog.Header>
-    <Dialog.Body />
+    <Dialog.Body>
+      <Dialog.List>
+        <Dialog.ListGroup>
+          <Dialog.ListItem />
+        </Dialog.ListGroup>
+      </Dialog.List>
+    </Dialog.Body>
     <Dialog.Footer>
       <Dialog.Close />
     </Dialog.Footer>
@@ -59,7 +65,10 @@ For a yes-or-no question, use [Alert Dialog](/docs/web/components/alert-dialog).
 - `Dialog.Header` — The title and the line under it, given as `title` and `description` or as parts. It leaves room for the close button. Anything else in it, such as a search field, stays put while the body scrolls.
 - `Dialog.Title` — The dialog's name. It is announced when the dialog opens.
 - `Dialog.Description` — A sentence under the title, read out after it.
-- `Dialog.Body` — The part that scrolls, with a thin drawn thumb. Its children are laid out in a column with a gap, so the fields of a form need no wrapper.
+- `Dialog.Body` — The part that scrolls, with a thin drawn thumb. Its children are laid out in a column with a gap, so the fields of a form need no wrapper. A hairline appears under the header once its content has scrolled.
+- `Dialog.List` — A list of one-line choices, such as time zones or the projects to move something to. The arrow keys, Home and End move between its items, and it opens scrolled to the selected one.
+- `Dialog.ListGroup` — A run of items under a `label`, which stays pinned at the top while its items scroll under it.
+- `Dialog.ListItem` — One choice. `selected` tints and checks it, `onSelect` is called when it is pressed or chosen with Enter, and `meta` puts quieter text at its end in figures that line up.
 - `Dialog.Footer` — The buttons. In the inset look they sit in the band as equal pills; in `plain` they sit at the end of a ruled strip. Keep it a direct child of `Dialog.Content`.
 - `Dialog.Close` — Closes the dialog. Pass your own button as `render`, such as Cancel.
 
@@ -106,9 +115,24 @@ Every part also takes the props of the element it renders, and a `className`.
 | `render` | `ReactElement` | — | Your own element to close the dialog with, such as a Cancel button. |
 | `icon` | `boolean` | `false` | Draw the cross glyph. Set for you on the built-in close button. |
 
+#### `DialogListGroupProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `label` | `ReactNode` | **required** | The heading over the group, which stays pinned while its items scroll under it. |
+
+#### `DialogListItemProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `selected` | `boolean` | `false` | Whether it is the chosen one: it is tinted and checked. |
+| `onSelect` | `() => void` | — | Called when it is pressed, or chosen with Enter or Space. |
+| `meta` | `ReactNode` | — | Quieter text at its end, in figures that line up: a time, a count. |
+| `disabled` | `boolean` | `false` | Shown, but cannot be chosen. |
+
 ## In a Server Component
 
-`Dialog` is a client component. A Server Component cannot read `Dialog.Trigger` off the import, so import each part by name: `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogBody`, `DialogFooter`, `DialogClose`.
+`Dialog` is a client component. A Server Component cannot read `Dialog.Trigger` off the import, so import each part by name: `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogBody`, `DialogFooter`, `DialogClose`, `DialogList`, `DialogListGroup`, `DialogListItem`.
 
 ## Notes
 

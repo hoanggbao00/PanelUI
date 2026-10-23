@@ -541,6 +541,9 @@ export {
   DialogBody,
   DialogFooter,
   DialogClose,
+  DialogList,
+  DialogListGroup,
+  DialogListItem,
   type DialogProps,
   type DialogTriggerProps,
   type DialogContentProps,
@@ -550,4 +553,7 @@ export {
   type DialogBodyProps,
   type DialogFooterProps,
   type DialogCloseProps,
+  type DialogListProps,
+  type DialogListGroupProps,
+  type DialogListItemProps,
 } from './components/dialog';

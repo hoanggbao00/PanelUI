@@ -40,6 +40,13 @@
  * opening the dialog puts focus on its first field rather than on the way
  * out. A press outside, Escape or the close button dismiss it.
  *
+ * ## Lists to choose from
+ *
+ * `Dialog.List` is a list of one-line choices for the body, such as a time
+ * zone or a project to move something to: grouped under headings that stay
+ * pinned while it scrolls, moved through with the arrow keys, with a check
+ * on the chosen one. It opens scrolled to the chosen one.
+ *
  * ## On a phone it sits low
  *
  * Under 640px wide it rests at the bottom of the screen, a few pixels clear
@@ -52,8 +59,12 @@ import {
   createContext,
   isValidElement,
   useContext,
+  useEffect,
+  useId,
   useMemo,
+  useRef,
   type ComponentProps,
+  type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -77,7 +88,12 @@ const dialogVariants = tv({
     header: 'flex shrink-0 flex-col gap-1',
     title: 'text-[19px] font-semibold leading-6 tracking-[-0.01em]',
     description: 'text-[15px] leading-[22px] text-muted-foreground',
-    body: 'relative flex min-h-0 flex-1 flex-col',
+    body: [
+      'relative flex min-h-0 flex-1 flex-col',
+      // A hairline at an edge the content has been scrolled past, so what is
+      // cut off reads as going under the header, not as stopping there.
+      "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-20 before:h-px before:bg-border before:opacity-0 before:transition-opacity before:content-[''] data-overflow-y-start:before:opacity-100",
+    ],
     bodyViewport: 'min-h-0 flex-1 overscroll-contain rounded-[inherit] outline-none',
     bodyContent: 'flex flex-col gap-4',
     scrollbar:
@@ -90,6 +106,23 @@ const dialogVariants = tv({
       'after:absolute after:-inset-1.5 hover:bg-foreground/10 hover:text-foreground active:scale-95',
       'focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none [&_svg]:size-4',
     ],
+    // Pulled out to the panel's edge by the rows' own padding, so a row's
+    // text lines up with the header's.
+    list: '-mx-3 flex flex-col outline-none',
+    listGroup: 'flex flex-col [&+&]:mt-2',
+    listGroupLabel:
+      'sticky top-0 z-10 bg-popover/90 px-3 pb-1.5 pt-2 text-xs font-medium text-muted-foreground backdrop-blur-sm',
+    listItem: [
+      'flex h-10 shrink-0 cursor-pointer select-none items-center gap-3 rounded-xl px-3 text-sm outline-none',
+      // Room for the pinned heading above it when the arrow keys scroll it into view.
+      'scroll-mb-2 scroll-mt-10 transition-colors duration-100 hover:bg-foreground/[0.05]',
+      'focus-visible:bg-foreground/[0.06] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/60',
+      'data-selected:bg-[color-mix(in_oklab,var(--primary)_9%,transparent)] data-selected:font-medium',
+      'aria-disabled:cursor-default aria-disabled:opacity-50 aria-disabled:hover:bg-transparent motion-reduce:transition-none',
+    ],
+    listItemLabel: 'min-w-0 flex-1 truncate',
+    listItemMeta: 'shrink-0 text-xs font-normal tabular-nums text-muted-foreground',
+    listItemCheck: 'flex size-4 shrink-0 items-center justify-center text-primary [&_svg]:size-4',
   },
   variants: {
     variant: {
@@ -388,6 +421,132 @@ function DialogClose({
 }
 DialogClose.displayName = 'Dialog.Close';
 
+export interface DialogListProps extends ComponentProps<'div'> {}
+
+/**
+ * A list of one-line choices in the body. The arrow keys, Home and End move
+ * between its items, and it opens scrolled to the selected one.
+ */
+function DialogList({ className, onKeyDown, children, ...props }: DialogListProps) {
+  const list = useRef<HTMLDivElement>(null);
+  const items = () =>
+    [...(list.current?.querySelectorAll<HTMLElement>('[data-slot=dialog-list-item]:not([aria-disabled=true])') ?? [])];
+
+  useEffect(() => {
+    const all = items();
+    const selected = all.find((item) => item.dataset.selected !== undefined);
+    // One item takes Tab: the chosen one, or the first when none is.
+    if (!selected && all[0]) all[0].tabIndex = 0;
+    selected?.scrollIntoView({ block: 'center' });
+  }, []);
+
+  const move = (event: KeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(event);
+    const all = items();
+    const index = all.indexOf(document.activeElement as HTMLElement);
+    const next =
+      event.key === 'ArrowDown'
+        ? all[index < 0 ? 0 : Math.min(index + 1, all.length - 1)]
+        : event.key === 'ArrowUp'
+          ? all[Math.max(index - 1, 0)]
+          : event.key === 'Home'
+            ? all[0]
+            : event.key === 'End'
+              ? all[all.length - 1]
+              : undefined;
+    if (!next) return;
+    event.preventDefault();
+    next.focus();
+  };
+
+  return (
+    <div ref={list} role="listbox" data-slot="dialog-list" className={dialogVariants().list({ className })} onKeyDown={move} {...props}>
+      {children}
+    </div>
+  );
+}
+DialogList.displayName = 'Dialog.List';
+
+export interface DialogListGroupProps extends Omit<ComponentProps<'div'>, 'title'> {
+  /** The heading over the group, which stays pinned while its items scroll under it. */
+  label: ReactNode;
+}
+
+/** A run of items in `Dialog.List` under a heading of their own. */
+function DialogListGroup({ label, className, children, ...props }: DialogListGroupProps) {
+  const slots = dialogVariants();
+  const id = useId();
+  return (
+    <div role="group" aria-labelledby={id} data-slot="dialog-list-group" className={slots.listGroup({ className })} {...props}>
+      <div id={id} className={slots.listGroupLabel()}>
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+}
+DialogListGroup.displayName = 'Dialog.ListGroup';
+
+export interface DialogListItemProps extends Omit<ComponentProps<'div'>, 'onSelect'> {
+  /** Whether it is the chosen one: it is tinted and checked. */
+  selected?: boolean;
+  /** Called when it is pressed, or chosen with Enter or Space. */
+  onSelect?: () => void;
+  /** Quieter text at its end, in figures that line up: a time, a count. */
+  meta?: ReactNode;
+  /** Shown, but cannot be chosen. */
+  disabled?: boolean;
+}
+
+/** One choice in `Dialog.List`, on one line. */
+function DialogListItem({
+  selected = false,
+  onSelect,
+  meta,
+  disabled = false,
+  className,
+  onClick,
+  onKeyDown,
+  children,
+  ...props
+}: DialogListItemProps) {
+  const slots = dialogVariants();
+  return (
+    <div
+      role="option"
+      aria-selected={selected}
+      aria-disabled={disabled || undefined}
+      tabIndex={selected ? 0 : -1}
+      data-slot="dialog-list-item"
+      data-selected={selected ? '' : undefined}
+      className={slots.listItem({ className })}
+      onClick={(event) => {
+        onClick?.(event);
+        if (!disabled) onSelect?.();
+      }}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        if ((event.key === 'Enter' || event.key === ' ') && !disabled) {
+          event.preventDefault();
+          onSelect?.();
+        }
+      }}
+      {...props}
+    >
+      <span className={slots.listItemLabel()}>{children}</span>
+      {meta !== undefined ? <span className={slots.listItemMeta()}>{meta}</span> : null}
+      <span aria-hidden="true" className={slots.listItemCheck()}>
+        {selected ? (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m5 12.5 4.5 4.5L19 7.5" />
+          </svg>
+        ) : null}
+      </span>
+    </div>
+  );
+}
+DialogListItem.displayName = 'Dialog.ListItem';
+
 export const Dialog = Object.assign(DialogRoot, {
   Trigger: DialogTrigger,
   Content: DialogContent,
@@ -397,6 +556,9 @@ export const Dialog = Object.assign(DialogRoot, {
   Body: DialogBody,
   Footer: DialogFooter,
   Close: DialogClose,
+  List: DialogList,
+  ListGroup: DialogListGroup,
+  ListItem: DialogListItem,
 });
 
 export {
@@ -408,4 +570,7 @@ export {
   DialogBody,
   DialogFooter,
   DialogClose,
+  DialogList,
+  DialogListGroup,
+  DialogListItem,
 };
