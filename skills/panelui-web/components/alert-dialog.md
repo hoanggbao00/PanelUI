@@ -14,7 +14,7 @@ Use it to ask a question that has to be answered before anything else on the pag
 
 A press outside it, Escape and `AlertDialog.Cancel` all close it without doing anything, and `AlertDialog.Action` closes it once it has done its work. The question sits in a panel, and `AlertDialog.Footer` moves out of the panel into the darker band under it, where the answers sit side by side at equal widths.
 
-For a task rather than a yes or no, such as a form to fill in, use [Sheet](/docs/web/components/sheet) or [Feedback](/docs/web/components/feedback). For a message that can wait on the page, use [Alert](/docs/web/components/alert).
+For a task rather than a yes or no, such as a form to fill in, use [Dialog](/docs/web/components/dialog), or [Sheet](/docs/web/components/sheet) for a longer one. For a message that can wait on the page, use [Alert](/docs/web/components/alert).
 
 ## Usage
 

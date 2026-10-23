@@ -1,0 +1,720 @@
+---
+title: Dialog
+description: A task done in a panel over the page, with its buttons in the band beneath it.
+status: new
+---
+
+<ComponentPreview name="dialog/overview" height={180}>
+
+```tsx lineNumbers
+'use client';
+
+import { Button } from '@/components/panelui/button';
+import { Dialog } from '@/components/panelui/dialog';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+import { useState } from 'react';
+
+export default function DialogOverview() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('Spring launch');
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger render={<Button variant="outline" />}>Rename board</Dialog.Trigger>
+      <Dialog.Content size="sm">
+        <Dialog.Header title="Rename board" description="Everyone on the board will see it." />
+        <Dialog.Body>
+          <form
+            id="rename-board"
+            className="flex flex-col gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const next = new FormData(event.currentTarget).get('name');
+              if (typeof next === 'string' && next.trim()) setName(next.trim());
+              setOpen(false);
+            }}
+          >
+            <Label htmlFor="board-name">
+              <Label.Text>Name</Label.Text>
+            </Label>
+            <Input id="board-name" name="name" defaultValue={name} autoComplete="off" />
+          </form>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close render={<Button variant="secondary" />}>Cancel</Dialog.Close>
+          <Button type="submit" form="rename-board">
+            Save
+          </Button>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it for a short task that is done away from the page and then put away: renaming something, inviting people, filling in a few fields.
+
+The task sits in a panel, and `Dialog.Footer` moves out of the panel into the darker band underneath, where its buttons are equal pills. `variant="plain"` is a single surface with the footer ruled off at its foot, for a dense form. A press outside, Escape or the close button in the corner dismiss it.
+
+The dialog is never taller than the screen: the header and footer stay put and `Dialog.Body` scrolls between them. On a screen under 640px wide it rests at the bottom, where a thumb reaches its buttons.
+
+For a yes-or-no question, use [Alert Dialog](/docs/web/components/alert-dialog). For a longer task that keeps the page in view, use [Sheet](/docs/web/components/sheet).
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/dialog.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/dialog` instead of `@/components/panelui/dialog`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="@base-ui/react tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/dialog.tsx`:
+
+<RegistrySource name="dialog" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Dialog } from "@/components/panelui/dialog"
+```
+
+```tsx
+<Dialog>
+  <Dialog.Trigger render={<Button />}>Rename board</Dialog.Trigger>
+  <Dialog.Content size="sm">
+    <Dialog.Header title="Rename board" description="Everyone on the board sees the new name." />
+    <Dialog.Body>
+      <Input defaultValue="Spring launch" aria-label="Name" />
+    </Dialog.Body>
+    <Dialog.Footer>
+      <Dialog.Close render={<Button variant="secondary" />}>Cancel</Dialog.Close>
+      <Button>Save</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog>
+```
+
+## Composition
+
+```tsx
+<Dialog>
+  <Dialog.Trigger />
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title />
+      <Dialog.Description />
+    </Dialog.Header>
+    <Dialog.Body />
+    <Dialog.Footer>
+      <Dialog.Close />
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog>
+```
+
+- **`Dialog.Trigger`** — What opens the dialog. Pass your own button as `render`.
+- **`Dialog.Content`** — The dialog, over a dimmed page. `variant` is `inset` (a panel in a band) or `plain` (one surface), `size` is `sm`, `md` or `lg`, `showClose` draws the round close button, and `blur` frosts the page behind it.
+- **`Dialog.Header`** — The title and the line under it, given as `title` and `description` or as parts. It leaves room for the close button. Anything else in it, such as a search field, stays put while the body scrolls.
+- **`Dialog.Title`** — The dialog's name. It is announced when the dialog opens.
+- **`Dialog.Description`** — A sentence under the title, read out after it.
+- **`Dialog.Body`** — The part that scrolls, with a thin drawn thumb. Its children are laid out in a column with a gap, so the fields of a form need no wrapper.
+- **`Dialog.Footer`** — The buttons. In the inset look they sit in the band as equal pills; in `plain` they sit at the end of a ruled strip. Keep it a direct child of `Dialog.Content`.
+- **`Dialog.Close`** — Closes the dialog. Pass your own button as `render`, such as Cancel.
+
+## Examples
+
+### Inviting people
+
+A field, a role [Select](/docs/web/components/select) and an Add button in one row, over the list of people invited so far. Pressing Enter in the field adds the address.
+
+<ComponentPreview name="dialog/invite" height={180}>
+
+```tsx lineNumbers
+'use client';
+
+import { Avatar } from '@/components/panelui/avatar';
+import { Button } from '@/components/panelui/button';
+import { Dialog } from '@/components/panelui/dialog';
+import { Frame } from '@/components/panelui/frame';
+import { Input } from '@/components/panelui/input';
+import { Select } from '@/components/panelui/select';
+import { useState } from 'react';
+
+const ROLES = [
+  { value: 'editor', label: 'Editor' },
+  { value: 'viewer', label: 'Viewer' },
+];
+
+type Invite = { email: string; role: string };
+
+export default function DialogInvite() {
+  const [invites, setInvites] = useState<Invite[]>([
+    { email: 'ines@quarry.dev', role: 'editor' },
+    { email: 'tomas@quarry.dev', role: 'viewer' },
+  ]);
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('editor');
+
+  const add = () => {
+    const next = email.trim();
+    if (!next.includes('@') || invites.some((invite) => invite.email === next)) return;
+    setInvites([...invites, { email: next, role }]);
+    setEmail('');
+  };
+
+  return (
+    <Dialog>
+      <Dialog.Trigger render={<Button />}>Invite people</Dialog.Trigger>
+      <Dialog.Content>
+        <Dialog.Header title="Invite to Quarry" description="They get an email with a link to join." />
+        <Dialog.Body>
+          <form
+            className="flex gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              add();
+            }}
+          >
+            <Input
+              type="email"
+              placeholder="name@company.com"
+              aria-label="Email address"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="min-w-0 flex-1"
+            />
+            <Select items={ROLES} value={role} onValueChange={(value) => setRole(value as string)}>
+              <Select.Trigger aria-label="Role" className="w-28">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Content>
+                {ROLES.map((item) => (
+                  <Select.Item key={item.value} value={item.value}>
+                    {item.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
+            <Button type="submit" variant="outline">
+              Add
+            </Button>
+          </form>
+          <Frame variant="plain">
+            <Frame.Panel>
+              {invites.map((invite) => (
+                <Frame.Row key={invite.email}>
+                  <Frame.Media>
+                    <Avatar name={invite.email} size="sm" />
+                  </Frame.Media>
+                  <Frame.Content>
+                    <Frame.Title as="p">{invite.email}</Frame.Title>
+                  </Frame.Content>
+                  <Frame.Actions>
+                    <Frame.Description>{invite.role === 'editor' ? 'Editor' : 'Viewer'}</Frame.Description>
+                  </Frame.Actions>
+                </Frame.Row>
+              ))}
+            </Frame.Panel>
+          </Frame>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close render={<Button variant="secondary" />}>Cancel</Dialog.Close>
+          <Dialog.Close render={<Button />}>
+            Send {invites.length} {invites.length === 1 ? 'invite' : 'invites'}
+          </Dialog.Close>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A form
+
+A name, an address with a fixed prefix in an `Input.Group`, a [Textarea](/docs/web/components/textarea) and a [Select](/docs/web/components/select). The form lives in the body and the submit button in the footer, joined by the form's `id`. An empty name marks its [Label](/docs/web/components/label) invalid; Create shows a spinner while it saves. `dismissible={false}` keeps a stray press outside from throwing the form away.
+
+<ComponentPreview name="dialog/form" height={180}>
+
+```tsx lineNumbers
+'use client';
+
+import { Button } from '@/components/panelui/button';
+import { Dialog } from '@/components/panelui/dialog';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+import { Select } from '@/components/panelui/select';
+import { Textarea } from '@/components/panelui/textarea';
+import { useState } from 'react';
+
+const VISIBILITY = [
+  { value: 'team', label: 'Everyone in the team' },
+  { value: 'private', label: 'Only people I invite' },
+];
+
+export default function DialogForm() {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [missing, setMissing] = useState(false);
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setMissing(false);
+      }}
+      dismissible={false}
+    >
+      <Dialog.Trigger render={<Button />}>New project</Dialog.Trigger>
+      <Dialog.Content>
+        <Dialog.Header title="New project" description="You can change all of this later in its settings." />
+        <Dialog.Body>
+          <form
+            id="new-project"
+            className="flex flex-col gap-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const name = String(new FormData(event.currentTarget).get('name') ?? '').trim();
+              setMissing(name === '');
+              if (name === '') return;
+              setSaving(true);
+              window.setTimeout(() => {
+                setSaving(false);
+                setOpen(false);
+              }, 1100);
+            }}
+          >
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="project-name" required invalid={missing}>
+                <Label.Text>Name</Label.Text>
+                {missing ? <Label.Hint>Give it a name</Label.Hint> : null}
+              </Label>
+              <Input id="project-name" name="name" placeholder="Harbour redesign" aria-invalid={missing || undefined} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="project-address">
+                <Label.Text>Address</Label.Text>
+              </Label>
+              <Input.Group>
+                <Input.Addon className="border-e pe-3">quarry.app/</Input.Addon>
+                <Input id="project-address" placeholder="harbour" />
+              </Input.Group>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="project-about" optional>
+                <Label.Text>What it is for</Label.Text>
+              </Label>
+              <Textarea id="project-about" minRows={2} maxRows={5} placeholder="A line or two for the people you invite" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>
+                <Label.Text>Who can see it</Label.Text>
+              </Label>
+              <Select items={VISIBILITY} defaultValue="team">
+                <Select.Trigger aria-label="Who can see it">
+                  <Select.Value />
+                </Select.Trigger>
+                <Select.Content>
+                  {VISIBILITY.map((item) => (
+                    <Select.Item key={item.value} value={item.value}>
+                      {item.label}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
+            </div>
+          </form>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close render={<Button variant="secondary" />} disabled={saving}>
+            Cancel
+          </Dialog.Close>
+          <Button type="submit" form="new-project" loading={saving}>
+            Create project
+          </Button>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A long list
+
+The header holds a search field and stays put while the body scrolls under it. Choosing a city closes the dialog, so it draws no close button: `showClose={false}`.
+
+<ComponentPreview name="dialog/scroll" height={180}>
+
+```tsx lineNumbers
+'use client';
+
+import { CheckIcon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Dialog } from '@/components/panelui/dialog';
+import { Frame } from '@/components/panelui/frame';
+import { Input } from '@/components/panelui/input';
+import { useState } from 'react';
+
+const ZONES = [
+  ['Pacific/Honolulu', 'UTC−10'], ['America/Anchorage', 'UTC−9'], ['America/Los_Angeles', 'UTC−8'],
+  ['America/Denver', 'UTC−7'], ['America/Mexico_City', 'UTC−6'], ['America/Chicago', 'UTC−6'],
+  ['America/New_York', 'UTC−5'], ['America/Toronto', 'UTC−5'], ['America/Bogota', 'UTC−5'],
+  ['America/Halifax', 'UTC−4'], ['America/Sao_Paulo', 'UTC−3'], ['America/Buenos_Aires', 'UTC−3'],
+  ['Atlantic/Azores', 'UTC−1'], ['Europe/Lisbon', 'UTC+0'], ['Europe/London', 'UTC+0'],
+  ['Africa/Lagos', 'UTC+1'], ['Europe/Madrid', 'UTC+1'], ['Europe/Paris', 'UTC+1'],
+  ['Europe/Berlin', 'UTC+1'], ['Africa/Cairo', 'UTC+2'], ['Europe/Athens', 'UTC+2'],
+  ['Africa/Nairobi', 'UTC+3'], ['Europe/Istanbul', 'UTC+3'], ['Asia/Riyadh', 'UTC+3'],
+  ['Asia/Dubai', 'UTC+4'], ['Asia/Karachi', 'UTC+5'], ['Asia/Kolkata', 'UTC+5:30'],
+  ['Asia/Dhaka', 'UTC+6'], ['Asia/Bangkok', 'UTC+7'], ['Asia/Singapore', 'UTC+8'],
+  ['Asia/Shanghai', 'UTC+8'], ['Asia/Tokyo', 'UTC+9'], ['Asia/Seoul', 'UTC+9'],
+  ['Australia/Sydney', 'UTC+10'], ['Pacific/Auckland', 'UTC+12'],
+] as const;
+
+const city = (zone: string) => zone.split('/').pop()!.replace(/_/g, ' ');
+
+export default function DialogScroll() {
+  const [open, setOpen] = useState(false);
+  const [zone, setZone] = useState('Europe/Istanbul');
+  const [query, setQuery] = useState('');
+  const shown = ZONES.filter(([name]) => name.toLowerCase().replace(/_/g, ' ').includes(query.trim().toLowerCase()));
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setQuery('');
+        }}
+      >
+        <Dialog.Trigger render={<Button variant="outline" />}>Time zone: {city(zone)}</Dialog.Trigger>
+        <Dialog.Content size="sm" showClose={false} className="h-[30rem]">
+          <Dialog.Header title="Time zone" description="Meeting times are shown in it.">
+            <Input
+              type="search"
+              placeholder="Search for a city"
+              aria-label="Search for a city"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="mt-3"
+            />
+          </Dialog.Header>
+          <Dialog.Body>
+            <Frame variant="plain">
+              <Frame.Panel>
+                {shown.map(([name, offset]) => (
+                  <Frame.Row
+                    key={name}
+                    aria-pressed={name === zone}
+                    onClick={() => {
+                      setZone(name);
+                      setOpen(false);
+                    }}
+                  >
+                    <Frame.Content>
+                      <Frame.Title as="p">{city(name)}</Frame.Title>
+                      <Frame.Description>{offset}</Frame.Description>
+                    </Frame.Content>
+                    {name === zone ? (
+                      <Frame.Actions>
+                        <CheckIcon className="size-4 text-primary" />
+                      </Frame.Actions>
+                    ) : null}
+                  </Frame.Row>
+                ))}
+              </Frame.Panel>
+            </Frame>
+            {shown.length === 0 ? <p className="text-center text-sm text-muted-foreground">No city matches “{query}”.</p> : null}
+          </Dialog.Body>
+        </Dialog.Content>
+      </Dialog>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Plain
+
+`variant="plain"` is one surface, with the footer at its foot behind a rule and its buttons at the end in their usual sizes. `size="lg"` gives a two-column form the width it needs.
+
+<ComponentPreview name="dialog/plain" height={180}>
+
+```tsx lineNumbers
+'use client';
+
+import { Button } from '@/components/panelui/button';
+import { Dialog } from '@/components/panelui/dialog';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+import { Select } from '@/components/panelui/select';
+
+const COUNTRIES = [
+  { value: 'pt', label: 'Portugal' },
+  { value: 'es', label: 'Spain' },
+  { value: 'tr', label: 'Türkiye' },
+  { value: 'gb', label: 'United Kingdom' },
+];
+
+export default function DialogPlain() {
+  return (
+    <Dialog>
+      <Dialog.Trigger render={<Button variant="outline" />}>Edit shipping address</Dialog.Trigger>
+      <Dialog.Content variant="plain" size="lg">
+        <Dialog.Header title="Shipping address" description="Orders placed from now on are sent here." />
+        <Dialog.Body className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <Label htmlFor="ship-name">
+              <Label.Text>Full name</Label.Text>
+            </Label>
+            <Input id="ship-name" defaultValue="Mira Castell" autoComplete="name" />
+          </div>
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <Label htmlFor="ship-street">
+              <Label.Text>Street and number</Label.Text>
+            </Label>
+            <Input id="ship-street" defaultValue="Rua das Flores 48" autoComplete="address-line1" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="ship-city">
+              <Label.Text>City</Label.Text>
+            </Label>
+            <Input id="ship-city" defaultValue="Porto" autoComplete="address-level2" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="ship-code">
+              <Label.Text>Postcode</Label.Text>
+            </Label>
+            <Input id="ship-code" defaultValue="4050-262" autoComplete="postal-code" />
+          </div>
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <Label>
+              <Label.Text>Country</Label.Text>
+            </Label>
+            <Select items={COUNTRIES} defaultValue="pt">
+              <Select.Trigger aria-label="Country">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Content>
+                {COUNTRIES.map((item) => (
+                  <Select.Item key={item.value} value={item.value}>
+                    {item.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close render={<Button variant="ghost" />}>Cancel</Dialog.Close>
+          <Dialog.Close render={<Button />}>Save address</Dialog.Close>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A dialog from a dialog
+
+A `Dialog` inside another's content opens over it. The one behind steps back, a little smaller and veiled, and the page is not darkened a second time. Closing the front one returns to the first.
+
+<ComponentPreview name="dialog/nested" height={180}>
+
+```tsx lineNumbers
+'use client';
+
+import { Button } from '@/components/panelui/button';
+import { Dialog } from '@/components/panelui/dialog';
+import { Input } from '@/components/panelui/input';
+import { Label } from '@/components/panelui/label';
+import { useState } from 'react';
+
+export default function DialogNested() {
+  const [email, setEmail] = useState('mira@castell.studio');
+  const [changeOpen, setChangeOpen] = useState(false);
+
+  return (
+    <Dialog>
+      <Dialog.Trigger render={<Button variant="outline" />}>Edit profile</Dialog.Trigger>
+      <Dialog.Content>
+        <Dialog.Header title="Profile" description="How you appear to the people you work with." />
+        <Dialog.Body>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="profile-name">
+              <Label.Text>Name</Label.Text>
+            </Label>
+            <Input id="profile-name" defaultValue="Mira Castell" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="profile-email">
+              <Label.Text>Email</Label.Text>
+              <Label.Action>
+                <Dialog open={changeOpen} onOpenChange={setChangeOpen}>
+                  <Dialog.Trigger render={<Button variant="ghost" size="sm" className="-my-1 h-6 px-1.5 text-xs" />}>
+                    Change
+                  </Dialog.Trigger>
+                  <Dialog.Content size="sm">
+                    <Dialog.Header title="Change email" description="We send a code to check the new address." />
+                    <Dialog.Body>
+                      <form
+                        id="change-email"
+                        className="flex flex-col gap-4"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          const next = String(new FormData(event.currentTarget).get('email') ?? '').trim();
+                          if (next.includes('@')) setEmail(next);
+                          setChangeOpen(false);
+                        }}
+                      >
+                        <div className="flex flex-col gap-2">
+                          <Label htmlFor="new-email">
+                            <Label.Text>New email</Label.Text>
+                          </Label>
+                          <Input id="new-email" name="email" type="email" placeholder="you@example.com" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label htmlFor="email-password">
+                            <Label.Text>Your password</Label.Text>
+                          </Label>
+                          <Input id="email-password" type="password" autoComplete="current-password" />
+                        </div>
+                      </form>
+                    </Dialog.Body>
+                    <Dialog.Footer>
+                      <Dialog.Close render={<Button variant="secondary" />}>Back</Dialog.Close>
+                      <Button type="submit" form="change-email">
+                        Send code
+                      </Button>
+                    </Dialog.Footer>
+                  </Dialog.Content>
+                </Dialog>
+              </Label.Action>
+            </Label>
+            <Input id="profile-email" value={email} readOnly />
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close render={<Button variant="secondary" />}>Cancel</Dialog.Close>
+          <Dialog.Close render={<Button />}>Save profile</Dialog.Close>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Dialog
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | — | Whether it is open, when the caller holds that. |
+| `defaultOpen` | `boolean` | — | Whether it starts open, when the caller does not hold it. |
+| `onOpenChange` | `(open: boolean) => void` | — | Called when it opens or closes. |
+| `dismissible` | `boolean` | `true` | Whether a press outside it closes it. Turn it off while a form in it has changes that would be lost; Escape and the close button still work. Default `true`. |
+
+### Dialog.Trigger
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `render` | `ReactElement` | — | Your own element to be the trigger, such as a styled button. It is given the click handler and the attributes that tie it to the dialog. |
+
+### Dialog.Content
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `'inset' \| 'plain'` | `'inset'` | `inset` sets the task in a panel inside a darker band that holds the footer. `plain` is one surface with the footer ruled off. Default `inset`. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | How wide it may grow: `sm` 24rem, `md` 28rem, `lg` 36rem. Default `md`. |
+| `showClose` | `boolean` | `true` | Show the round close button in the top trailing corner. Default `true`. |
+| `blur` | `boolean` | `false` | Frost the page behind it instead of only dimming it. |
+| `inline` | `boolean` | `false` | Draw it in the page instead of over it: no backdrop, no trigger, always there. For previews; `open` is ignored. |
+
+### Dialog.Header
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | `ReactNode` | — | The heading. It is also what the dialog is announced as. |
+| `description` | `ReactNode` | — | A line under the heading. |
+
+### Dialog.Close
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `render` | `ReactElement` | — | Your own element to close the dialog with, such as a Cancel button. |
+| `icon` | `boolean` | `false` | Draw the cross glyph. Set for you on the built-in close button. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Closing
+
+A press outside, Escape and the close button close it, and so does any `Dialog.Close`. `dismissible={false}` stops a press outside from closing it, for a form whose changes would be lost; Escape still works. Hold `open` yourself with `onOpenChange` to close it from code, for example once a form has saved.
+
+### Focus
+
+When it opens, focus goes to the first field in it. The close button is drawn in the corner but comes last in the order, so the way out is not the first thing focused. Focus returns to the trigger when it closes.
+
+### Forms
+
+Put the `<form>` in `Dialog.Body` with an `id`, and give the submit button in the footer `type="submit"` and `form` set to that `id`. Enter in a field then submits it, and the footer can stay a direct child of the content.
+
+### On a phone
+
+Under 640px wide the dialog sits at the bottom of the screen, 8px clear of the edges, and can be as tall as the screen less that gap.
+
+### Server Components
+
+`Dialog` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Dialog.Trigger` off the import, so each part is also exported by name: `DialogTrigger` is `Dialog.Trigger`, and so on for the others.
+
+```tsx
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter, DialogClose } from "@/components/panelui/dialog"
+```

@@ -531,3 +531,23 @@ export {
   type AlertDialogCancelProps,
   type AlertDialogActionProps,
 } from './components/alert-dialog';
+export {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+  DialogClose,
+  type DialogProps,
+  type DialogTriggerProps,
+  type DialogContentProps,
+  type DialogHeaderProps,
+  type DialogTitleProps,
+  type DialogDescriptionProps,
+  type DialogBodyProps,
+  type DialogFooterProps,
+  type DialogCloseProps,
+} from './components/dialog';

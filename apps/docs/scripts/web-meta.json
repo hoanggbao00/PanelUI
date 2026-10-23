@@ -290,5 +290,14 @@
       "category": "overlays",
       "title": "Alert Dialog"
     }
+  ],
+  "dialog": [
+    "Dialog",
+    "A task done in a panel over the page, with its buttons in the band beneath it.",
+    "react dialog modal form popup component",
+    {
+      "addedIn": "0.8.0",
+      "category": "overlays"
+    }
   ]
 }

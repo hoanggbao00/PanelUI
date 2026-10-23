@@ -1,0 +1,53 @@
+{
+  "slug": "dialog",
+  "demo": "overview",
+  "demoOptions": {
+    "height": 180
+  },
+  "intro": "Use it for a short task that is done away from the page and then put away: renaming something, inviting people, filling in a few fields.\n\nThe task sits in a panel, and `Dialog.Footer` moves out of the panel into the darker band underneath, where its buttons are equal pills. `variant=\"plain\"` is a single surface with the footer ruled off at its foot, for a dense form. A press outside, Escape or the close button in the corner dismiss it.\n\nThe dialog is never taller than the screen: the header and footer stay put and `Dialog.Body` scrolls between them. On a screen under 640px wide it rests at the bottom, where a thumb reaches its buttons.\n\nFor a yes-or-no question, use [Alert Dialog](/docs/web/components/alert-dialog). For a longer task that keeps the page in view, use [Sheet](/docs/web/components/sheet).",
+  "usage": "<Dialog>\n  <Dialog.Trigger render={<Button />}>Rename board</Dialog.Trigger>\n  <Dialog.Content size=\"sm\">\n    <Dialog.Header title=\"Rename board\" description=\"Everyone on the board sees the new name.\" />\n    <Dialog.Body>\n      <Input defaultValue=\"Spring launch\" aria-label=\"Name\" />\n    </Dialog.Body>\n    <Dialog.Footer>\n      <Dialog.Close render={<Button variant=\"secondary\" />}>Cancel</Dialog.Close>\n      <Button>Save</Button>\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
+  "anatomy": "<Dialog>\n  <Dialog.Trigger />\n  <Dialog.Content>\n    <Dialog.Header>\n      <Dialog.Title />\n      <Dialog.Description />\n    </Dialog.Header>\n    <Dialog.Body />\n    <Dialog.Footer>\n      <Dialog.Close />\n    </Dialog.Footer>\n  </Dialog.Content>\n</Dialog>",
+  "parts": {
+    "Trigger": "What opens the dialog. Pass your own button as `render`.",
+    "Content": "The dialog, over a dimmed page. `variant` is `inset` (a panel in a band) or `plain` (one surface), `size` is `sm`, `md` or `lg`, `showClose` draws the round close button, and `blur` frosts the page behind it.",
+    "Header": "The title and the line under it, given as `title` and `description` or as parts. It leaves room for the close button. Anything else in it, such as a search field, stays put while the body scrolls.",
+    "Title": "The dialog's name. It is announced when the dialog opens.",
+    "Description": "A sentence under the title, read out after it.",
+    "Body": "The part that scrolls, with a thin drawn thumb. Its children are laid out in a column with a gap, so the fields of a form need no wrapper.",
+    "Footer": "The buttons. In the inset look they sit in the band as equal pills; in `plain` they sit at the end of a ruled strip. Keep it a direct child of `Dialog.Content`.",
+    "Close": "Closes the dialog. Pass your own button as `render`, such as Cancel."
+  },
+  "examples": [
+    {
+      "title": "Inviting people",
+      "description": "A field, a role [Select](/docs/web/components/select) and an Add button in one row, over the list of people invited so far. Pressing Enter in the field adds the address.",
+      "demo": "invite",
+      "height": 180
+    },
+    {
+      "title": "A form",
+      "description": "A name, an address with a fixed prefix in an `Input.Group`, a [Textarea](/docs/web/components/textarea) and a [Select](/docs/web/components/select). The form lives in the body and the submit button in the footer, joined by the form's `id`. An empty name marks its [Label](/docs/web/components/label) invalid; Create shows a spinner while it saves. `dismissible={false}` keeps a stray press outside from throwing the form away.",
+      "demo": "form",
+      "height": 180
+    },
+    {
+      "title": "A long list",
+      "description": "The header holds a search field and stays put while the body scrolls under it. Choosing a city closes the dialog, so it draws no close button: `showClose={false}`.",
+      "demo": "scroll",
+      "height": 180
+    },
+    {
+      "title": "Plain",
+      "description": "`variant=\"plain\"` is one surface, with the footer at its foot behind a rule and its buttons at the end in their usual sizes. `size=\"lg\"` gives a two-column form the width it needs.",
+      "demo": "plain",
+      "height": 180
+    },
+    {
+      "title": "A dialog from a dialog",
+      "description": "A `Dialog` inside another's content opens over it. The one behind steps back, a little smaller and veiled, and the page is not darkened a second time. Closing the front one returns to the first.",
+      "demo": "nested",
+      "height": 180
+    }
+  ],
+  "notes": "### Closing\n\nA press outside, Escape and the close button close it, and so does any `Dialog.Close`. `dismissible={false}` stops a press outside from closing it, for a form whose changes would be lost; Escape still works. Hold `open` yourself with `onOpenChange` to close it from code, for example once a form has saved.\n\n### Focus\n\nWhen it opens, focus goes to the first field in it. The close button is drawn in the corner but comes last in the order, so the way out is not the first thing focused. Focus returns to the trigger when it closes.\n\n### Forms\n\nPut the `<form>` in `Dialog.Body` with an `id`, and give the submit button in the footer `type=\"submit\"` and `form` set to that `id`. Enter in a field then submits it, and the footer can stay a direct child of the content.\n\n### On a phone\n\nUnder 640px wide the dialog sits at the bottom of the screen, 8px clear of the edges, and can be as tall as the screen less that gap."
+}
