@@ -123,7 +123,7 @@
     {
       "addedIn": "0.2.0",
       "category": "overlays",
-      "updatedIn": "0.6.0"
+      "updatedIn": "0.8.0"
     }
   ],
   "card": [
@@ -206,7 +206,8 @@
     "react prompt input chat composer ai component",
     {
       "addedIn": "0.5.0",
-      "category": "ai"
+      "category": "ai",
+      "updatedIn": "0.8.0"
     }
   ],
   "menu": [
