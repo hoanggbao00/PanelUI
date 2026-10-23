@@ -135,6 +135,26 @@ Several triggers under one root. Opening any of them opens at its page, and swip
 </ImageViewer>
 ```
 
+### A darker backdrop
+
+The open picture leaves a gap in the page where its thumbnail was, and a light backdrop lets that gap and the cards around it show through, most of all without blur. `dimClassName` sets a darker dim: the whole backdrop without blur, and the layer over the frost with it.
+
+```tsx
+<ImageViewer blur={false} dimClassName="bg-black/90">
+  <View className="flex-row gap-1.5">
+    {photos.map((photo) => (
+      <ImageViewer.Trigger
+        key={photo.id}
+        source={{ uri: photo.uri }}
+        alt={photo.alt}
+        radius={10}
+        className="aspect-square flex-1 rounded-[10px]"
+      />
+    ))}
+  </View>
+</ImageViewer>
+```
+
 ### Captions and a larger copy
 
 `caption` is shown under the picture while it is open; a single tap on the picture hides it along with the close button. `fullSource` loads when the viewer opens and replaces `source` once it arrives, so the page can carry small thumbnails.
@@ -253,6 +273,7 @@ A portrait, a landscape and a panorama, each fitted whole to the screen from a t
 | `defaultIndex` | `number` | `0` | Initial page when uncontrolled. |
 | `onIndexChange` | `(index: number) => void` | — |  |
 | `blur` | `boolean` | `true` | Blur the page behind the picture. Needs the optional `expo-blur`, and dims instead without it. Reduce Transparency draws an opaque backdrop. |
+| `dimClassName` | `string` | — | Classes for the dim over the page. Without blur it is the whole backdrop, `bg-black/60` by default. With blur it is drawn over the frost, a faint `bg-black/10` by default. The open picture leaves a gap where its thumbnail was; a darker dim keeps that gap, and the page around it, from showing through. |
 | `maxScale` | `number` | `4` | How far a pinch can zoom in, as a multiple of the fitted size. |
 | `doubleTapScale` | `number` | `2.5` | Where a double tap zooms to, as a multiple of the fitted size. |
 | `haptics` | `boolean` | `true` | Tick as a drag to dismiss begins. Needs the optional `expo-haptics`. |

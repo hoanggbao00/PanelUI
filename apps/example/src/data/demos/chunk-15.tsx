@@ -1650,6 +1650,25 @@ function ImageViewerRowDemo() {
   );
 }
 
+/** No blur, and a dim dark enough that the emptied thumbnail does not show through. */
+function ImageViewerDarkerBackdropDemo() {
+  return (
+    <ImageViewer blur={false} dimClassName="bg-black/90">
+      <View className="w-full flex-row gap-1.5">
+        {ROW_OF_THREE.map((entry) => (
+          <ImageViewer.Trigger
+            key={entry.id}
+            {...photo(entry.id)}
+            alt={entry.alt}
+            radius={10}
+            className="aspect-square flex-1 rounded-[10px]"
+          />
+        ))}
+      </View>
+    </ImageViewer>
+  );
+}
+
 function ImageViewerRightToLeftDemo() {
   return (
     <ImageViewer dir="rtl">
@@ -2019,6 +2038,7 @@ export const ENTRIES: ComponentEntry[] = [
       { label: 'One photo', render: () => <ImageViewerSingleDemo /> },
       { label: 'Three under one root', render: () => <ImageViewerRowDemo /> },
       { label: 'Right to left', render: () => <ImageViewerRightToLeftDemo /> },
+      { label: 'Darker backdrop', render: () => <ImageViewerDarkerBackdropDemo /> },
       {
         label: 'Photo journal',
         id: 'journal',

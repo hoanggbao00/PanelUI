@@ -35,6 +35,7 @@ import { ImageViewer } from 'panelui-native';
 | `defaultIndex` | `number` | `0` | Initial page when uncontrolled. |
 | `onIndexChange` | `(index: number) => void` | — | — |
 | `blur` | `boolean` | `true` | Blur the page behind the picture. Needs the optional `expo-blur`, and dims instead without it. Reduce Transparency draws an opaque backdrop. |
+| `dimClassName` | `string` | — | Classes for the dim over the page. Without blur it is the whole backdrop, `bg-black/60` by default. With blur it is drawn over the frost, a faint `bg-black/10` by default. The open picture leaves a gap where its thumbnail was; a darker dim keeps that gap, and the page around it, from showing through. |
 | `maxScale` | `number` | `4` | How far a pinch can zoom in, as a multiple of the fitted size. |
 | `doubleTapScale` | `number` | `2.5` | Where a double tap zooms to, as a multiple of the fitted size. |
 | `haptics` | `boolean` | `true` | Tick as a drag to dismiss begins. Needs the optional `expo-haptics`. |

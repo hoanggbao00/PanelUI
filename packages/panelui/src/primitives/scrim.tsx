@@ -176,6 +176,11 @@ export interface ScrimProps extends Omit<ViewProps, 'children'> {
    */
   dimClassName?: string;
   /**
+   * The dim drawn over the blur, so the frost has something to sit on. Faint by
+   * default; an overlay that leaves a gap in the page under it passes a darker one.
+   */
+  blurDimClassName?: string;
+  /**
    * How far the backdrop is in, from `0` to `1`, read on the UI thread.
    *
    * For an overlay the finger can pull partway out — a viewer dragged towards
@@ -191,6 +196,7 @@ export function Scrim({
   intensity = 24,
   tint = 'default',
   dimClassName = 'bg-black/50',
+  blurDimClassName = 'bg-black/10',
   progress,
   style,
   ...props
@@ -206,6 +212,7 @@ export function Scrim({
         intensity={intensity}
         tint={tint}
         dimClassName={dimClassName}
+        blurDimClassName={blurDimClassName}
         style={style}
         {...props}
       />
@@ -223,7 +230,7 @@ export function Scrim({
         {/* A faint dim under the blur so the frost has something to sit on —
             a pure blur over a dark scene is nearly invisible. */}
         <BlurView intensity={intensity} tint={tint} style={StyleSheet.absoluteFill} />
-        <View className="absolute inset-0 bg-black/10" />
+        <View style={StyleSheet.absoluteFill} className={blurDimClassName} />
       </Animated.View>
     );
   }
@@ -265,6 +272,7 @@ interface ProgressScrimProps extends Omit<ViewProps, 'children'> {
   intensity: number;
   tint: BlurTint;
   dimClassName: string;
+  blurDimClassName: string;
 }
 
 /** The scrim with its three layers driven by a shared value instead of a fade. */
@@ -274,6 +282,7 @@ function ProgressScrim({
   intensity,
   tint,
   dimClassName,
+  blurDimClassName,
   style,
   ...props
 }: ProgressScrimProps) {
@@ -295,7 +304,7 @@ function ProgressScrim({
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, fade]}
-          className="bg-black/10"
+          className={blurDimClassName}
         />
       </View>
     );

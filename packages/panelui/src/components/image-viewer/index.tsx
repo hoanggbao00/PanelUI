@@ -265,6 +265,13 @@ export interface ImageViewerProps {
    * instead without it. Reduce Transparency draws an opaque backdrop.
    */
   blur?: boolean;
+  /**
+   * Classes for the dim over the page. Without blur it is the whole backdrop,
+   * `bg-black/60` by default. With blur it is drawn over the frost, a faint
+   * `bg-black/10` by default. The open picture leaves a gap where its thumbnail
+   * was; a darker dim keeps that gap, and the page around it, from showing through.
+   */
+  dimClassName?: string;
   /** How far a pinch can zoom in, as a multiple of the fitted size. */
   maxScale?: number;
   /** Where a double tap zooms to, as a multiple of the fitted size. */
@@ -304,6 +311,7 @@ function ImageViewerRoot({
   defaultIndex = 0,
   onIndexChange,
   blur = true,
+  dimClassName,
   maxScale = 4,
   doubleTapScale = 2.5,
   haptics = true,
@@ -371,6 +379,7 @@ function ImageViewerRoot({
             onExited={exited}
             onShow={setHiddenId}
             blur={blur}
+            dimClassName={dimClassName}
             maxScale={maxScale}
             doubleTapScale={doubleTapScale}
             haptics={haptics}
@@ -592,6 +601,7 @@ interface ViewerOverlayProps {
   onExited: () => void;
   onShow: (id: string | null) => void;
   blur: boolean;
+  dimClassName?: string;
   maxScale: number;
   doubleTapScale: number;
   haptics: boolean;
@@ -612,6 +622,7 @@ function ViewerOverlay({
   onExited,
   onShow,
   blur,
+  dimClassName,
   maxScale,
   doubleTapScale,
   haptics,
@@ -1169,7 +1180,8 @@ function ViewerOverlay({
         progress={backdrop}
         intensity={BLUR_INTENSITY}
         tint={mode === 'dark' ? 'dark' : 'light'}
-        dimClassName="bg-black/60"
+        dimClassName={dimClassName ?? 'bg-black/60'}
+        blurDimClassName={dimClassName}
         pointerEvents="none"
       />
 
