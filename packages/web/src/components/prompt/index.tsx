@@ -32,6 +32,14 @@
  * and closes with its `open` prop, folding under the card, so a band can come
  * and go without the page jumping by more than its own height.
  *
+ * ## Modes
+ *
+ * A prompt that changes with what the app is doing names its states with
+ * `mode`, and each band says which of them it belongs to with its own
+ * `mode`. The bands that match open and the others fold, in one movement,
+ * so the card moves once, by the difference between them. A band's own
+ * `open` still wins over its mode.
+ *
  * ## Sending
  *
  * Enter sends and Shift+Enter starts a new line; Enter while a character is
@@ -144,8 +152,10 @@ const promptVariants = tv({
     statusText:
       'min-w-0 truncate bg-[linear-gradient(90deg,var(--muted-foreground)_35%,var(--foreground)_50%,var(--muted-foreground)_65%)] bg-[length:250%_100%] bg-clip-text text-transparent',
     statusSpinner: 'ms-auto size-4 animate-spin text-muted-foreground motion-reduce:animate-none',
+    // The strip folds like a band: its tuck under the card moves with it.
+    contextFold: 'mx-4 grid transition-[grid-template-rows,margin,opacity] duration-300 ease-[cubic-bezier(0.2,0,0,1)] motion-reduce:transition-none',
     context: [
-      'relative mx-4 -mt-5 flex items-center gap-x-4 gap-y-1 rounded-b-[1rem] border bg-muted px-3.5 pb-2 pt-6.5 text-xs text-muted-foreground',
+      'relative flex items-center gap-x-4 gap-y-1 rounded-b-[1rem] border bg-muted px-3.5 pb-2 pt-6.5 text-xs text-muted-foreground',
       'flex-wrap [&_svg]:shrink-0 [&_svg:not([class*=size-])]:size-3.5',
     ],
     contextItem: 'inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap',
@@ -236,6 +246,8 @@ interface PromptContextValue {
   removeAttachment(id: string): void;
   openFileDialog(): void;
   status: PromptState;
+  /** The state the developer has put the prompt in, which bands open by. */
+  mode?: string;
   busy: boolean;
   disabled: boolean;
   empty: boolean;
@@ -312,6 +324,12 @@ export interface PromptProps extends Omit<ComponentProps<'form'>, 'onSubmit' | '
   maxFiles?: number;
   /** Called with the files that were not taken, and why. */
   onReject?: (files: File[], reason: PromptRejectReason) => void;
+  /**
+   * The state the prompt is in, named by you: `"connect"`, `"tasks"`,
+   * `"writing"`. Each band given a `mode` of its own opens while this
+   * matches it and folds away otherwise.
+   */
+  mode?: string;
 }
 
 function PromptRoot({
@@ -326,6 +344,7 @@ function PromptRoot({
   accept,
   maxFiles,
   onReject,
+  mode,
   className,
   children,
   ...props
@@ -404,6 +423,7 @@ function PromptRoot({
       removeAttachment,
       openFileDialog,
       status,
+      mode,
       busy,
       disabled,
       empty,
@@ -418,7 +438,7 @@ function PromptRoot({
       listbox,
       setListbox,
     }),
-    [value, setValue, attachments, addFiles, removeAttachment, openFileDialog, status, busy, disabled, empty, submit, stop, onStop, dragging, fieldId, listbox]
+    [value, setValue, attachments, addFiles, removeAttachment, openFileDialog, status, mode, busy, disabled, empty, submit, stop, onStop, dragging, fieldId, listbox]
   );
 
   const send = (event: FormEvent<HTMLFormElement>) => {
@@ -431,6 +451,7 @@ function PromptRoot({
       <form
         data-slot="prompt"
         data-status={status}
+        data-mode={mode}
         aria-busy={busy || undefined}
         className={promptVariants().root({ className })}
         onSubmit={send}
@@ -485,14 +506,31 @@ function Band({
   );
 }
 
+/** A band's `mode`: the prompt mode, or modes, it is open in. */
+export type PromptBandMode = string | string[];
+
+/**
+ * Whether a band is open: its own `open` if given, else whether the
+ * prompt's mode is one of the band's, else what the band does by default.
+ */
+function useBandOpen(part: string, open: boolean | undefined, mode: PromptBandMode | undefined, fallback: (prompt: PromptContextValue) => boolean) {
+  const prompt = usePrompt(part);
+  if (open !== undefined) return open;
+  if (mode !== undefined) return prompt.mode !== undefined && (Array.isArray(mode) ? mode : [mode]).includes(prompt.mode);
+  return fallback(prompt);
+}
+
 export interface PromptBannerProps extends ComponentProps<'div'> {
-  /** Whether it is shown. It folds under the field when it is not. Default `true`. */
+  /** Whether it is shown. It folds under the field when it is not. Default: shown, or with `mode`, while the prompt is in that mode. */
   open?: boolean;
+  /** The prompt modes it is shown in. It folds away in any other. */
+  mode?: PromptBandMode;
 }
 
 /** A band above the field, for something to do before or while writing: connect an account, pick a project. */
-function PromptBanner({ open = true, ...props }: PromptBannerProps) {
-  return <Band edge="top" open={open} slot="prompt-banner" {...props} />;
+function PromptBanner({ open, mode, ...props }: PromptBannerProps) {
+  const shown = useBandOpen('Prompt.Banner', open, mode, () => true);
+  return <Band edge="top" open={shown} slot="prompt-banner" {...props} />;
 }
 PromptBanner.displayName = 'Prompt.Banner';
 
@@ -530,8 +568,10 @@ function useShimmer(active: boolean) {
 }
 
 export interface PromptStatusProps extends ComponentProps<'div'> {
-  /** Whether it is shown. Default: while `status` is `submitted` or `streaming`. */
+  /** Whether it is shown. Default: while `status` is `submitted` or `streaming`, or with `mode`, while the prompt is in that mode. */
   open?: boolean;
+  /** The prompt modes it is shown in. It folds away in any other. */
+  mode?: PromptBandMode;
   /** Something before the words: the model's mark, a tool's icon. */
   icon?: ReactNode;
   /** Whether a spinner turns at its end. Default `true`. */
@@ -539,9 +579,8 @@ export interface PromptStatusProps extends ComponentProps<'div'> {
 }
 
 /** A band under the field saying what the answer is doing, with the words lit by a moving sweep. */
-function PromptStatus({ open, icon, spinner = true, children, ...props }: PromptStatusProps) {
-  const prompt = usePrompt('Prompt.Status');
-  const shown = open ?? prompt.busy;
+function PromptStatus({ open, mode, icon, spinner = true, children, ...props }: PromptStatusProps) {
+  const shown = useBandOpen('Prompt.Status', open, mode, (prompt) => prompt.busy);
   const slots = promptVariants();
   const text = useShimmer(shown);
   return (
@@ -560,11 +599,32 @@ function PromptStatus({ open, icon, spinner = true, children, ...props }: Prompt
 }
 PromptStatus.displayName = 'Prompt.Status';
 
-export interface PromptContextProps extends ComponentProps<'div'> {}
+export interface PromptContextProps extends ComponentProps<'div'> {
+  /** Whether it is shown. It folds under the field when it is not. Default: shown, or with `mode`, while the prompt is in that mode. */
+  open?: boolean;
+  /** The prompt modes it is shown in. It folds away in any other. */
+  mode?: PromptBandMode;
+}
 
 /** A strip under the field, inset from its edges, for where the message is going: a branch, a folder, a ticket. */
-function PromptContext({ className, ...props }: PromptContextProps) {
-  return <div data-slot="prompt-context" className={promptVariants().context({ className })} {...props} />;
+function PromptContext({ open, mode, className, ...props }: PromptContextProps) {
+  const shown = useBandOpen('Prompt.Context', open, mode, () => true);
+  const slots = promptVariants();
+  const clip = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    clip.current?.toggleAttribute('inert', !shown);
+  }, [shown]);
+  return (
+    <div
+      data-slot="prompt-context"
+      data-open={shown ? '' : undefined}
+      className={slots.contextFold({ className: shown ? '-mt-5 grid-rows-[1fr] opacity-100' : 'mt-0 grid-rows-[0fr] opacity-0' })}
+    >
+      <div ref={clip} className="min-h-0 overflow-hidden">
+        <div className={slots.context({ className })} {...props} />
+      </div>
+    </div>
+  );
 }
 PromptContext.displayName = 'Prompt.Context';
 
@@ -1187,8 +1247,10 @@ function ProgressRing({ done, total }: { done: number; total: number }) {
 }
 
 export interface PromptTasksProps extends Omit<ComponentProps<'div'>, 'title'> {
-  /** Whether the band is shown. It folds under the field when it is not. Default `true`. */
+  /** Whether the band is shown. It folds under the field when it is not. Default: shown, or with `mode`, while the prompt is in that mode. */
   open?: boolean;
+  /** The prompt modes it is shown in. It folds away in any other. */
+  mode?: PromptBandMode;
   /** What the agent is doing, on the band's one line: "Preparing the release". */
   title: ReactNode;
   /** Whether the list is open under the title, when the caller holds it. */
@@ -1207,7 +1269,8 @@ export interface PromptTasksProps extends Omit<ComponentProps<'div'>, 'title'> {
  * `maxHeight`, and keeps the task in progress in view.
  */
 function PromptTasks({
-  open = true,
+  open,
+  mode,
   title,
   expanded,
   defaultExpanded = false,
@@ -1217,6 +1280,7 @@ function PromptTasks({
   children,
   ...props
 }: PromptTasksProps) {
+  const shown = useBandOpen('Prompt.Tasks', open, mode, () => true);
   const slots = promptVariants();
   const [inner, setInner] = useState(defaultExpanded);
   const isExpanded = expanded ?? inner;
@@ -1244,7 +1308,7 @@ function PromptTasks({
   };
 
   return (
-    <Band edge="top" open={open} slot="prompt-tasks" className={['flex-col items-stretch gap-0 px-0 pt-0.5', className].filter(Boolean).join(' ')} {...props}>
+    <Band edge="top" open={shown} slot="prompt-tasks" className={['flex-col items-stretch gap-0 px-0 pt-0.5', className].filter(Boolean).join(' ')} {...props}>
       <button type="button" aria-expanded={isExpanded} aria-controls={listId} onClick={toggle} className={slots.tasksHeader()}>
         <ProgressRing done={done} total={tasks.length} />
         <span className={slots.tasksTitle()}>{title}</span>

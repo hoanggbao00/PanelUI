@@ -360,6 +360,7 @@ export {
   PromptHint,
   type PromptProps,
   type PromptState,
+  type PromptBandMode,
   type PromptMessage,
   type PromptAttachment,
   type PromptRejectReason,

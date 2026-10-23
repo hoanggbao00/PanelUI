@@ -281,8 +281,8 @@ import { Prompt } from "@/components/panelui/prompt"
 </Prompt>
 ```
 
-- **`Prompt.Banner`** — A band above the field for something to do first, such as connecting an account. It folds under the field when `open` is false.
-- **`Prompt.Tasks`** — A band above the field with an agent's tasks. One line holds a ring that fills as they are done, the `title` and a count; pressed, it opens into the list, which scrolls past `maxHeight`.
+- **`Prompt.Banner`** — A band above the field for something to do first, such as connecting an account. It folds under the field when `open` is false. With `mode`, it is open while the prompt is in that mode.
+- **`Prompt.Tasks`** — A band above the field with an agent's tasks. One line holds a ring that fills as they are done, the `title` and a count; pressed, it opens into the list, which scrolls past `maxHeight`. With `mode`, the band is open while the prompt is in that mode.
 - **`Prompt.Task`** — One task, `pending`, `active`, `done` or `error`. An active task's words are lit while it runs, and a done one is checked and struck through.
 - **`Prompt.Commands`** — A band above the field listing `items` while the text is the trigger and a word. Chosen with the keys or a press.
 - **`Prompt.BannerAction`** — The banner's button, at its end. It takes everything a [Button](/docs/web/components/button) does, `loading` included.
@@ -298,8 +298,8 @@ import { Prompt } from "@/components/panelui/prompt"
 - **`Prompt.Attach`** — A tool that opens the file picker, for a prompt with no menu.
 - **`Prompt.Model`** — Chooses the model. `items` are `{ value, label, icon, description }`, and the button shows the chosen one's icon and label. `variant="ghost"` has no edge.
 - **`Prompt.Submit`** — Sends the message. While `status` is `submitted` or `streaming` it stops the answer instead, with a ring turning round it. With `onVoice`, it starts voice while the field is empty.
-- **`Prompt.Status`** — A band under the field saying what the answer is doing. It opens while the prompt is busy unless `open` says otherwise.
-- **`Prompt.Context`** — A strip under the field, inset from its edges, for where the message goes: a machine, a branch, a ticket.
+- **`Prompt.Status`** — A band under the field saying what the answer is doing. It opens while the prompt is busy, or with `mode`, while the prompt is in that mode, unless `open` says otherwise.
+- **`Prompt.Context`** — A strip under the field, inset from its edges, for where the message goes: a machine, a branch, a ticket. It folds away when `open` is false, or with `mode`, while the prompt is in another mode.
 - **`Prompt.ContextItem`** — One fact in the strip, with an icon before it. `onSelect` makes it a button.
 - **`Prompt.Hint`** — A quiet line under the prompt. Without children it says that Shift+Enter starts a new line.
 
@@ -615,6 +615,104 @@ export default function PromptWorkspace() {
               ))}
             </Select.Content>
           </Select>
+        </Prompt.Context>
+      </Prompt>
+    </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Switching modes
+
+`mode` on `Prompt` names the state it is in, and each band says with its own `mode` which state it belongs to: the banner to `connect`, the tasks to `tasks`, the status band to `writing`, the context strip to `project`. Changing `mode` folds the band that no longer matches and opens the one that does, in one movement. Here the tabs stand in for what the app is doing. In Writing, `status` is `streaming` as well, so the send button is a stop button.
+
+<ComponentPreview name="prompt/modes" height={400}>
+
+```tsx lineNumbers
+'use client';
+
+import { BrainIcon, GitBranchIcon, GitPullRequestIcon, FolderGit2Icon, LaptopIcon, SparklesIcon, ZapIcon } from 'lucide-react';
+import { Prompt, type PromptModelItem, type PromptTaskStatus } from '@/components/panelui/prompt';
+import { Tabs } from '@/components/panelui/tabs';
+import { useState } from 'react';
+
+const MODELS: PromptModelItem[] = [
+  { value: 'lumen', label: 'Lumen 4', icon: <SparklesIcon />, description: 'Balanced, for most questions' },
+  { value: 'lumen-mini', label: 'Lumen 4 Mini', icon: <ZapIcon />, description: 'Quick answers to small asks' },
+  { value: 'lumen-deep', label: 'Lumen 4 Deep', icon: <BrainIcon />, description: 'Slower, for hard problems' },
+];
+
+const MODES = [
+  { value: 'connect', label: 'Banner' },
+  { value: 'tasks', label: 'Tasks' },
+  { value: 'writing', label: 'Writing' },
+  { value: 'project', label: 'Project' },
+];
+
+const TASKS: [string, PromptTaskStatus][] = [
+  ['Read the open pull requests', 'done'],
+  ['Group the changes by area', 'done'],
+  ['Draft the release notes', 'active'],
+  ['Bump the version to 2.4.0', 'pending'],
+  ['Tag the release', 'pending'],
+];
+
+export default function PromptModes() {
+  // In an app this follows what the assistant is doing; here the tabs set it.
+  const [mode, setMode] = useState('connect');
+
+  return (
+    <div className="flex w-full max-w-xl flex-col items-center gap-5">
+      <Tabs value={mode} onValueChange={(value) => setMode(value as string)}>
+        <Tabs.List aria-label="Prompt mode">
+          {MODES.map((item) => (
+            <Tabs.Trigger key={item.value} value={item.value}>
+              {item.label}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+      </Tabs>
+      <Prompt mode={mode} status={mode === 'writing' ? 'streaming' : 'idle'} onStop={() => setMode('project')}>
+        <Prompt.Banner mode="connect">
+          <FolderGit2Icon />
+          <span className="truncate">Connect a repository to start working in it</span>
+          <Prompt.BannerAction onClick={() => setMode('tasks')}>Connect</Prompt.BannerAction>
+        </Prompt.Banner>
+        <Prompt.Tasks mode="tasks" title="Preparing release 2.4.0">
+          {TASKS.map(([task, status]) => (
+            <Prompt.Task key={task} status={status}>
+              {task}
+            </Prompt.Task>
+          ))}
+        </Prompt.Tasks>
+        <Prompt.Field>
+          <Prompt.Textarea placeholder="Ask for a change or a follow-up" />
+          <Prompt.Footer>
+            <Prompt.Tools>
+              <Prompt.Menu>
+                <Prompt.AttachItem />
+              </Prompt.Menu>
+              <Prompt.Model items={MODELS} defaultValue="lumen-deep" variant="ghost" />
+            </Prompt.Tools>
+            <Prompt.Submit />
+          </Prompt.Footer>
+        </Prompt.Field>
+        <Prompt.Status mode="writing">Writing the release notes</Prompt.Status>
+        <Prompt.Context mode="project">
+          <Prompt.ContextItem>
+            <LaptopIcon />
+            This machine
+          </Prompt.ContextItem>
+          <Prompt.ContextItem>
+            <GitPullRequestIcon />
+            #482
+          </Prompt.ContextItem>
+          <Prompt.ContextItem>
+            <GitBranchIcon />
+            release/2.4.0
+          </Prompt.ContextItem>
         </Prompt.Context>
       </Prompt>
     </div>
@@ -966,20 +1064,30 @@ export default function PromptAttachments() {
 | `accept` | `string` | — | Which files can be attached, as for `<input type="file">`: `image/*,.pdf`. Default any. |
 | `maxFiles` | `number` | — | How many files can be attached at once. Default no limit. |
 | `onReject` | `(files: File[], reason: PromptRejectReason) => void` | — | Called with the files that were not taken, and why. |
+| `mode` | `string` | — | The state the prompt is in, named by you: `"connect"`, `"tasks"`, `"writing"`. Each band given a `mode` of its own opens while this matches it and folds away otherwise. |
 
 ### Prompt.Banner
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `open` | `boolean` | `true` | Whether it is shown. It folds under the field when it is not. Default `true`. |
+| `open` | `boolean` | — | Whether it is shown. It folds under the field when it is not. Default: shown, or with `mode`, while the prompt is in that mode. |
+| `mode` | `PromptBandMode` | — | The prompt modes it is shown in. It folds away in any other. |
 
 ### Prompt.Status
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `open` | `boolean` | `true` | Whether it is shown. Default: while `status` is `submitted` or `streaming`. |
+| `open` | `boolean` | — | Whether it is shown. Default: while `status` is `submitted` or `streaming`, or with `mode`, while the prompt is in that mode. |
+| `mode` | `PromptBandMode` | — | The prompt modes it is shown in. It folds away in any other. |
 | `icon` | `ReactNode` | — | Something before the words: the model's mark, a tool's icon. |
 | `spinner` | `boolean` | — | Whether a spinner turns at its end. Default `true`. |
+
+### Prompt.Context
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `open` | `boolean` | — | Whether it is shown. It folds under the field when it is not. Default: shown, or with `mode`, while the prompt is in that mode. |
+| `mode` | `PromptBandMode` | — | The prompt modes it is shown in. It folds away in any other. |
 
 ### Prompt.ContextItem
 
@@ -1048,7 +1156,8 @@ export default function PromptAttachments() {
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
-| `open` | `boolean` | `true` | Whether the band is shown. It folds under the field when it is not. Default `true`. |
+| `open` | `boolean` | — | Whether the band is shown. It folds under the field when it is not. Default: shown, or with `mode`, while the prompt is in that mode. |
+| `mode` | `PromptBandMode` | — | The prompt modes it is shown in. It folds away in any other. |
 | `title` | `ReactNode` | — | What the agent is doing, on the band's one line: "Preparing the release". |
 | `expanded` | `boolean` | — | Whether the list is open under the title, when the caller holds it. |
 | `defaultExpanded` | `boolean` | `false` | Whether the list starts open, when the caller does not hold it. Default `false`. |
@@ -1106,6 +1215,10 @@ Files arrive from `Prompt.AttachItem` or `Prompt.Attach`, from ⌘U or Ctrl+U in
 ### Bands
 
 `Prompt.Banner` and `Prompt.Status` open and close by their `open` prop, folding under the card, and nothing inside a closed band can be focused. The status band opens by itself while the prompt is busy. Its words are lit by a sweep that stops when reduced motion is asked for.
+
+### Modes
+
+A band is open by, in order: its own `open`, when given; its `mode`, when given, matched against the prompt's `mode` (a band can name several in an array); and otherwise what it does by default, which is open for the banner, the tasks and the context strip and while busy for the status band. Bands that change together fold and open in the same 300ms, so the card moves once, by the difference in their heights.
 
 ### Screen readers
 

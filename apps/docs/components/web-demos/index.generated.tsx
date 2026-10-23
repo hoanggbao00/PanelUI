@@ -139,6 +139,7 @@ export const WEB_DEMOS: Record<string, ComponentType> = {
   'prompt/banner': dynamic(() => import('./prompt/banner')),
   'prompt/commands': dynamic(() => import('./prompt/commands')),
   'prompt/inline': dynamic(() => import('./prompt/inline')),
+  'prompt/modes': dynamic(() => import('./prompt/modes')),
   'prompt/thinking': dynamic(() => import('./prompt/thinking')),
   'prompt/thumb': dynamic(() => import('./prompt/thumb')),
   'prompt/voice': dynamic(() => import('./prompt/voice')),
