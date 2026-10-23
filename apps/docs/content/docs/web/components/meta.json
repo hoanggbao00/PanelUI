@@ -3,6 +3,7 @@
   "pages": [
     "!index",
     "alert",
+    "alert-dialog",
     "avatar",
     "bar-picker",
     "button",

@@ -16,6 +16,8 @@ By default the message is a card set into a tray tinted in its `tone`, and `Aler
 
 An alert does not leave on its own. It stays until `Alert.Close` is pressed or `open` is set to false, and then it folds away.
 
+To ask a question that has to be answered before anything else, use [Alert Dialog](/docs/web/components/alert-dialog).
+
 ## Usage
 
 ```tsx

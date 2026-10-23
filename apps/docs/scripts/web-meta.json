@@ -280,5 +280,15 @@
       "addedIn": "0.8.0",
       "category": "feedback"
     }
+  ],
+  "alert-dialog": [
+    "AlertDialog",
+    "A question that must be answered before the page can be used again, with the answers side by side under it.",
+    "react alert dialog confirm modal destructive component",
+    {
+      "addedIn": "0.8.0",
+      "category": "overlays",
+      "title": "Alert Dialog"
+    }
   ]
 }

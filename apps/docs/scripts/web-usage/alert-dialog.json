@@ -1,0 +1,53 @@
+{
+  "slug": "alert-dialog",
+  "demo": "overview",
+  "demoOptions": {
+    "height": 180
+  },
+  "intro": "Use it to ask a question that has to be answered before anything else on the page: deleting a project, discarding changes, signing out of every device.\n\nA press outside it, Escape and `AlertDialog.Cancel` all close it without doing anything, and `AlertDialog.Action` closes it once it has done its work. The question sits in a panel, and `AlertDialog.Footer` moves out of the panel into the darker band under it, where the answers sit side by side at equal widths.\n\nFor a task rather than a yes or no, such as a form to fill in, use [Sheet](/docs/web/components/sheet) or [Feedback](/docs/web/components/feedback). For a message that can wait on the page, use [Alert](/docs/web/components/alert).",
+  "usage": "<AlertDialog>\n  <AlertDialog.Trigger render={<Button variant=\"destructive\" />}>Delete project</AlertDialog.Trigger>\n  <AlertDialog.Content tone=\"destructive\">\n    <AlertDialog.Title>Delete Orchard?</AlertDialog.Title>\n    <AlertDialog.Description>Its 14 boards go with it.</AlertDialog.Description>\n    <AlertDialog.Footer>\n      <AlertDialog.Cancel />\n      <AlertDialog.Action onClick={remove}>Delete project</AlertDialog.Action>\n    </AlertDialog.Footer>\n  </AlertDialog.Content>\n</AlertDialog>",
+  "anatomy": "<AlertDialog>\n  <AlertDialog.Trigger />\n  <AlertDialog.Content>\n    <AlertDialog.Media />\n    <AlertDialog.Title />\n    <AlertDialog.Description />\n    <AlertDialog.Footer>\n      <AlertDialog.Cancel />\n      <AlertDialog.Action />\n    </AlertDialog.Footer>\n  </AlertDialog.Content>\n</AlertDialog>",
+  "parts": {
+    "Trigger": "What opens the dialog. Pass your own button as `render`.",
+    "Content": "The dialog: a panel in a darker band, over a dimmed page. `tone` colours the media and sets the action's default colour, `size=\"sm\"` centres a shorter question, and `blur` frosts the page behind it. Anything other than the footer, such as a field, goes in the panel.",
+    "Media": "A glyph in a disc of the dialog's tone, above the title.",
+    "Title": "The question. The dialog is announced by it.",
+    "Description": "What follows from each answer, read out after the title.",
+    "Footer": "The answers, side by side at equal widths in the band under the panel. Keep it a direct child of `AlertDialog.Content`.",
+    "Cancel": "Closes the dialog and does nothing else. It reads \"Cancel\" unless given children.",
+    "Action": "Does what the dialog asks about, then closes it. It takes a [Button](/docs/web/components/button)'s props, a `tone`, and `variant=\"soft\"` for an answer that is not the main one. When `onClick` returns a promise, it waits for it. `hold` makes it an action that must be pressed and held."
+  },
+  "examples": [
+    {
+      "title": "With an icon",
+      "description": "`AlertDialog.Media` puts a glyph in a disc of the dialog's `tone` above the title. `size=\"sm\"` makes the dialog narrower and centres the question over the two answers.",
+      "demo": "media",
+      "height": 180
+    },
+    {
+      "title": "Type to confirm",
+      "description": "Anything that is not the footer goes in the panel, here a field. The action stays `disabled` until the repository's name is typed, so a habit of pressing Enter cannot delete it. `dismissible={false}` keeps a press outside from throwing the typing away.",
+      "demo": "type-to-confirm",
+      "height": 180
+    },
+    {
+      "title": "While it works",
+      "description": "The action's `onClick` returns a promise. While it runs, the button shows a spinner and the dialog cannot be closed. It closes when the promise resolves. When it rejects, the dialog stays open, and here a plain [Alert](/docs/web/components/alert) in the panel says what went wrong. Turn on the switch to see the failure.",
+      "demo": "async",
+      "height": 240
+    },
+    {
+      "title": "Hold to confirm",
+      "description": "`hold={1500}` makes the action one that must be pressed and held for a second and a half while a fill runs across it. Letting go early drains it. Holding Space or Enter works the same way.",
+      "demo": "hold",
+      "height": 180
+    },
+    {
+      "title": "Three answers",
+      "description": "A footer can hold more than two answers. Discard is an action with `tone=\"destructive\"` and `variant=\"soft\"`: a tint rather than a fill, so Save stays the one filled button.",
+      "demo": "three-choices",
+      "height": 200
+    }
+  ],
+  "notes": "### Closing\n\nA press outside it, Escape and `AlertDialog.Cancel` close it, unless an action is running. `dismissible={false}` stops a press outside from closing it, for a question that a stray click should not answer; Escape still does. `AlertDialog.Action` closes it after its `onClick`, unless that handler calls `event.preventDefault()` or returns a promise that rejects.\n\n### Focus\n\nWhen it opens, focus moves to the first thing in it that takes focus: a field in the panel if there is one, otherwise the first answer. Put `AlertDialog.Cancel` first in the footer, so the answer focused by default is the one that changes nothing. Focus goes back to the trigger when it closes.\n\n### Holding and screen readers\n\nA screen reader cannot hold a button, so a press that arrives with no pointer or key going down first, as a screen reader's does, confirms straight away. The button is described as \"Press and hold to confirm\" for everyone else.\n\n### Opening it from code\n\nPass `open` and `onOpenChange` to open it from anywhere, such as a menu item, without an `AlertDialog.Trigger`."
+}

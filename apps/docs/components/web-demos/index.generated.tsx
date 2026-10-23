@@ -6,6 +6,13 @@ import type { ComponentType } from 'react';
 
 /** Every demo a docs page shows, each in a chunk of its own. */
 export const WEB_DEMOS: Record<string, ComponentType> = {
+  'alert-dialog/async': dynamic(() => import('./alert-dialog/async')),
+  'alert-dialog/hold': dynamic(() => import('./alert-dialog/hold')),
+  'alert-dialog/media': dynamic(() => import('./alert-dialog/media')),
+  'alert-dialog/overview': dynamic(() => import('./alert-dialog/overview')),
+  'alert-dialog/three-choices': dynamic(() => import('./alert-dialog/three-choices')),
+  'alert-dialog/thumb': dynamic(() => import('./alert-dialog/thumb')),
+  'alert-dialog/type-to-confirm': dynamic(() => import('./alert-dialog/type-to-confirm')),
   'alert/actions': dynamic(() => import('./alert/actions')),
   'alert/banner': dynamic(() => import('./alert/banner')),
   'alert/details': dynamic(() => import('./alert/details')),
