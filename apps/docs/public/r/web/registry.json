@@ -129,6 +129,23 @@
       ]
     },
     {
+      "name": "canvas",
+      "type": "registry:component",
+      "title": "Canvas",
+      "description": "A surface of dots, lines or crosses for other components to sit on, with a light that can follow the pointer.",
+      "dependencies": [
+        "tailwind-variants"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "components/panelui/canvas.tsx",
+          "type": "registry:component",
+          "target": "@components/panelui/canvas.tsx"
+        }
+      ]
+    },
+    {
       "name": "card",
       "type": "registry:component",
       "title": "Card",

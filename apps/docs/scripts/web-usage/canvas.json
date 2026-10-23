@@ -1,0 +1,54 @@
+{
+  "slug": "canvas",
+  "demo": "overview",
+  "demoOptions": {
+    "height": 420,
+    "flush": true
+  },
+  "intro": "Use it as the surface under something that sits on a page of its own: a graph, an empty state, a composer on an otherwise empty screen.\n\nIt is a stack of layers. `Canvas.Pattern` draws dots, a grid or crosses across the whole surface, and several patterns stack. `Canvas.Spotlight` lights the marks near the pointer, brightest at its centre. `Canvas.Content` is what sits on top.\n\nA canvas needs a height to fill: give it one with `className`, or let its parent stretch it.\n\nTo put a [Flow](/docs/web/components/flow) on it, pass the Flow's `onViewportChange` to the canvas's `viewport`, and the pattern pans and zooms with the graph.",
+  "usage": "<Canvas className=\"h-96\">\n  <Canvas.Pattern variant=\"dots\" />\n  <Canvas.Spotlight />\n  <Canvas.Content>…</Canvas.Content>\n</Canvas>",
+  "anatomy": "<Canvas>\n  <Canvas.Pattern />\n  <Canvas.Spotlight />\n  <Canvas.Content />\n</Canvas>",
+  "parts": {
+    "Pattern": "Marks across the whole canvas: `dots`, `grid` or `cross`, `gap` apart. `major` draws every so many lines or marks stronger, `fade` lets the pattern fade towards the edges or the bottom, and `strength` sets how strongly the marks show. Patterns stack in the order they are written.",
+    "Spotlight": "Lights the patterns near the pointer: inside `radius`, the marks brighten towards the foreground colour, most at the centre. It follows the pointer over whatever is in the content, fades out when the pointer leaves, and on a touch screen shows while a finger is down. `position` holds it at a point instead.",
+    "Content": "What sits on the canvas, above its patterns and its light. It fills the canvas, so lay out what is in it with `className`."
+  },
+  "examples": [
+    {
+      "title": "Under a flow",
+      "description": "A [Flow](/docs/web/components/flow) with a transparent background sits in `Canvas.Content`, and its `onViewportChange` feeds the canvas's `viewport`. Drag the pane or zoom it, and the dots move with the graph; the spotlight follows the pointer over the nodes too.",
+      "demo": "flow",
+      "height": 440,
+      "flush": true
+    },
+    {
+      "title": "Graph paper",
+      "description": "`variant=\"grid\"` with `major={5}` draws every fifth line stronger, as on graph paper, here under a [KPI](/docs/web/components/kpi).",
+      "demo": "grid",
+      "height": 360,
+      "flush": true
+    },
+    {
+      "title": "Crosses",
+      "description": "`variant=\"cross\"` at a wider `gap`, fading towards the edges with `fade=\"edges\"`, behind an empty state in a [Card](/docs/web/components/card).",
+      "demo": "cross",
+      "height": 360,
+      "flush": true
+    },
+    {
+      "title": "Fading out",
+      "description": "Dots that fade towards every edge, so a [Prompt](/docs/web/components/prompt) in the middle of an empty screen has a surface under it without a hard border round it.",
+      "demo": "fade",
+      "height": 380,
+      "flush": true
+    },
+    {
+      "title": "Layers",
+      "description": "Three patterns stacked: fine dots, crosses every 96 pixels at a higher `strength`, and a grid at the same spacing that fades towards the bottom. Each is a layer of its own, drawn from the same viewport.",
+      "demo": "layers",
+      "height": 360,
+      "flush": true
+    }
+  ],
+  "notes": "### Height\n\nThe canvas fills what it is given and does not grow with its content. Give it a height, or put it in a parent that stretches it.\n\n### Under a Flow\n\nGive the Flow `className=\"h-full rounded-none border-0 bg-transparent\"` and no `Flow.Background`, keep the viewport in state, and pass it both ways: `onViewportChange={setViewport}` on the Flow and `viewport={viewport}` on the canvas.\n\n### The spotlight and motion\n\nThe spotlight follows the pointer directly rather than easing after it, and nothing moves on its own, so it runs the same when reduced motion is asked for. It is drawn from the canvas's own pointer events, so it also lights the marks under content that takes the pointer, such as a Flow's nodes.\n\n### Colours\n\nThe marks are the theme's foreground colour at `strength`, 28% for dots and crosses and 10% for a grid, and the spotlight brings them to 95%. Both follow the theme, light and dark."
+}

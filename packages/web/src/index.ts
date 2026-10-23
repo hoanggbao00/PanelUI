@@ -561,3 +561,16 @@ export {
   type DialogListGroupProps,
   type DialogListItemProps,
 } from './components/dialog';
+export {
+  Canvas,
+  CanvasPattern,
+  CanvasSpotlight,
+  CanvasContent,
+  type CanvasProps,
+  type CanvasViewport,
+  type CanvasPatternVariant,
+  type CanvasFade,
+  type CanvasPatternProps,
+  type CanvasSpotlightProps,
+  type CanvasContentProps,
+} from './components/canvas';

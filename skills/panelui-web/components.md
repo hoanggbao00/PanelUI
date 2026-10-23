@@ -28,6 +28,7 @@ Generated from the collection's source. Read a component's own file before using
 
 ## Layout and structure
 
+- [Canvas](components/canvas.md) — A surface of dots, lines or crosses for other components to sit on, with a light that can follow the pointer.
 - [Card](components/card.md) — A surface that holds one thing, with a heading, an action beside it and a footer.
 - [Frame](components/frame.md) — A panel of rows set into a tray, with the tray's top strip carrying the title.
 - [Lane Board](components/lane-board.md) — Lanes of cards that can be dragged within a lane and from one lane to another.

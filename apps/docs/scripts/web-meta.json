@@ -299,5 +299,14 @@
       "addedIn": "0.8.0",
       "category": "overlays"
     }
+  ],
+  "canvas": [
+    "Canvas",
+    "A surface of dots, lines or crosses for other components to sit on, with a light that can follow the pointer.",
+    "react canvas background dot grid pattern spotlight component",
+    {
+      "addedIn": "0.8.0",
+      "category": "layout"
+    }
   ]
 }

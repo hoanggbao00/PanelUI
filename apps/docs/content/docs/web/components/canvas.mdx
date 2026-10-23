@@ -1,0 +1,357 @@
+---
+title: Canvas
+description: A surface of dots, lines or crosses for other components to sit on, with a light that can follow the pointer.
+status: new
+---
+
+<ComponentPreview name="canvas/overview" height={420} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { Canvas } from '@/components/panelui/canvas';
+
+export default function CanvasOverview() {
+  return (
+    <Canvas className="h-[420px] w-full">
+      <Canvas.Pattern />
+      <Canvas.Spotlight />
+    </Canvas>
+  );
+}
+```
+
+</ComponentPreview>
+
+Use it as the surface under something that sits on a page of its own: a graph, an empty state, a composer on an otherwise empty screen.
+
+It is a stack of layers. `Canvas.Pattern` draws dots, a grid or crosses across the whole surface, and several patterns stack. `Canvas.Spotlight` lights the marks near the pointer, brightest at its centre. `Canvas.Content` is what sits on top.
+
+A canvas needs a height to fill: give it one with `className`, or let its parent stretch it.
+
+To put a [Flow](/docs/web/components/flow) on it, pass the Flow's `onViewportChange` to the canvas's `viewport`, and the pattern pans and zooms with the graph.
+
+## Installation
+
+<Tabs items={['CLI', 'npm', 'Manual']}>
+
+<Tab value="CLI">
+
+<InstallTabs kind="dlx" packages="shadcn@latest add https://panelui.dev/r/web/canvas.json" />
+
+The source is copied into `components/panelui/`, where you can edit it.
+
+</Tab>
+
+<Tab value="npm">
+
+<InstallTabs kind="add" packages="panelui-web" />
+
+Import from `panelui-web/canvas` instead of `@/components/panelui/canvas`. Tailwind needs one line to read the package's classes, which is on the [installation page](/docs/web/installation#from-npm).
+
+</Tab>
+
+<Tab value="Manual">
+
+<Steps>
+
+<Step>
+
+Install the packages it uses:
+
+<InstallTabs kind="add" packages="tailwind-variants" />
+
+</Step>
+
+<Step>
+
+Copy the source into `components/panelui/canvas.tsx`:
+
+<RegistrySource name="canvas" />
+
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Usage
+
+```tsx
+import { Canvas } from "@/components/panelui/canvas"
+```
+
+```tsx
+<Canvas className="h-96">
+  <Canvas.Pattern variant="dots" />
+  <Canvas.Spotlight />
+  <Canvas.Content>…</Canvas.Content>
+</Canvas>
+```
+
+## Composition
+
+```tsx
+<Canvas>
+  <Canvas.Pattern />
+  <Canvas.Spotlight />
+  <Canvas.Content />
+</Canvas>
+```
+
+- **`Canvas.Pattern`** — Marks across the whole canvas: `dots`, `grid` or `cross`, `gap` apart. `major` draws every so many lines or marks stronger, `fade` lets the pattern fade towards the edges or the bottom, and `strength` sets how strongly the marks show. Patterns stack in the order they are written.
+- **`Canvas.Spotlight`** — Lights the patterns near the pointer: inside `radius`, the marks brighten towards the foreground colour, most at the centre. It follows the pointer over whatever is in the content, fades out when the pointer leaves, and on a touch screen shows while a finger is down. `position` holds it at a point instead.
+- **`Canvas.Content`** — What sits on the canvas, above its patterns and its light. It fills the canvas, so lay out what is in it with `className`.
+
+## Examples
+
+### Under a flow
+
+A [Flow](/docs/web/components/flow) with a transparent background sits in `Canvas.Content`, and its `onViewportChange` feeds the canvas's `viewport`. Drag the pane or zoom it, and the dots move with the graph; the spotlight follows the pointer over the nodes too.
+
+<ComponentPreview name="canvas/flow" height={440} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { Canvas, type CanvasViewport } from '@/components/panelui/canvas';
+import { Flow } from '@/components/panelui/flow';
+import { useState } from 'react';
+
+const STEPS = [
+  { id: 'upload', title: 'Upload', detail: 'interview-04.mov', x: 0, y: 110 },
+  { id: 'transcode', title: 'Transcode', detail: '1080p and 720p', x: 260, y: 110 },
+  { id: 'captions', title: 'Captions', detail: 'English, Turkish', x: 520, y: 20 },
+  { id: 'thumbnails', title: 'Thumbnails', detail: '12 frames', x: 520, y: 200 },
+  { id: 'publish', title: 'Publish', detail: 'Friday, 10:00', x: 780, y: 110 },
+];
+
+export default function CanvasFlow() {
+  const [viewport, setViewport] = useState<CanvasViewport>({ x: 0, y: 0, zoom: 1 });
+
+  return (
+    <Canvas viewport={viewport} className="h-[440px] w-full">
+      {/* Wider than the default, since the graph is fitted below a zoom of 1. */}
+      <Canvas.Pattern gap={18} size={1.1} />
+      <Canvas.Spotlight />
+      <Canvas.Content>
+        <Flow
+          fitViewOnMount
+          fitViewPadding={40}
+          onViewportChange={setViewport}
+          label="Video pipeline"
+          className="h-full rounded-none border-0 bg-transparent"
+        >
+          {STEPS.map((step) => (
+            <Flow.Node key={step.id} id={step.id} position={{ x: step.x, y: step.y }} className="w-44">
+              <Flow.NodeContent>
+                <Flow.NodeTitle>{step.title}</Flow.NodeTitle>
+                <Flow.NodeDescription>{step.detail}</Flow.NodeDescription>
+              </Flow.NodeContent>
+            </Flow.Node>
+          ))}
+          <Flow.Edge from="upload" to="transcode" arrow />
+          <Flow.Edge from="transcode" to="captions" arrow />
+          <Flow.Edge from="transcode" to="thumbnails" arrow />
+          <Flow.Edge from="captions" to="publish" dashed animated arrow />
+          <Flow.Edge from="thumbnails" to="publish" dashed animated arrow />
+        </Flow>
+      </Canvas.Content>
+    </Canvas>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Graph paper
+
+`variant="grid"` with `major={5}` draws every fifth line stronger, as on graph paper, here under a [KPI](/docs/web/components/kpi).
+
+<ComponentPreview name="canvas/grid" height={360} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { Canvas } from '@/components/panelui/canvas';
+import { Kpi } from '@/components/panelui/kpi';
+
+const SIGNUPS = [42, 48, 45, 51, 58, 56, 63, 71, 69, 78];
+
+export default function CanvasGrid() {
+  return (
+    <Canvas className="h-[360px] w-full">
+      <Canvas.Pattern variant="grid" major={5} />
+      <Canvas.Content className="flex items-center justify-center p-6">
+        <Kpi surface className="w-80">
+          <Kpi.Content layout="inline">
+            <Kpi.Stat>
+              <Kpi.Title>Sign-ups this week</Kpi.Title>
+              <Kpi.Value>1,284</Kpi.Value>
+              <Kpi.Trend value={12.4} />
+            </Kpi.Stat>
+            <Kpi.Chart data={SIGNUPS} color="info" inline style={{ width: 110 }} />
+          </Kpi.Content>
+        </Kpi>
+      </Canvas.Content>
+    </Canvas>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Crosses
+
+`variant="cross"` at a wider `gap`, fading towards the edges with `fade="edges"`, behind an empty state in a [Card](/docs/web/components/card).
+
+<ComponentPreview name="canvas/cross" height={360} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { PlusIcon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Canvas } from '@/components/panelui/canvas';
+import { Card } from '@/components/panelui/card';
+
+export default function CanvasCross() {
+  return (
+    <Canvas className="h-[360px] w-full">
+      <Canvas.Pattern variant="cross" gap={32} fade="edges" />
+      <Canvas.Content className="flex items-center justify-center p-6">
+        <Card className="w-full max-w-xs">
+          <Card.Header>
+            <Card.Title>No boards yet</Card.Title>
+            <Card.Description>A board holds the cards for one project. Start with one and invite people to it.</Card.Description>
+          </Card.Header>
+          <Card.Footer>
+            <Button>
+              <PlusIcon />
+              New board
+            </Button>
+          </Card.Footer>
+        </Card>
+      </Canvas.Content>
+    </Canvas>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Fading out
+
+Dots that fade towards every edge, so a [Prompt](/docs/web/components/prompt) in the middle of an empty screen has a surface under it without a hard border round it.
+
+<ComponentPreview name="canvas/fade" height={380} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { Canvas } from '@/components/panelui/canvas';
+import { Prompt } from '@/components/panelui/prompt';
+
+export default function CanvasFade() {
+  return (
+    <Canvas className="h-[380px] w-full">
+      <Canvas.Pattern fade="edges" gap={16} size={1} />
+      <Canvas.Content className="flex items-center justify-center p-6">
+        <Prompt className="max-w-md">
+          <Prompt.Field>
+            <Prompt.Textarea placeholder="What should we build today?" />
+            <Prompt.Footer>
+              <Prompt.Tools>
+                <Prompt.Attach />
+              </Prompt.Tools>
+              <Prompt.Submit />
+            </Prompt.Footer>
+          </Prompt.Field>
+        </Prompt>
+      </Canvas.Content>
+    </Canvas>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Layers
+
+Three patterns stacked: fine dots, crosses every 96 pixels at a higher `strength`, and a grid at the same spacing that fades towards the bottom. Each is a layer of its own, drawn from the same viewport.
+
+<ComponentPreview name="canvas/layers" height={360} flush>
+
+```tsx lineNumbers
+'use client';
+
+import { Canvas } from '@/components/panelui/canvas';
+
+export default function CanvasLayers() {
+  return (
+    <Canvas className="h-[360px] w-full">
+      <Canvas.Pattern variant="dots" gap={12} strength="18%" />
+      <Canvas.Pattern variant="cross" gap={96} size={5} strength="45%" />
+      <Canvas.Pattern variant="grid" gap={96} fade="bottom" />
+    </Canvas>
+  );
+}
+```
+
+</ComponentPreview>
+
+## API Reference
+
+### Canvas
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `viewport` | `CanvasViewport` | `{ x: 0, y: 0, zoom: 1 }` | Where the canvas is looking, as `{ x, y, zoom }`. Pass what a Flow reports from `onViewportChange`, and the pattern pans and scales with the graph. Default `{ x: 0, y: 0, zoom: 1 }`. |
+
+### Canvas.Pattern
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `CanvasPatternVariant` | `'dots'` | Dots, a grid of lines, or small crosses. Default `dots`. |
+| `gap` | `number` | — | The distance from one mark to the next, in pixels at a zoom of 1. Default `12`, or `24` for a grid. |
+| `size` | `number` | — | How big a mark is: a dot's radius, a line's width, half a cross's arm. Default `0.75`, `1` or `3`. |
+| `major` | `number` | — | Draws every this-many-th line or mark stronger, as on graph paper. |
+| `fade` | `CanvasFade` | `'none'` | Fades the pattern out towards every edge or towards the bottom. Default `none`. |
+| `strength` | `string` | — | How strongly the marks show at rest, as a share of the foreground colour. Default `28%` for dots and crosses, `10%` for a grid. |
+
+### Canvas.Spotlight
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `radius` | `number` | `100` | How far the light reaches from its centre, in pixels. Default `100`. |
+| `position` | `{ x: number; y: number }` | — | Holds the light at a point, in pixels from the canvas's top left corner, instead of following the pointer. |
+
+Every part also takes the props of the element it renders, and a `className`.
+
+## Notes
+
+### Height
+
+The canvas fills what it is given and does not grow with its content. Give it a height, or put it in a parent that stretches it.
+
+### Under a Flow
+
+Give the Flow `className="h-full rounded-none border-0 bg-transparent"` and no `Flow.Background`, keep the viewport in state, and pass it both ways: `onViewportChange={setViewport}` on the Flow and `viewport={viewport}` on the canvas.
+
+### The spotlight and motion
+
+The spotlight follows the pointer directly rather than easing after it, and nothing moves on its own, so it runs the same when reduced motion is asked for. It is drawn from the canvas's own pointer events, so it also lights the marks under content that takes the pointer, such as a Flow's nodes.
+
+### Colours
+
+The marks are the theme's foreground colour at `strength`, 28% for dots and crosses and 10% for a grid, and the spotlight brings them to 95%. Both follow the theme, light and dark.
+
+### Server Components
+
+`Canvas` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Canvas.Pattern` off the import, so each part is also exported by name: `CanvasPattern` is `Canvas.Pattern`, and so on for the others.
+
+```tsx
+import { Canvas, CanvasPattern, CanvasSpotlight, CanvasContent } from "@/components/panelui/canvas"
+```
