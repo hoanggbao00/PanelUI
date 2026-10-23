@@ -53,6 +53,9 @@ For a decision that needs an answer before anything else, use a dialog. For one 
       <Sheet.Body>
         <Sheet.Trigger to="details" />
       </Sheet.Body>
+      <Sheet.Slides>
+        <Sheet.Slide />
+      </Sheet.Slides>
       <Sheet.Footer>
         <Sheet.Close />
       </Sheet.Footer>
@@ -73,6 +76,8 @@ For a decision that needs an answer before anything else, use a dialog. For one 
 - `Sheet.Title` — The sheet's name. It is also what a screen reader announces when the sheet opens.
 - `Sheet.Description` — A sentence under the title, read out after it.
 - `Sheet.Body` — The part that scrolls. The header and footer stay where they are while it moves.
+- `Sheet.Slides` — A column of rounded slides in place of `Sheet.Body`, for photos or a deck. By default it is a deck: each slide fills the sheet's height, a scroll glides to the next slide, the arrow keys move one at a time, and a counter sits under it. `snap={false}` makes it a numbered column of smaller slides that scrolls freely, and with `onIndexChange` pressing one chooses it. `index` and `defaultIndex` hold the current slide.
+- `Sheet.Slide` — One slide: a rounded frame that an image or a video fills edge to edge, or anything drawn. `label` is what a screen reader calls it after its place, such as "3 of 8".
 - `Sheet.Footer` — The actions, stacked full width.
 - `Sheet.Close` — Closes the sheet, even when `dismissible` is off. Give it `render` to make your own button close it.
 - `Sheet.Stage` — Wraps the page. While a sheet inside it is open, the page steps back slightly and rounds its corners. Set `--stage-radius` to the radius of what it sits in, less the gap, so the two corners are concentric.
@@ -133,9 +138,27 @@ Every part also takes the props of the element it renders, and a `className`.
 | `render` | `ReactElement` | — | Your own element to close the sheet with, such as a Cancel button. Without it, and without children, this is the round close button. |
 | `icon` | `boolean` | — | Draw the cross glyph. Set for you on the built-in close button. |
 
+#### `SheetSlidesProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `snap` | `boolean` | `true` | `true` makes it a deck: each slide fills the height, and a scroll glides to the next one. `false` makes it a numbered column of smaller slides that scrolls freely. Default `true`. |
+| `index` | `number` | — | The current slide, counted from 0, when the caller holds it. Setting it scrolls that slide into view. |
+| `defaultIndex` | `number` | `0` | The slide to start on, when the caller does not hold it. Default `0`. |
+| `onIndexChange` | `(index: number) => void` | — | Called with the new index when the current slide changes: scrolled to in a deck, pressed in a column. In a column, passing it makes each slide a button. |
+| `counter` | `boolean` | — | Show "3 / 8" under the current slide. Default: on in a deck. |
+| `aspect` | `string` | `'16 / 9'` | The shape of a slide in a column, as a CSS aspect ratio. Default `16 / 9`. |
+
+#### `SheetSlideProps`
+
+| Prop | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `label` | `string` | — | What a screen reader calls it, after its place: "3 of 8, Harbour at dawn". An image's `alt` usually says it already. |
+| `aspect` | `string` | `'16 / 9'` | Its shape in a column, overriding `Sheet.Slides`' `aspect`. |
+
 ## In a Server Component
 
-`Sheet` is a client component. A Server Component cannot read `Sheet.Trigger` off the import, so import each part by name: `SheetTrigger`, `SheetNext`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`, `SheetBody`, `SheetFooter`, `SheetClose`, `SheetStage`.
+`Sheet` is a client component. A Server Component cannot read `Sheet.Trigger` off the import, so import each part by name: `SheetTrigger`, `SheetNext`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`, `SheetBody`, `SheetFooter`, `SheetClose`, `SheetStage`, `SheetSlides`, `SheetSlide`.
 
 ## Notes
 
@@ -160,6 +183,10 @@ Swiping follows the pointer, and a quick flick toward the edge closes the sheet 
 Focus moves into the sheet when it opens and returns to the trigger when it closes. The page behind cannot be scrolled or focused while it is open.
 
 With reduced motion turned on, the sheet appears and disappears without sliding.
+
+#### Slides need a height
+
+A deck fills the height it is given, so put it in a sheet that has one: a side sheet, or a top or bottom sheet with `size="half"` or `size="full"`. In a sheet that sizes itself to its content it falls back to 60% of the screen, at most 32rem. A column needs no height of its own; it scrolls once it reaches the edge of the screen.
 
 ## Example
 

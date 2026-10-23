@@ -45,10 +45,21 @@
  *
  * Every sheet follows a drag and leaves on a flick toward its own edge. The
  * grabber on a top or bottom sheet says so before anybody tries.
+ *
+ * ## Slides
+ *
+ * `Sheet.Slides` takes the place of the body with a column of rounded
+ * slides, for photos or a deck. By default it is a deck: each slide fills
+ * the sheet's height, a turn of the wheel or a swipe of the trackpad glides
+ * to the next slide, an arrow key moves one, and a counter under it says
+ * which. Without `snap` it is a numbered column of smaller slides that
+ * scrolls freely, the way a presentation's slide panel does, and pressing
+ * one chooses it.
  */
 import { Drawer } from '@base-ui/react/drawer';
 import { ScrollArea } from '@base-ui/react/scroll-area';
 import {
+  Children,
   createContext,
   useCallback,
   useContext,
@@ -57,6 +68,8 @@ import {
   useRef,
   useState,
   type ComponentProps,
+  type CSSProperties,
+  type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -135,6 +148,33 @@ const sheetVariants = tv({
       'my-3 me-1 flex w-1.5 opacity-0 transition-opacity delay-300 data-hovering:opacity-100 data-hovering:delay-0 data-scrolling:opacity-100 data-scrolling:delay-0',
     thumb: 'relative flex-1 rounded-full bg-foreground/20',
     footer: 'flex shrink-0 flex-col gap-2 px-6 pt-3 pb-6',
+    /*
+     * Slides. As a deck the viewport is a size container, so a slide can be
+     * exactly its height less the padding, which is what lets one flick land
+     * on one slide. The minimum height is for a sheet that sizes itself to
+     * its content, where a deck would otherwise have no height to fill.
+     */
+    slides: 'relative flex min-h-0 flex-1 flex-col',
+    // Focus is shown on the current slide, not as a square round the scroller.
+    slidesViewport: 'group/slides min-h-0 flex-1 overscroll-contain outline-none',
+    slidesContent: 'flex flex-col gap-3 px-3',
+    // 20px is the sheet's 32 less the 12px it is set in by: one corner, two curves.
+    slide: [
+      'relative shrink-0 overflow-hidden rounded-[20px] bg-muted',
+      '[&>img]:size-full [&>img]:object-cover [&>video]:size-full [&>video]:object-cover',
+      // A hairline over the picture, so a photo keeps an edge on a sheet of its own colour.
+      "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:ring-1 after:ring-inset after:ring-foreground/[0.08] after:content-['']",
+      'group-focus-visible/slides:data-current:ring-2 group-focus-visible/slides:data-current:ring-ring',
+    ],
+    slideRow: 'grid grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-2.5',
+    slideNumber: 'pt-1 text-end text-xs font-medium tabular-nums text-muted-foreground',
+    slideButton: [
+      'group/slide block w-full cursor-pointer rounded-[14px] text-start outline-none transition-shadow duration-150',
+      'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-popover',
+    ],
+    // No blur behind it: a filter over a scrolling picture repaints on every frame.
+    counter:
+      'pointer-events-none absolute inset-x-0 bottom-5 mx-auto w-fit rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium tabular-nums text-white',
     /*
      * The page behind steps back by 3%, not more: enough to read as a layer
      * underneath, not so much that the page looks like it shrank. It keeps its
@@ -720,6 +760,359 @@ function SheetClose({ render, icon = false, children, ...props }: SheetCloseProp
 }
 SheetClose.displayName = 'Sheet.Close';
 
+/* ----------------------------------------------------------------- slides */
+
+interface SlidesContextValue {
+  snap: boolean;
+  count: number;
+  current: number;
+  choose(index: number): void;
+  /** Set when pressing a slide chooses it. */
+  pressable: boolean;
+}
+
+const SlidesContext = createContext<SlidesContextValue | null>(null);
+
+/** The rounded frame of a slide: the slide itself in a deck, inside its row in a column. */
+const frameOf = (slide: HTMLElement) => slide.querySelector<HTMLElement>('[data-slide-frame]') ?? slide;
+const SlideIndexContext = createContext(0);
+
+function reduceMotion() {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+export interface SheetSlidesProps extends Omit<ComponentProps<'div'>, 'onChange'> {
+  /**
+   * `true` makes it a deck: each slide fills the height, and a scroll
+   * glides to the next one. `false` makes it a numbered column of smaller
+   * slides that scrolls freely. Default `true`.
+   */
+  snap?: boolean;
+  /** The current slide, counted from 0, when the caller holds it. Setting it scrolls that slide into view. */
+  index?: number;
+  /** The slide to start on, when the caller does not hold it. Default `0`. */
+  defaultIndex?: number;
+  /**
+   * Called with the new index when the current slide changes: scrolled to
+   * in a deck, pressed in a column. In a column, passing it makes each
+   * slide a button.
+   */
+  onIndexChange?: (index: number) => void;
+  /** Show "3 / 8" under the current slide. Default: on in a deck. */
+  counter?: boolean;
+  /** The shape of a slide in a column, as a CSS aspect ratio. Default `16 / 9`. */
+  aspect?: string;
+}
+
+/**
+ * A column of rounded slides in place of `Sheet.Body`: a deck that moves one
+ * slide at a time, or with `snap={false}`, a numbered column to choose from.
+ */
+function SheetSlides({
+  snap = true,
+  index,
+  defaultIndex = 0,
+  onIndexChange,
+  counter,
+  aspect = '16 / 9',
+  className,
+  style,
+  children,
+  'aria-label': label = 'Slides',
+  ...props
+}: SheetSlidesProps) {
+  const slots = sheetVariants();
+  const viewport = useRef<HTMLDivElement>(null);
+  const slides = Children.toArray(children);
+  const count = slides.length;
+  const [internal, setInternal] = useState(defaultIndex);
+  const current = Math.min(Math.max(index ?? internal, 0), Math.max(count - 1, 0));
+  const live = useRef({ current, onIndexChange, controlled: index !== undefined });
+  live.current = { current, onIndexChange, controlled: index !== undefined };
+
+  const slideAt = (at: number) =>
+    viewport.current?.querySelectorAll<HTMLElement>('[data-slot=sheet-slide]')[at] ?? null;
+  // Scrolls the slides alone. `scrollIntoView` would move every scroller
+  // above them too, the page included when a sheet is drawn inline.
+  const reveal = useCallback(
+    (at: number, smooth: boolean) => {
+      const root = viewport.current;
+      const slide = slideAt(at);
+      if (!root || !slide) return;
+      const box = root.getBoundingClientRect();
+      const frame = frameOf(slide).getBoundingClientRect();
+      const above = frame.top - box.top;
+      const below = frame.bottom - box.bottom;
+      const by = snap ? above - (box.height - frame.height) / 2 : above < 0 ? above - 8 : below > 0 ? below + 8 : 0;
+      if (by === 0) return;
+      const behavior = smooth && !reduceMotion() ? 'smooth' : 'auto';
+      if (!snap) {
+        root.scrollBy({ top: by, behavior });
+        return;
+      }
+      // A deck stops at every slide on the way, which is right for a hand
+      // and wrong for Home or End. Snapping is off for the length of a jump.
+      root.style.scrollSnapType = 'none';
+      root.scrollBy({ top: by, behavior });
+      let restored = false;
+      const restore = () => {
+        if (restored) return;
+        restored = true;
+        root.style.scrollSnapType = '';
+      };
+      if (behavior === 'smooth' && 'onscrollend' in window) {
+        root.addEventListener('scrollend', restore, { once: true });
+        window.setTimeout(restore, 1200);
+      } else {
+        requestAnimationFrame(restore);
+      }
+    },
+    [snap]
+  );
+
+  // The slide last brought into view. One that became current by being
+  // scrolled to is already in view, and must not be scrolled to again: that
+  // would pull a deck back to it in the middle of a longer scroll.
+  const shown = useRef<number | null>(null);
+
+  const settle = useCallback((next: number) => {
+    shown.current = next;
+    if (next === live.current.current) return;
+    if (!live.current.controlled) setInternal(next);
+    live.current.onIndexChange?.(next);
+  }, []);
+
+  // A deck's current slide is the one most in view.
+  useEffect(() => {
+    const root = viewport.current;
+    if (!snap || !root || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) settle(Number((entry.target as HTMLElement).dataset.index));
+        }
+      },
+      { root, threshold: 0.6 }
+    );
+    root.querySelectorAll('[data-slot=sheet-slide]').forEach((slide) => observer.observe(slide));
+    return () => observer.disconnect();
+  }, [snap, count, settle]);
+
+  // Opens on the current slide, and follows `index` when it is set from outside.
+  useEffect(() => {
+    const first = shown.current === null;
+    if (!first && shown.current === current) return;
+    shown.current = current;
+    if (first && current === 0) return;
+    const box = viewport.current?.getBoundingClientRect();
+    const slide = slideAt(current);
+    const frame = slide ? frameOf(slide).getBoundingClientRect() : undefined;
+    const visible = box && frame && frame.top >= box.top - 1 && frame.bottom <= box.bottom + 1;
+    // A deck that scrolled there by itself is already on it.
+    if (!visible || (first && snap)) reveal(current, !first);
+  }, [current, reveal, snap]);
+
+  const go = (next: number) => {
+    const at = Math.min(Math.max(next, 0), count - 1);
+    if (snap) reveal(at, true);
+    else {
+      settle(at);
+      reveal(at, true);
+      slideAt(at)?.querySelector<HTMLElement>('button')?.focus();
+    }
+  };
+  const goNow = useRef(go);
+  goNow.current = go;
+
+  /*
+   * A wheel or a trackpad turns a deck one slide per gesture. Left to the
+   * browser, a slow scroll drifts part of the way, eases off and springs
+   * back, and a fast one runs past several slides. Here a deliberate scroll
+   * glides to the next slide, and the rest of the same gesture, the
+   * trackpad's momentum included, is absorbed rather than fought. A touch
+   * screen keeps the browser's own snapping, which follows the finger.
+   */
+  useEffect(() => {
+    const root = viewport.current;
+    if (!snap || !root) return;
+    let pending = 0;
+    let lastWheel = 0;
+    let lockedUntil = 0;
+    const onWheel = (event: WheelEvent) => {
+      // Sideways scrolling and pinch-zoom are not turns.
+      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      event.preventDefault();
+      const now = performance.now();
+      const gap = now - lastWheel;
+      lastWheel = now;
+      if (now < lockedUntil) {
+        // Still the same gesture: keep it from turning a second slide.
+        lockedUntil = Math.max(lockedUntil, now + 140);
+        return;
+      }
+      if (gap > 200) pending = 0;
+      pending += event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+      if (Math.abs(pending) < 24) return;
+      const step = Math.sign(pending);
+      pending = 0;
+      lockedUntil = now + 500;
+      goNow.current(live.current.current + step);
+    };
+    root.addEventListener('wheel', onWheel, { passive: false });
+    return () => root.removeEventListener('wheel', onWheel);
+  }, [snap]);
+
+  const keys = (event: KeyboardEvent<HTMLDivElement>) => {
+    const step =
+      event.key === 'ArrowDown' || event.key === 'PageDown' || (event.key === ' ' && !event.shiftKey)
+        ? 1
+        : event.key === 'ArrowUp' || event.key === 'PageUp' || (event.key === ' ' && event.shiftKey)
+          ? -1
+          : 0;
+    if (step !== 0) {
+      event.preventDefault();
+      go(current + step);
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      go(event.key === 'Home' ? 0 : count - 1);
+    }
+  };
+
+  const context = useMemo<SlidesContextValue>(
+    () => ({ snap, count, current, choose: settle, pressable: !snap && onIndexChange !== undefined }),
+    [snap, count, current, settle, onIndexChange]
+  );
+
+  return (
+    <SlidesContext.Provider value={context}>
+      <ScrollArea.Root
+        data-slot="sheet-slides"
+        data-snap={snap ? '' : undefined}
+        className={slots.slides({ className })}
+        style={{ ...style, ['--slide-aspect' as string]: aspect } as CSSProperties}
+        {...props}
+      >
+        <ScrollArea.Viewport
+          ref={viewport}
+          tabIndex={0}
+          aria-roledescription="carousel"
+          aria-label={label}
+          onKeyDown={keys}
+          className={slots.slidesViewport({
+            className: snap
+              ? 'min-h-[min(60dvh,32rem)] snap-y snap-mandatory [container-type:size]'
+              : undefined,
+          })}
+        >
+          <ScrollArea.Content className={slots.slidesContent({ className: snap ? 'py-1.5' : 'gap-2 pb-3 pt-1' })}>
+            {slides.map((slide, at) => (
+              <SlideIndexContext.Provider key={at} value={at}>
+                {slide}
+              </SlideIndexContext.Provider>
+            ))}
+          </ScrollArea.Content>
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar orientation="vertical" className={slots.scrollbar()}>
+          <ScrollArea.Thumb className={slots.thumb()} />
+        </ScrollArea.Scrollbar>
+        {(counter ?? snap) && count > 1 ? (
+          <div data-slot="sheet-slides-counter" aria-hidden="true" className={slots.counter()}>
+            {current + 1} / {count}
+          </div>
+        ) : null}
+      </ScrollArea.Root>
+    </SlidesContext.Provider>
+  );
+}
+SheetSlides.displayName = 'Sheet.Slides';
+
+export interface SheetSlideProps extends ComponentProps<'div'> {
+  /**
+   * What a screen reader calls it, after its place: "3 of 8, Harbour at
+   * dawn". An image's `alt` usually says it already.
+   */
+  label?: string;
+  /** Its shape in a column, overriding `Sheet.Slides`' `aspect`. */
+  aspect?: string;
+}
+
+/** One slide: a rounded frame that fills with an image, a video or anything drawn. */
+function SheetSlide({ label, aspect, className, style, children, ...props }: SheetSlideProps) {
+  const slides = useContext(SlidesContext);
+  if (!slides) throw new Error('Sheet.Slide must be used inside <Sheet.Slides>.');
+  const at = useContext(SlideIndexContext);
+  const slots = sheetVariants();
+  const place = `${at + 1} of ${slides.count}`;
+  const selected = at === slides.current;
+  const name = label ? `${place}, ${label}` : place;
+  const frameClass = slots.slide({
+    className: [
+      slides.snap
+        ? 'h-[calc(100cqh-0.75rem)] snap-center'
+        : // In a column a slide sits on the sheet's own colour, so it takes the
+          // theme's border as a real edge, and a shadow to stand off the sheet.
+          'aspect-(--slide-aspect) rounded-[14px] shadow-xs ring-1 ring-border transition-shadow duration-150 after:hidden',
+      !slides.snap && !selected && slides.pressable && 'group-hover/slide:ring-foreground/25',
+      // Chosen in a column: a ring in the info colour, the theme's colour for
+      // something switched on, clear of the slide's edge.
+      !slides.snap && selected && 'shadow-none ring-2 ring-[var(--info)] ring-offset-2 ring-offset-popover',
+      className,
+    ],
+  });
+  const frameStyle = aspect ? { ...style, aspectRatio: aspect } : style;
+
+  // In a deck the slide is the frame, so the observer that finds the current
+  // one has a box to watch.
+  if (slides.snap) {
+    return (
+      <div
+        data-slot="sheet-slide"
+        data-slide-frame=""
+        data-index={at}
+        data-current={selected ? '' : undefined}
+        role="group"
+        aria-roledescription="slide"
+        aria-label={name}
+        className={frameClass}
+        style={frameStyle}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  const frame = (
+    <div data-slide-frame="" data-current={selected ? '' : undefined} className={frameClass} style={frameStyle}>
+      {children}
+    </div>
+  );
+
+  return (
+    <div data-slot="sheet-slide" data-index={at} data-selected={selected ? '' : undefined} className={slots.slideRow()} {...props}>
+      <span aria-hidden="true" className={slots.slideNumber({ className: selected ? 'text-[var(--info)]' : undefined })}>
+        {at + 1}
+      </span>
+      {slides.pressable ? (
+        <button
+          type="button"
+          aria-label={label ? name : `Slide ${place}`}
+          aria-current={selected ? 'true' : undefined}
+          className={slots.slideButton()}
+          onClick={() => slides.choose(at)}
+        >
+          {frame}
+        </button>
+      ) : (
+        <div role="group" aria-roledescription="slide" aria-label={name}>
+          {frame}
+        </div>
+      )}
+    </div>
+  );
+}
+SheetSlide.displayName = 'Sheet.Slide';
+
 export interface SheetStageProps extends ComponentProps<'div'> {}
 
 /**
@@ -751,6 +1144,8 @@ export const Sheet = Object.assign(SheetRoot, {
   Footer: SheetFooter,
   Close: SheetClose,
   Stage: SheetStage,
+  Slides: SheetSlides,
+  Slide: SheetSlide,
 });
 
 export {
@@ -764,4 +1159,6 @@ export {
   SheetFooter,
   SheetClose,
   SheetStage,
+  SheetSlides,
+  SheetSlide,
 };

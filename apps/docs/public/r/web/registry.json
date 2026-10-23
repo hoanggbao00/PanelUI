@@ -589,6 +589,14 @@
         "tailwind-variants"
       ],
       "registryDependencies": [],
+      "cssVars": {
+        "light": {
+          "info": "oklch(0.623 0.214 259.815)"
+        },
+        "dark": {
+          "info": "oklch(0.623 0.214 259.815)"
+        }
+      },
       "files": [
         {
           "path": "components/panelui/sheet.tsx",

@@ -100,6 +100,8 @@ export {
   SheetFooter,
   SheetClose,
   SheetStage,
+  SheetSlides,
+  SheetSlide,
   type SheetProps,
   type SheetSide,
   type SheetTriggerProps,
@@ -112,6 +114,8 @@ export {
   type SheetFooterProps,
   type SheetCloseProps,
   type SheetStageProps,
+  type SheetSlidesProps,
+  type SheetSlideProps,
 } from './components/sheet';
 export {
   DayGrid,

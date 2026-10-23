@@ -151,6 +151,9 @@ import { Sheet } from "@/components/panelui/sheet"
       <Sheet.Body>
         <Sheet.Trigger to="details" />
       </Sheet.Body>
+      <Sheet.Slides>
+        <Sheet.Slide />
+      </Sheet.Slides>
       <Sheet.Footer>
         <Sheet.Close />
       </Sheet.Footer>
@@ -171,6 +174,8 @@ import { Sheet } from "@/components/panelui/sheet"
 - **`Sheet.Title`** — The sheet's name. It is also what a screen reader announces when the sheet opens.
 - **`Sheet.Description`** — A sentence under the title, read out after it.
 - **`Sheet.Body`** — The part that scrolls. The header and footer stay where they are while it moves.
+- **`Sheet.Slides`** — A column of rounded slides in place of `Sheet.Body`, for photos or a deck. By default it is a deck: each slide fills the sheet's height, a scroll glides to the next slide, the arrow keys move one at a time, and a counter sits under it. `snap={false}` makes it a numbered column of smaller slides that scrolls freely, and with `onIndexChange` pressing one chooses it. `index` and `defaultIndex` hold the current slide.
+- **`Sheet.Slide`** — One slide: a rounded frame that an image or a video fills edge to edge, or anything drawn. `label` is what a screen reader calls it after its place, such as "3 of 8".
 - **`Sheet.Footer`** — The actions, stacked full width.
 - **`Sheet.Close`** — Closes the sheet, even when `dismissible` is off. Give it `render` to make your own button close it.
 - **`Sheet.Stage`** — Wraps the page. While a sheet inside it is open, the page steps back slightly and rounds its corners. Set `--stage-radius` to the radius of what it sits in, less the gap, so the two corners are concentric.
@@ -210,6 +215,177 @@ export default function SheetSides() {
         </Sheet>
       ))}
     </div>
+  );
+}
+```
+
+</ComponentPreview>
+
+### Photos, one at a time
+
+`Sheet.Slides` in a `size="full"` sheet is a deck of rounded slides, each as tall as the sheet. A turn of the wheel or a swipe of the trackpad glides to the next photo, however hard it is, and on a touch screen the photo follows the finger and settles. The arrow keys move one at a time, and the counter under it says which one is showing.
+
+<ComponentPreview name="sheet/slides" height={160}>
+
+```tsx lineNumbers
+'use client';
+
+import { ImagesIcon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Sheet } from '@/components/panelui/sheet';
+
+const PHOTO = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=70`;
+
+const PHOTOS = [
+  { id: '1506905925346-21bda4d32df4', alt: 'Snowy peaks above a sea of cloud at dusk' },
+  { id: '1470071459604-3b5ec3a7fe05', alt: 'Green cliffs under morning cloud' },
+  { id: '1441974231531-c6227db76b6e', alt: 'A path through a sunlit forest' },
+  { id: '1493246507139-91e8fad9978e', alt: 'Mountains reflected in a still turquoise lake' },
+  { id: '1507525428034-b723cf961d3e', alt: 'Waves reaching a beach at sunrise' },
+  { id: '1519681393784-d120267933ba', alt: 'The night sky over a snowy ridge' },
+  { id: '1472214103451-9374bd1c798e', alt: 'Green hills at sunset' },
+];
+
+export default function SheetSlidesPhotos() {
+  return (
+    <Sheet>
+      <Sheet.Trigger render={<Button variant="outline" />}>
+        <ImagesIcon />
+        View the album
+      </Sheet.Trigger>
+      <Sheet.Content size="full">
+        <Sheet.Header title="Highlands" description={`${PHOTOS.length} photos from the trip`} />
+        <Sheet.Slides aria-label="Photos">
+          {PHOTOS.map((photo) => (
+            <Sheet.Slide key={photo.id}>
+              <img src={PHOTO(photo.id)} alt={photo.alt} decoding="async" draggable={false} />
+            </Sheet.Slide>
+          ))}
+        </Sheet.Slides>
+      </Sheet.Content>
+    </Sheet>
+  );
+}
+```
+
+</ComponentPreview>
+
+### A deck in a column
+
+With `snap={false}` the slides become a numbered column that scrolls freely, like a presentation's slide panel. Given `onIndexChange`, each slide is a button: pressing one chooses it and rings it in the info colour, and the arrow keys move the choice. `index` holds the choice outside, to show the slide wherever the page needs it.
+
+<ComponentPreview name="sheet/slide-column" height={160}>
+
+```tsx lineNumbers
+'use client';
+
+import { PanelLeftIcon } from 'lucide-react';
+import { Button } from '@/components/panelui/button';
+import { Sheet } from '@/components/panelui/sheet';
+import { useState } from 'react';
+
+type Slide =
+  | { kind: 'title'; title: string; byline: string }
+  | { kind: 'bars'; title: string; bars: [string, number][] }
+  | { kind: 'list'; title: string; items: string[] }
+  | { kind: 'figure'; title: string; value: string; note: string }
+  | { kind: 'columns'; title: string; columns: [string, string][] }
+  | { kind: 'end'; title: string };
+
+const SLIDES: Slide[] = [
+  { kind: 'title', title: 'Q3 review', byline: 'Harbour team · October' },
+  { kind: 'bars', title: 'Bookings by month', bars: [['Jul', 0.55], ['Aug', 0.72], ['Sep', 0.94]] },
+  { kind: 'list', title: 'What shipped', items: ['Shared calendars', 'Offline check-in', 'Faster search'] },
+  { kind: 'figure', title: 'Guests who came back', value: '68%', note: 'up from 61% in Q2' },
+  { kind: 'columns', title: 'Next quarter', columns: [['Billing', 'Split payments'], ['Mobile', 'Boarding passes'], ['Ops', 'Night shifts']] },
+  { kind: 'end', title: 'Questions?' },
+];
+
+const CHART = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)'];
+
+/** One slide, drawn in units of its own width, so it reads at whatever size the column gives it. */
+function SlideArt({ slide }: { slide: Slide }) {
+  return (
+    // The outer box is the container the drawing's units are measured against.
+    <div className="size-full bg-card text-card-foreground [container-type:inline-size]">
+      <div className="flex size-full flex-col p-[6cqw]">
+      {slide.kind === 'title' ? (
+        <div className="my-auto flex flex-col gap-[2cqw]">
+          <div className="h-[1.2cqw] w-[12cqw] rounded-full bg-primary" />
+          <p className="text-[9cqw] font-semibold leading-none tracking-tight">{slide.title}</p>
+          <p className="text-[3.4cqw] text-muted-foreground">{slide.byline}</p>
+        </div>
+      ) : slide.kind === 'end' ? (
+        <p className="m-auto text-[8cqw] font-semibold tracking-tight">{slide.title}</p>
+      ) : (
+        <>
+          <p className="text-[4.6cqw] font-semibold leading-tight">{slide.title}</p>
+          {slide.kind === 'bars' ? (
+            <div className="mt-auto flex h-[30cqw] items-end gap-[4cqw]">
+              {slide.bars.map(([month, value], at) => (
+                <div key={month} className="flex h-full flex-1 flex-col items-center justify-end gap-[1.5cqw]">
+                  <div className="w-full rounded-[1.4cqw]" style={{ height: `${value * 100}%`, background: CHART[at] }} />
+                  <span className="text-[2.6cqw] text-muted-foreground">{month}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {slide.kind === 'list' ? (
+            <ul className="mt-[5cqw] flex flex-col gap-[3cqw]">
+              {slide.items.map((item, at) => (
+                <li key={item} className="flex items-center gap-[2.5cqw] text-[3.6cqw]">
+                  <span className="size-[2cqw] shrink-0 rounded-full" style={{ background: CHART[at] }} />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {slide.kind === 'figure' ? (
+            <div className="my-auto flex flex-col gap-[1cqw]">
+              <p className="text-[16cqw] font-semibold leading-none tracking-tight" style={{ color: 'var(--chart-2)' }}>
+                {slide.value}
+              </p>
+              <p className="text-[3.2cqw] text-muted-foreground">{slide.note}</p>
+            </div>
+          ) : null}
+          {slide.kind === 'columns' ? (
+            <div className="mt-auto grid grid-cols-3 gap-[3cqw]">
+              {slide.columns.map(([area, plan], at) => (
+                <div key={area} className="flex flex-col gap-[1.2cqw] rounded-[2cqw] bg-muted p-[3cqw]">
+                  <span className="h-[1cqw] w-[6cqw] rounded-full" style={{ background: CHART[at] }} />
+                  <span className="text-[3.2cqw] font-medium">{area}</span>
+                  <span className="text-[2.6cqw] text-muted-foreground">{plan}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </>
+      )}
+      </div>
+    </div>
+  );
+}
+
+export default function SheetSlideColumn() {
+  const [current, setCurrent] = useState(0);
+
+  return (
+    <Sheet side="left">
+      <Sheet.Trigger render={<Button variant="outline" />}>
+        <PanelLeftIcon />
+        Slides
+      </Sheet.Trigger>
+      <Sheet.Content>
+        <Sheet.Header title="Q3 review" description={`${SLIDES.length} slides`} />
+        <Sheet.Slides snap={false} index={current} onIndexChange={setCurrent}>
+          {SLIDES.map((slide) => (
+            <Sheet.Slide key={slide.title} label={slide.title}>
+              <SlideArt slide={slide} />
+            </Sheet.Slide>
+          ))}
+        </Sheet.Slides>
+      </Sheet.Content>
+    </Sheet>
   );
 }
 ```
@@ -852,6 +1028,24 @@ export default function SheetStageDemo() {
 | `render` | `ReactElement` | — | Your own element to close the sheet with, such as a Cancel button. Without it, and without children, this is the round close button. |
 | `icon` | `boolean` | — | Draw the cross glyph. Set for you on the built-in close button. |
 
+### Sheet.Slides
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `snap` | `boolean` | `true` | `true` makes it a deck: each slide fills the height, and a scroll glides to the next one. `false` makes it a numbered column of smaller slides that scrolls freely. Default `true`. |
+| `index` | `number` | — | The current slide, counted from 0, when the caller holds it. Setting it scrolls that slide into view. |
+| `defaultIndex` | `number` | `0` | The slide to start on, when the caller does not hold it. Default `0`. |
+| `onIndexChange` | `(index: number) => void` | — | Called with the new index when the current slide changes: scrolled to in a deck, pressed in a column. In a column, passing it makes each slide a button. |
+| `counter` | `boolean` | — | Show "3 / 8" under the current slide. Default: on in a deck. |
+| `aspect` | `string` | `'16 / 9'` | The shape of a slide in a column, as a CSS aspect ratio. Default `16 / 9`. |
+
+### Sheet.Slide
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | — | What a screen reader calls it, after its place: "3 of 8, Harbour at dawn". An image's `alt` usually says it already. |
+| `aspect` | `string` | `'16 / 9'` | Its shape in a column, overriding `Sheet.Slides`' `aspect`. |
+
 Every part also takes the props of the element it renders, and a `className`.
 
 ## Notes
@@ -878,10 +1072,14 @@ Focus moves into the sheet when it opens and returns to the trigger when it clos
 
 With reduced motion turned on, the sheet appears and disappears without sliding.
 
+### Slides need a height
+
+A deck fills the height it is given, so put it in a sheet that has one: a side sheet, or a top or bottom sheet with `size="half"` or `size="full"`. In a sheet that sizes itself to its content it falls back to 60% of the screen, at most 32rem. A column needs no height of its own; it scrolls once it reaches the edge of the screen.
+
 ### Server Components
 
 `Sheet` is a client component. In a file that starts with `"use client"`, write its parts with a dot, as on this page. A Server Component cannot read `Sheet.Trigger` off the import, so each part is also exported by name: `SheetTrigger` is `Sheet.Trigger`, and so on for the others.
 
 ```tsx
-import { Sheet, SheetTrigger, SheetNext, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter, SheetClose, SheetStage } from "@/components/panelui/sheet"
+import { Sheet, SheetTrigger, SheetNext, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter, SheetClose, SheetStage, SheetSlides, SheetSlide } from "@/components/panelui/sheet"
 ```
